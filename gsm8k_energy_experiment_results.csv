@@ -1,0 +1,4 @@
+Strategy,Latency (s),Tokens Generated,Tokens/Sec,Total Energy (kWh),Carbon Emissions (kgCO2eq),Output
+Standard,376.639,2805,7.45,0.00439037,0.00162212,"To determine how much Janet makes every day at the farmers' market, we need to carefully analyze the egg usage and the r..."
+Chain_of_Thought,142.627,1342,9.41,0.00176333,0.00065150,"To determine how much Janet makes every day at the farmers' market, we need to follow a step-by-step breakdown of her eg..."
+RAG_Simulated,182.865,1615,8.83,0.00227960,0.00084225,"To determine how much Janet makes every day at the farmers' market, we follow these steps:  1. **Total Eggs Laid Per Day..."
