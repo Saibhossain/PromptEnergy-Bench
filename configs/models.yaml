@@ -1,0 +1,53 @@
+# Model configurations for PromptEnergy-Bench
+# Defines available models, their backend operators, supported formats, context limits, and reasoning attributes.
+
+models:
+  - name: "qwen3.5:0.8b-mlx"
+    backend: "ollama"
+    format: "mlx"
+    context_limit: 4096
+    supports_thinking: true
+    default_parameters:
+      temperature: 0.0
+      seed: 42
+      max_tokens: 1024
+
+  - name: "qwen3.5:2b-mlx"
+    backend: "ollama"
+    format: "mlx"
+    context_limit: 4096
+    supports_thinking: true
+    default_parameters:
+      temperature: 0.0
+      seed: 42
+      max_tokens: 1024
+
+  - name: "qwen2.5:0.5b"
+    backend: "ollama"
+    format: "gguf"
+    context_limit: 32768
+    supports_thinking: false
+    default_parameters:
+      temperature: 0.0
+      seed: 42
+      max_tokens: 1024
+
+  - name: "gemma3:1b"
+    backend: "ollama"
+    format: "gguf"
+    context_limit: 8192
+    supports_thinking: false
+    default_parameters:
+      temperature: 0.0
+      seed: 42
+      max_tokens: 1024
+
+  - name: "gpt-4o-mini"
+    backend: "openai"
+    format: "api"
+    context_limit: 128000
+    supports_thinking: false
+    default_parameters:
+      temperature: 0.0
+      seed: 42
+      max_tokens: 1024

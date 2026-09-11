@@ -1,56 +1,330 @@
-import pandas as pd
+"""Comprehensive Multi-Model, Multi-Device Visualization Suite for PromptEnergy-Bench.
+
+Generates:
+1. Accuracy by strategy
+2. Energy by strategy
+3. Latency by strategy
+4. Output tokens by strategy
+5. Accuracy vs Energy
+6. Accuracy vs Latency
+7. Energy vs Output Tokens
+8. Context Length vs Energy
+9. Context Length vs TTFT
+10. Context Length vs Accuracy
+11. Pareto frontier (Accuracy vs Energy & Accuracy vs Latency)
+
+Saves figures directly into:
+results/{experiment}/{device}/{timestamp}/plots/{validation or final}/
+"""
+
+import argparse
+import json
+import os
+import glob
+from typing import List, Dict, Any, Optional
 import matplotlib.pyplot as plt
+import pandas as pd
 import seaborn as sns
 
-# 1. Load the data
-csv_filename = "gsm8k_energy_experiment_results.csv"
-print(f"Loading data from {csv_filename}...")
-df = pd.read_csv(csv_filename)
+# Set publication style
+sns.set_theme(style="whitegrid", palette="muted")
+plt.rcParams.update({
+    "font.family": "sans-serif",
+    "font.size": 11,
+    "axes.labelsize": 12,
+    "axes.titlesize": 13,
+    "xtick.labelsize": 10,
+    "ytick.labelsize": 10,
+    "figure.titlesize": 14
+})
 
-# 2. Set up the visual style
-sns.set_theme(style="whitegrid")
-# Define a custom color palette for the three strategies
-palette = {"Standard": "#4C72B0", "Chain_of_Thought": "#DD8452", "RAG_Simulated": "#55A868"}
 
-# 3. Create a 2x2 grid of subplots for the dashboard
-fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-fig.suptitle('LLM Prompting Strategy: Performance & Energy Analysis', fontsize=18, fontweight='bold', y=0.98)
+def load_results_dataframe(jsonl_path: str) -> pd.DataFrame:
+    """Loads results.jsonl into a Pandas DataFrame."""
+    records = []
+    with open(jsonl_path, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if line:
+                records.append(json.loads(line))
+    df = pd.DataFrame(records)
+    # Filter to successful runs for performance plots
+    if "status" in df.columns:
+        df = df[df["status"] == "success"].copy()
+    return df
 
-# --- Chart 1: Latency (Top Left) ---
-sns.barplot(x='Strategy', y='Latency (s)', data=df, ax=axes[0, 0], palette=palette)
-axes[0, 0].set_title('Inference Latency (Lower is Better)', fontsize=14)
-axes[0, 0].set_ylabel('Seconds')
 
-# --- Chart 2: Total Energy (Top Right) ---
-sns.barplot(x='Strategy', y='Total Energy (kWh)', data=df, ax=axes[0, 1], palette=palette)
-axes[0, 1].set_title('Total Energy Consumption (Lower is Better)', fontsize=14)
-axes[0, 1].set_ylabel('Energy (kWh)')
+def generate_primary_plots(df: pd.DataFrame, output_dir: str) -> List[str]:
+    """Generates plots 1-7 and 11 for Primary Prompting Experiment."""
+    os.makedirs(output_dir, exist_ok=True)
+    generated_files = []
 
-# --- Chart 3: Tokens Generated (Bottom Left) ---
-sns.barplot(x='Strategy', y='Tokens Generated', data=df, ax=axes[1, 0], palette=palette)
-axes[1, 0].set_title('Total Tokens Generated', fontsize=14)
-axes[1, 0].set_ylabel('Token Count')
+    if df.empty or "strategy" not in df.columns:
+        return generated_files
 
-# --- Chart 4: Generation Efficiency (Bottom Right) ---
-sns.barplot(x='Strategy', y='Tokens/Sec', data=df, ax=axes[1, 1], palette=palette)
-axes[1, 1].set_title('Generation Speed (Higher is Better)', fontsize=14)
-axes[1, 1].set_ylabel('Tokens per Second')
+    # 1. Accuracy by Strategy
+    if "answer_correct" in df.columns:
+        fig, ax = plt.subplots(figsize=(8, 5))
+        acc_df = df.groupby(["strategy", "model"], as_index=False)["answer_correct"].mean()
+        acc_df["accuracy"] = acc_df["answer_correct"] * 100.0
+        sns.barplot(data=acc_df, x="strategy", y="accuracy", hue="model" if len(acc_df["model"].unique()) > 1 else None, ax=ax)
+        ax.set_title("Accuracy by Prompting Strategy")
+        ax.set_ylabel("Accuracy (%)")
+        ax.set_xlabel("Strategy")
+        ax.set_ylim(0, 100)
+        plt.xticks(rotation=20)
+        plt.tight_layout()
+        fpath = os.path.join(output_dir, "01_accuracy_by_strategy.png")
+        plt.savefig(fpath, dpi=300)
+        plt.close()
+        generated_files.append(fpath)
 
-# 4. Clean up layout and rotate x-axis labels for better readability
-for ax in axes.flat:
-    ax.set_xlabel('') # Remove redundant 'Strategy' x-label
-    ax.tick_params(axis='x', labelrotation=15)
-    
-    # Add data labels on top of the bars for clarity
-    for container in ax.containers:
-        ax.bar_label(container, fmt='%.4g', padding=3)
+    # 2. Energy by Strategy
+    if "energy_total_j" in df.columns and df["energy_total_j"].notna().any():
+        fig, ax = plt.subplots(figsize=(8, 5))
+        sns.barplot(data=df, x="strategy", y="energy_total_j", hue="model" if len(df["model"].unique()) > 1 else None, ax=ax, errorbar="sd")
+        ax.set_title("Energy Consumption by Strategy (Lower is Better)")
+        ax.set_ylabel("Total Energy (Joules)")
+        ax.set_xlabel("Strategy")
+        plt.xticks(rotation=20)
+        plt.tight_layout()
+        fpath = os.path.join(output_dir, "02_energy_by_strategy.png")
+        plt.savefig(fpath, dpi=300)
+        plt.close()
+        generated_files.append(fpath)
 
-plt.tight_layout(rect=[0, 0, 1, 0.95]) # Adjust layout to fit the main title
+    # 3. Latency by Strategy
+    if "total_latency_ms" in df.columns and df["total_latency_ms"].notna().any():
+        fig, ax = plt.subplots(figsize=(8, 5))
+        sns.barplot(data=df, x="strategy", y="total_latency_ms", hue="model" if len(df["model"].unique()) > 1 else None, ax=ax, errorbar="sd")
+        ax.set_title("Total Inference Latency by Strategy")
+        ax.set_ylabel("Latency (ms)")
+        ax.set_xlabel("Strategy")
+        plt.xticks(rotation=20)
+        plt.tight_layout()
+        fpath = os.path.join(output_dir, "03_latency_by_strategy.png")
+        plt.savefig(fpath, dpi=300)
+        plt.close()
+        generated_files.append(fpath)
 
-# 5. Save the figure as an image and display it
-output_image = "experiment_dashboard.png"
-plt.savefig(output_image, dpi=300)
-print(f"Diagram successfully saved as {output_image}")
+    # 4. Output Tokens by Strategy
+    if "output_tokens" in df.columns:
+        fig, ax = plt.subplots(figsize=(8, 5))
+        sns.barplot(data=df, x="strategy", y="output_tokens", hue="model" if len(df["model"].unique()) > 1 else None, ax=ax, errorbar="sd")
+        ax.set_title("Output Tokens Generated by Strategy")
+        ax.set_ylabel("Output Tokens")
+        ax.set_xlabel("Strategy")
+        plt.xticks(rotation=20)
+        plt.tight_layout()
+        fpath = os.path.join(output_dir, "04_output_tokens_by_strategy.png")
+        plt.savefig(fpath, dpi=300)
+        plt.close()
+        generated_files.append(fpath)
 
-# Show the interactive plot window
-plt.show()
+    # 5. Accuracy vs Energy (Scatter / Pareto Trade-off)
+    if "answer_correct" in df.columns and "energy_total_j" in df.columns and df["energy_total_j"].notna().any():
+        agg = df.groupby("strategy").agg({
+            "answer_correct": "mean",
+            "energy_total_j": "mean",
+            "total_latency_ms": "mean"
+        }).reset_index()
+        agg["accuracy"] = agg["answer_correct"] * 100.0
+
+        fig, ax = plt.subplots(figsize=(8, 6))
+        sns.scatterplot(data=agg, x="energy_total_j", y="accuracy", hue="strategy", s=150, ax=ax)
+        for _, row in agg.iterrows():
+            ax.annotate(row["strategy"], (row["energy_total_j"], row["accuracy"]), xytext=(5, 5), textcoords="offset points")
+        ax.set_title("Accuracy vs. Energy Consumption")
+        ax.set_xlabel("Mean Energy (Joules)")
+        ax.set_ylabel("Accuracy (%)")
+        plt.tight_layout()
+        fpath = os.path.join(output_dir, "05_accuracy_vs_energy.png")
+        plt.savefig(fpath, dpi=300)
+        plt.close()
+        generated_files.append(fpath)
+
+    # 6. Accuracy vs Latency
+    if "answer_correct" in df.columns and "total_latency_ms" in df.columns:
+        agg = df.groupby("strategy").agg({
+            "answer_correct": "mean",
+            "total_latency_ms": "mean"
+        }).reset_index()
+        agg["accuracy"] = agg["answer_correct"] * 100.0
+
+        fig, ax = plt.subplots(figsize=(8, 6))
+        sns.scatterplot(data=agg, x="total_latency_ms", y="accuracy", hue="strategy", s=150, ax=ax)
+        for _, row in agg.iterrows():
+            ax.annotate(row["strategy"], (row["total_latency_ms"], row["accuracy"]), xytext=(5, 5), textcoords="offset points")
+        ax.set_title("Accuracy vs. Latency Trade-off")
+        ax.set_xlabel("Mean Latency (ms)")
+        ax.set_ylabel("Accuracy (%)")
+        plt.tight_layout()
+        fpath = os.path.join(output_dir, "06_accuracy_vs_latency.png")
+        plt.savefig(fpath, dpi=300)
+        plt.close()
+        generated_files.append(fpath)
+
+    # 7. Energy vs Output Tokens
+    if "energy_total_j" in df.columns and "output_tokens" in df.columns and df["energy_total_j"].notna().any():
+        fig, ax = plt.subplots(figsize=(8, 6))
+        sns.scatterplot(data=df, x="output_tokens", y="energy_total_j", hue="strategy", alpha=0.7, ax=ax)
+        ax.set_title("Energy vs. Output Tokens")
+        ax.set_xlabel("Output Tokens")
+        ax.set_ylabel("Energy (Joules)")
+        plt.tight_layout()
+        fpath = os.path.join(output_dir, "07_energy_vs_output_tokens.png")
+        plt.savefig(fpath, dpi=300)
+        plt.close()
+        generated_files.append(fpath)
+
+    # 11. Pareto Frontier
+    if "answer_correct" in df.columns and "energy_total_j" in df.columns and df["energy_total_j"].notna().any():
+        agg = df.groupby("strategy").agg({
+            "answer_correct": "mean",
+            "energy_total_j": "mean",
+            "total_latency_ms": "mean"
+        }).reset_index()
+        agg["accuracy"] = agg["answer_correct"] * 100.0
+
+        # Sort by energy
+        agg = agg.sort_values("energy_total_j")
+        # Identify non-dominated on energy-accuracy
+        pareto_points = []
+        max_acc = -1.0
+        for _, row in agg.iterrows():
+            if row["accuracy"] > max_acc:
+                pareto_points.append(row)
+                max_acc = row["accuracy"]
+        pareto_df = pd.DataFrame(pareto_points)
+
+        fig, ax = plt.subplots(figsize=(9, 6))
+        sns.scatterplot(data=agg, x="energy_total_j", y="accuracy", hue="strategy", s=140, ax=ax)
+        if not pareto_df.empty:
+            ax.plot(pareto_df["energy_total_j"], pareto_df["accuracy"], "r--", linewidth=2, label="Pareto Frontier")
+        for _, row in agg.iterrows():
+            ax.annotate(row["strategy"], (row["energy_total_j"], row["accuracy"]), xytext=(6, 6), textcoords="offset points")
+        ax.set_title("Pareto Frontier: Accuracy vs. Energy")
+        ax.set_xlabel("Mean Energy (Joules)")
+        ax.set_ylabel("Accuracy (%)")
+        ax.legend(loc="lower right")
+        plt.tight_layout()
+        fpath = os.path.join(output_dir, "11_pareto_frontier.png")
+        plt.savefig(fpath, dpi=300)
+        plt.close()
+        generated_files.append(fpath)
+
+    return generated_files
+
+
+def generate_context_plots(df: pd.DataFrame, output_dir: str) -> List[str]:
+    """Generates plots 8-10 for Context Scaling Experiment."""
+    os.makedirs(output_dir, exist_ok=True)
+    generated_files = []
+
+    if df.empty or "context_target_tokens" not in df.columns:
+        return generated_files
+
+    # 8. Context Length vs Energy
+    if "energy_total_j" in df.columns and df["energy_total_j"].notna().any():
+        fig, ax = plt.subplots(figsize=(8, 5))
+        sns.lineplot(data=df, x="context_target_tokens", y="energy_total_j", hue="context_source_type", marker="o", ax=ax)
+        ax.set_title("Context Length vs. Energy Consumption")
+        ax.set_xlabel("Target Context Length (Tokens)")
+        ax.set_ylabel("Total Energy (Joules)")
+        plt.tight_layout()
+        fpath = os.path.join(output_dir, "08_context_vs_energy.png")
+        plt.savefig(fpath, dpi=300)
+        plt.close()
+        generated_files.append(fpath)
+
+    # 9. Context Length vs TTFT / Prefill Latency
+    if "ttft_ms" in df.columns and df["ttft_ms"].notna().any():
+        fig, ax = plt.subplots(figsize=(8, 5))
+        sns.lineplot(data=df, x="context_target_tokens", y="ttft_ms", hue="context_source_type", marker="s", ax=ax)
+        ax.set_title("Context Length vs. Time to First Token (TTFT)")
+        ax.set_xlabel("Target Context Length (Tokens)")
+        ax.set_ylabel("TTFT (ms)")
+        plt.tight_layout()
+        fpath = os.path.join(output_dir, "09_context_vs_ttft.png")
+        plt.savefig(fpath, dpi=300)
+        plt.close()
+        generated_files.append(fpath)
+
+    # 10. Context Length vs Accuracy
+    if "answer_correct" in df.columns:
+        fig, ax = plt.subplots(figsize=(8, 5))
+        acc_df = df.groupby(["context_target_tokens", "context_source_type"], as_index=False)["answer_correct"].mean()
+        acc_df["accuracy"] = acc_df["answer_correct"] * 100.0
+        sns.lineplot(data=acc_df, x="context_target_tokens", y="accuracy", hue="context_source_type", marker="^", ax=ax)
+        ax.set_title("Context Length vs. Accuracy")
+        ax.set_xlabel("Target Context Length (Tokens)")
+        ax.set_ylabel("Accuracy (%)")
+        ax.set_ylim(0, 100)
+        plt.tight_layout()
+        fpath = os.path.join(output_dir, "10_context_vs_accuracy.png")
+        plt.savefig(fpath, dpi=300)
+        plt.close()
+        generated_files.append(fpath)
+
+    return generated_files
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Plot PromptEnergy-Bench experiment results.")
+    parser.add_argument("--run-dir", type=str, default=None, help="Path to specific run directory")
+    parser.add_argument("--results-jsonl", type=str, default=None, help="Direct path to results.jsonl")
+    args = parser.parse_args()
+
+    # Find target results file
+    results_file = args.results_jsonl
+    target_dir = args.run_dir
+
+    if not results_file and target_dir:
+        results_file = os.path.join(target_dir, "results.jsonl")
+
+    if not results_file:
+        # Search for the latest results.jsonl in results/
+        candidates = glob.glob("results/**/results.jsonl", recursive=True)
+        if candidates:
+            # Sort by modification time
+            candidates.sort(key=os.path.getmtime, reverse=True)
+            results_file = candidates[0]
+            target_dir = os.path.dirname(results_file)
+            print(f"Auto-detected latest experiment results: {results_file}")
+        elif os.path.exists("gsm8k_energy_experiment_results.csv"):
+            # Fallback legacy
+            print("Found legacy gsm8k_energy_experiment_results.csv. Please use new results.jsonl structure.")
+            return
+        else:
+            print("No results.jsonl found. Please run an experiment first.")
+            return
+
+    df = load_results_dataframe(results_file)
+    if df.empty:
+        print("Results file is empty. Nothing to plot.")
+        return
+
+    # Check if validation run
+    is_val = False
+    config_path = os.path.join(target_dir, "config.json") if target_dir else None
+    if config_path and os.path.exists(config_path):
+        with open(config_path, "r") as f:
+            cfg = json.load(f)
+            is_val = cfg.get("validation", False) or cfg.get("dataset", {}).get("evaluation_size") == 50
+
+    plots_subdir = "validation" if is_val else "final"
+    output_dir = os.path.join(target_dir, "plots", plots_subdir) if target_dir else os.path.join("plots", plots_subdir)
+
+    print(f"Generating plots into: {output_dir}")
+    if "context_target_tokens" in df.columns:
+        files = generate_context_plots(df, output_dir)
+    else:
+        files = generate_primary_plots(df, output_dir)
+
+    print(f"Successfully generated {len(files)} plot(s):")
+    for f in files:
+        print(f" - {f}")
+
+
+if __name__ == "__main__":
+    main()

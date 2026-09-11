@@ -1,0 +1,41 @@
+# Hardware profiles and energy measurement presets
+
+devices:
+  macbook_air_m1:
+    device_name: "MacBook Air M1"
+    os: "macOS"
+    cpu: "Apple M1"
+    gpu_available: true
+    gpu_count: 1
+    gpu_name: "Apple M1 GPU"
+    gpu_vram_gb: null
+    ram_gb: 8
+    default_energy_method: "codecarbon_estimated"
+    default_operator: "ollama"
+    default_model_format: "mlx"
+
+  generic_cuda_server:
+    device_name: "Ubuntu NVIDIA Server"
+    os: "Linux"
+    cpu: "Generic x86_64"
+    gpu_available: true
+    gpu_count: 1
+    gpu_name: "NVIDIA RTX 4090"
+    gpu_vram_gb: 24
+    ram_gb: 64
+    default_energy_method: "nvidia_nvml"
+    default_operator: "transformers"
+    default_model_format: "f16"
+
+  cpu_only_pc:
+    device_name: "Generic CPU Machine"
+    os: "Linux"
+    cpu: "Generic CPU"
+    gpu_available: false
+    gpu_count: 0
+    gpu_name: null
+    gpu_vram_gb: null
+    ram_gb: 16
+    default_energy_method: "codecarbon_estimated"
+    default_operator: "llama.cpp"
+    default_model_format: "gguf"
