@@ -1,0 +1,10 @@
+[2026-09-11 12:54:51] [INFO] Initialized Experiment: primary_exp_gsm8k
+[2026-09-11 12:54:51] [INFO] Run ID: primary_exp_gsm8k__macbook_air_m1__2026-09-11_12-54-43
+[2026-09-11 12:54:51] [INFO] Run Directory: results/primary_exp_gsm8k/macbook_air_m1/2026-09-11_12-54-43
+[2026-09-11 12:54:51] [INFO] Model: qwen3.5:0.8b-mlx (Backend: ollama, Format: mlx)
+[2026-09-11 12:54:51] [INFO] Device: macbook_air_m1
+[2026-09-11 12:54:51] [INFO] Evaluation Size: full (Evaluation Split: TEST)
+[2026-09-11 12:54:51] [INFO] Loading GSM8K evaluation dataset (TEST split)...
+[2026-09-11 12:54:51] [INFO] Loaded 1319 evaluation examples.
+[2026-09-11 12:54:51] [INFO] Executing 1 warmup run(s)...
+[2026-09-11 12:54:53] [INFO] Warmup 1/1 completed.

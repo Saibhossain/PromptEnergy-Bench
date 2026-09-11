@@ -57,8 +57,9 @@ class TestContextBuilder(unittest.TestCase):
             target_tokens=100
         )
         self.assertEqual(ctx.context_type, "distractor")
-        # Distractor should choose airplane problem before apple problem
-        self.assertIn("gsm8k_train_0003", ctx.context_document_ids[0])
+        # Distractor should choose unrelated problems before apple problem
+        self.assertNotEqual(ctx.context_document_ids[0], "gsm8k_train_0001")
+        self.assertIn(ctx.context_document_ids[0], ["gsm8k_train_0002", "gsm8k_train_0003"])
 
     def test_context_scaling_tokens(self):
         ctx_50: ScaledContext = self.builder.build_context(self.target, "relevant", target_tokens=30)

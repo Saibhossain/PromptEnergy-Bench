@@ -1,0 +1,31 @@
+{
+    "run_id": "primary_exp_gsm8k__macbook_air_m1__2026-09-11_13-11-22",
+    "experiment_name": "primary_exp_gsm8k",
+    "timestamp": "2026-09-11_13-11-22",
+    "device": "macbook_air_m1",
+    "model": "qwen3.5:0.8b-mlx",
+    "backend": "ollama",
+    "evaluation_size": 50,
+    "validation": true,
+    "full_benchmark": false,
+    "metrics": {
+        "requested_samples": 250,
+        "successful_samples": 250,
+        "failed_samples": 0,
+        "correct_answers": 10,
+        "accuracy": 0.04,
+        "mean_latency_ms": 7861.17,
+        "median_latency_ms": 6512.56,
+        "mean_ttft_ms": 2230.18,
+        "mean_output_tokens": 128,
+        "median_output_tokens": 128.0,
+        "mean_thinking_tokens": 124.85,
+        "mean_visible_output_tokens": 3.15,
+        "mean_energy_j": 63.8025,
+        "median_energy_j": 54.4996,
+        "total_energy_j": 15950.6331,
+        "energy_per_correct_answer_j": 1595.0633,
+        "energy_per_output_token_j": 0.498457,
+        "accuracy_per_joule": 0.0006
+    }
+}

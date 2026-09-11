@@ -1,0 +1,24 @@
+{
+    "run_id": "primary_exp_gsm8k__macbook_air_m1__2026-09-11_13-11-22",
+    "experiment_name": "primary_exp_gsm8k",
+    "model": {
+        "name": "qwen3.5:0.8b-mlx",
+        "backend": "ollama",
+        "format": "mlx"
+    },
+    "dataset": {
+        "name": "gsm8k",
+        "evaluation_split": "test",
+        "context_source_split": "train",
+        "evaluation_size": 50
+    },
+    "sampling": {
+        "temperature": 0.0,
+        "seed": 42,
+        "top_p": 1.0,
+        "max_tokens": 128
+    },
+    "warmups": 1,
+    "repetitions": 1,
+    "validation": true
+}

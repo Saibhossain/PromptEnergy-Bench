@@ -1,0 +1,50 @@
+{
+    "run_id": "primary_exp_gsm8k__macbook_air_m1__2026-09-11_13-11-22",
+    "experiment_name": "primary_exp_gsm8k",
+    "timestamp": "2026-09-11_13-11-22",
+    "device": {
+        "name": "MacBook Air M1",
+        "normalized_name": "macbook_air_m1",
+        "os": "macOS",
+        "cpu": "Apple M1",
+        "gpu_available": true,
+        "gpu_count": 1,
+        "gpu_name": "Apple M1 GPU",
+        "gpu_vram_gb": 8.0,
+        "ram_gb": 8
+    },
+    "backend": {
+        "operator": "ollama",
+        "model_format": "mlx",
+        "model_name": "qwen3.5:0.8b-mlx"
+    },
+    "dataset": {
+        "name": "GSM8K",
+        "evaluation_split": "test",
+        "context_source_split": "train",
+        "evaluation_size": 50
+    },
+    "measurement": {
+        "energy_method": "apple_estimated",
+        "energy_quality": "estimated",
+        "token_method": "backend_usage",
+        "latency_method": "perf_counter"
+    },
+    "software": {
+        "python_version": "3.9.6",
+        "platform": "macOS-26.6.2-arm64-arm-64bit",
+        "ollama_version": "0.33.3",
+        "git_commit": "8c0725adafa01fcb067bb03f6b121636eac1b6a2",
+        "git_dirty": true,
+        "package_versions": {
+            "datasets": "4.5.0",
+            "codecarbon": "3.2.3",
+            "ollama": "unknown",
+            "pandas": "2.3.3",
+            "matplotlib": "3.9.4",
+            "seaborn": "0.13.2",
+            "psutil": "7.2.2",
+            "scipy": "1.13.1"
+        }
+    }
+}

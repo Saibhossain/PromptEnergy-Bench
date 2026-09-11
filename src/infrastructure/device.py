@@ -176,8 +176,14 @@ def collect_device_info(interactive: bool = False, cli_args: Optional[Dict[str, 
     model_name = get_val("model", "qwen3.5:0.8b-mlx", "9. Model name")
 
     # 10. Dataset evaluation size
-    eval_size_raw = get_val("eval_size", "50", "10. Dataset evaluation size ('50' or 'full')")
-    eval_size = 50 if str(eval_size_raw) == "50" else "full"
+    eval_size_raw = str(get_val("eval_size", "50", "10. Dataset evaluation size ('50' or 'full')")).lower()
+    if eval_size_raw == "full":
+        eval_size = "full"
+    else:
+        try:
+            eval_size = int(eval_size_raw)
+        except ValueError:
+            eval_size = 50
 
     # 11. Energy measurement mode
     energy_mode_def = "apple_estimated" if os_name == "macOS" else ("nvidia_nvml" if gpu_available and "NVIDIA" in str(gpu_name) else "codecarbon_estimated")

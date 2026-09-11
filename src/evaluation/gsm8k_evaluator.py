@@ -62,10 +62,10 @@ class GSM8KEvaluator:
         # 1. Check for '####' marker
         if "####" in raw_output:
             after_hash = raw_output.split("####")[-1].strip()
-            # Match first numeric token following ####
-            match = re.search(r"[-+]?\d+(?:\.\d+)?(?:/\d+)?", after_hash)
+            # Match first numeric token following #### (including commas and currencies)
+            match = re.search(r"[-+]?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?(?:/\d+)?", after_hash)
             if match:
-                return match.group(0)
+                return re.sub(r"[,\$€£%]", "", match.group(0))
 
         # 2. Check for explicit answer phrases
         phrase_patterns = [

@@ -1,0 +1,22 @@
+[2026-09-11 12:55:20] [INFO] Initialized Experiment: primary_exp_gsm8k
+[2026-09-11 12:55:20] [INFO] Run ID: primary_exp_gsm8k__macbook_air_m1__2026-09-11_12-55-18
+[2026-09-11 12:55:20] [INFO] Run Directory: results/primary_exp_gsm8k/macbook_air_m1/2026-09-11_12-55-18
+[2026-09-11 12:55:20] [INFO] Model: qwen3.5:0.8b-mlx (Backend: ollama, Format: mlx)
+[2026-09-11 12:55:20] [INFO] Device: macbook_air_m1
+[2026-09-11 12:55:20] [INFO] Evaluation Size: 2 (Evaluation Split: TEST)
+[2026-09-11 12:55:20] [INFO] Loading GSM8K evaluation dataset (TEST split)...
+[2026-09-11 12:55:20] [INFO] Loaded 2 evaluation examples.
+[2026-09-11 12:55:20] [INFO] Executing 1 warmup run(s)...
+[2026-09-11 12:55:22] [INFO] Warmup 1/1 completed.
+[2026-09-11 12:55:54] [INFO] Experiment completed. Summary saved to results/primary_exp_gsm8k/macbook_air_m1/2026-09-11_12-55-18/summary.json
+[2026-09-11 13:03:06] [INFO] Initialized Experiment: primary_exp_gsm8k
+[2026-09-11 13:03:06] [INFO] Run ID: primary_exp_gsm8k__macbook_air_m1__2026-09-11_12-55-18
+[2026-09-11 13:03:06] [INFO] Run Directory: results/primary_exp_gsm8k/macbook_air_m1/2026-09-11_12-55-18/
+[2026-09-11 13:03:06] [INFO] Model: qwen3.5:0.8b-mlx (Backend: ollama, Format: mlx)
+[2026-09-11 13:03:06] [INFO] Device: macbook_air_m1
+[2026-09-11 13:03:06] [INFO] Evaluation Size: 2 (Evaluation Split: TEST)
+[2026-09-11 13:03:06] [INFO] Loading GSM8K evaluation dataset (TEST split)...
+[2026-09-11 13:03:06] [INFO] Loaded 2 evaluation examples.
+[2026-09-11 13:03:06] [INFO] Executing 1 warmup run(s)...
+[2026-09-11 13:03:09] [INFO] Warmup 1/1 completed.
+[2026-09-11 13:03:09] [INFO] Experiment completed. Summary saved to results/primary_exp_gsm8k/macbook_air_m1/2026-09-11_12-55-18/summary.json

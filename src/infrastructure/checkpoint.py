@@ -106,7 +106,11 @@ def validate_resume_directory(
         raise ValueError(f"Experiment mismatch in resume dir. Expected '{expected_experiment_name}', found '{cfg_exp}'")
 
     cfg_model = config.get("model", {}).get("name")
-    if cfg_model != expected_model:
+    if expected_model and cfg_model != expected_model:
         raise ValueError(f"Model mismatch in resume dir. Expected '{expected_model}', found '{cfg_model}'")
+
+    cfg_device = metadata.get("device", {}).get("normalized_name")
+    if expected_device_name and cfg_device and cfg_device != expected_device_name:
+        raise ValueError(f"Device mismatch in resume dir. Expected '{expected_device_name}', found '{cfg_device}'")
 
     return config, metadata
