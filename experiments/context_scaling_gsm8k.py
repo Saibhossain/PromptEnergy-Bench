@@ -31,6 +31,7 @@ def parse_args():
     parser.add_argument("--model", type=str, default=None, help="Model name")
 
     # Context experiment specific
+    parser.add_argument("--context-lengths", nargs="+", type=int, default=None, help="List of context token lengths (e.g. 0 512 1024 2048 4096)")
     parser.add_argument("--include-8k", action="store_true", help="Attempt 8192 token context scaling if model permits")
 
     # Dataset / execution flags

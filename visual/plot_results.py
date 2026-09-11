@@ -22,8 +22,11 @@ import argparse
 import datetime
 import json
 import os
+import sys
 import glob
 from typing import List, Dict, Any, Optional, Tuple
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import matplotlib
 matplotlib.use("Agg")
@@ -90,6 +93,7 @@ STRATEGY_LABELS = {
 # Consistent color mapping
 _palette_colors = sns.color_palette("colorblind", n_colors=len(STRATEGY_ORDER))
 STRATEGY_PALETTE = dict(zip(STRATEGY_ORDER, _palette_colors))
+STRATEGY_DISPLAY_PALETTE = {STRATEGY_LABELS[k]: v for k, v in STRATEGY_PALETTE.items()}
 
 
 def save_publication_figure(fig: plt.Figure, output_dir: str, stem: str) -> List[str]:
@@ -149,16 +153,15 @@ def load_and_filter_results(
 def plot_01_accuracy_by_strategy(df_all: pd.DataFrame, reps: int, out_dir: str) -> List[str]:
     """Figure 1: Accuracy (%) by Prompt Strategy."""
     fig, ax = plt.subplots(figsize=(7.5, 4.5))
-    acc_df = df_all.groupby(["strategy", "strategy_display"], as_index=False, observed=False)["answer_correct"].mean()
+    acc_df = df_all.groupby(["strategy", "strategy_display"], as_index=False, observed=True)["answer_correct"].mean()
     acc_df["accuracy_pct"] = acc_df["answer_correct"] * 100.0
 
-    palette = [STRATEGY_PALETTE.get(s, "#4C72B0") for s in acc_df["strategy"]]
     bars = sns.barplot(
         data=acc_df,
         x="strategy_display",
         y="accuracy_pct",
         hue="strategy_display",
-        palette=palette,
+        palette=STRATEGY_DISPLAY_PALETTE,
         legend=False,
         edgecolor="#333333",
         linewidth=1.0,
@@ -185,7 +188,6 @@ def plot_02_energy_by_strategy(df_success: pd.DataFrame, reps: int, out_dir: str
         return []
 
     fig, ax = plt.subplots(figsize=(7.5, 4.5))
-    palette = [STRATEGY_PALETTE.get(s, "#4C72B0") for s in STRATEGY_ORDER if s in df_success["strategy"].unique()]
 
     # If reps > 1 show 95% CI, if reps == 1 show mean without fake CI
     errorbar = ("ci", 95) if reps > 1 else None
@@ -194,20 +196,19 @@ def plot_02_energy_by_strategy(df_success: pd.DataFrame, reps: int, out_dir: str
         x="strategy_display",
         y="energy_total_j",
         hue="strategy_display",
-        palette=palette,
+        palette=STRATEGY_DISPLAY_PALETTE,
         legend=False,
         errorbar=errorbar,
-        capsize=0.1 if reps > 1 else None,
         edgecolor="#333333",
         linewidth=1.0,
         ax=ax
     )
 
     # Annotate mean energy
-    means = df_success.groupby("strategy_display", observed=False)["energy_total_j"].mean()
-    for p, mean_val in zip(bars.patches, means):
-        if not np.isnan(mean_val):
-            ax.annotate(f"{mean_val:.2f} J", (p.get_x() + p.get_width() / 2., p.get_height()),
+    for p in bars.patches:
+        height = p.get_height()
+        if not np.isnan(height) and height > 0:
+            ax.annotate(f"{height:.2f} J", (p.get_x() + p.get_width() / 2., height),
                         ha="center", va="bottom", xytext=(0, 3), textcoords="offset points", fontsize=9)
 
     ax.set_ylabel("Mean Energy per Inference (J)")
@@ -224,7 +225,7 @@ def plot_03_latency_by_strategy(df_success: pd.DataFrame, reps: int, out_dir: st
 
     fig, ax = plt.subplots(figsize=(8.5, 5.0))
     # Aggregate latencies per strategy
-    agg = df_success.groupby(["strategy", "strategy_display"], as_index=False, observed=False).agg({
+    agg = df_success.groupby(["strategy", "strategy_display"], as_index=False, observed=True).agg({
         "ttft_ms": "mean",
         "generation_latency_ms": "mean",
         "total_latency_ms": "mean"
@@ -268,7 +269,7 @@ def plot_04_token_composition_by_strategy(df_success: pd.DataFrame, reps: int, o
     if "output_tokens" not in df_success.columns:
         return []
 
-    agg = df_success.groupby(["strategy", "strategy_display"], as_index=False, observed=False).agg({
+    agg = df_success.groupby(["strategy", "strategy_display"], as_index=False, observed=True).agg({
         "thinking_tokens": lambda x: x.dropna().mean() if not x.dropna().empty else 0.0,
         "visible_output_tokens": lambda x: x.dropna().mean() if not x.dropna().empty else 0.0,
         "output_tokens": "mean"
@@ -302,7 +303,7 @@ def plot_05_accuracy_energy_pareto(df_all: pd.DataFrame, reps: int, out_dir: str
     if "energy_total_j" not in df_all.columns or df_all["energy_total_j"].isna().all():
         return []
 
-    agg = df_all.groupby(["strategy", "strategy_display"], as_index=False, observed=False).agg({
+    agg = df_all.groupby(["strategy", "strategy_display"], as_index=False, observed=True).agg({
         "answer_correct": "mean",
         "energy_total_j": "mean",
         "total_latency_ms": "mean"
@@ -366,7 +367,7 @@ def plot_06_accuracy_latency(df_all: pd.DataFrame, reps: int, out_dir: str) -> L
     if "total_latency_ms" not in df_all.columns:
         return []
 
-    agg = df_all.groupby(["strategy", "strategy_display"], as_index=False, observed=False).agg({
+    agg = df_all.groupby(["strategy", "strategy_display"], as_index=False, observed=True).agg({
         "answer_correct": "mean",
         "total_latency_ms": "mean"
     })
@@ -462,7 +463,7 @@ def plot_08_thinking_tokens_vs_energy(df_success: pd.DataFrame, reps: int, out_d
 
 def plot_09_thinking_tokens_vs_accuracy(df_all: pd.DataFrame, reps: int, out_dir: str) -> List[str]:
     """Figure 9: Thinking Tokens vs Accuracy / Correctness."""
-    agg = df_all.groupby(["strategy", "strategy_display"], as_index=False, observed=False).agg({
+    agg = df_all.groupby(["strategy", "strategy_display"], as_index=False, observed=True).agg({
         "thinking_tokens": lambda x: x.dropna().mean() if not x.dropna().empty else 0.0,
         "answer_correct": "mean"
     })
@@ -501,7 +502,7 @@ def plot_10_efficiency_by_strategy(df_all: pd.DataFrame, reps: int, out_dir: str
     if "energy_total_j" not in df_all.columns:
         return []
 
-    agg = df_all.groupby(["strategy", "strategy_display"], as_index=False, observed=False).agg({
+    agg = df_all.groupby(["strategy", "strategy_display"], as_index=False, observed=True).agg({
         "answer_correct": "mean",
         "energy_total_j": "mean"
     })
@@ -511,13 +512,12 @@ def plot_10_efficiency_by_strategy(df_all: pd.DataFrame, reps: int, out_dir: str
     )
 
     fig, ax = plt.subplots(figsize=(7.5, 4.5))
-    palette = [STRATEGY_PALETTE.get(s, "#4C72B0") for s in agg["strategy"]]
     bars = sns.barplot(
         data=agg,
         x="strategy_display",
         y="accuracy_per_joule",
         hue="strategy_display",
-        palette=palette,
+        palette=STRATEGY_DISPLAY_PALETTE,
         legend=False,
         edgecolor="#333333",
         linewidth=1.0,
@@ -579,17 +579,16 @@ def plot_12_latency_distribution(df_success: pd.DataFrame, reps: int, out_dir: s
 def plot_13_truncation_rate(df_all: pd.DataFrame, reps: int, out_dir: str) -> List[str]:
     """Figure 13: Generation Truncation Rate (%) by Strategy."""
     fig, ax = plt.subplots(figsize=(7.5, 4.5))
-    trunc_df = df_all.groupby(["strategy", "strategy_display"], as_index=False, observed=False).agg({
+    trunc_df = df_all.groupby(["strategy", "strategy_display"], as_index=False, observed=True).agg({
         "generation_truncated": lambda x: (sum(1 for v in x if v is True) / len(x)) * 100.0 if len(x) > 0 else 0.0
     })
 
-    palette = [STRATEGY_PALETTE.get(s, "#4C72B0") for s in trunc_df["strategy"]]
     bars = sns.barplot(
         data=trunc_df,
         x="strategy_display",
         y="generation_truncated",
         hue="strategy_display",
-        palette=palette,
+        palette=STRATEGY_DISPLAY_PALETTE,
         legend=False,
         edgecolor="#333333",
         linewidth=1.0,
@@ -614,7 +613,7 @@ def plot_validation_overview(df_all: pd.DataFrame, summary: Dict[str, Any], out_
     fig.suptitle("Pipeline Validation Diagnostic Overview", fontsize=14, fontweight="bold", y=0.98)
 
     # 1. Accuracy Panel
-    acc_df = df_all.groupby("strategy_display", observed=False)["answer_correct"].mean().reset_index()
+    acc_df = df_all.groupby("strategy_display", observed=True)["answer_correct"].mean().reset_index()
     acc_df["acc_pct"] = acc_df["answer_correct"] * 100.0
     sns.barplot(data=acc_df, x="strategy_display", y="acc_pct", hue="strategy_display", legend=False, ax=axes[0, 0], palette="crest")
     axes[0, 0].set_title("Accuracy (%)", fontsize=11)
@@ -623,7 +622,7 @@ def plot_validation_overview(df_all: pd.DataFrame, summary: Dict[str, Any], out_
     axes[0, 0].tick_params(axis="x", rotation=25)
 
     # 2. Truncation Rate Panel
-    trunc_df = df_all.groupby("strategy_display", observed=False)["generation_truncated"].apply(
+    trunc_df = df_all.groupby("strategy_display", observed=True)["generation_truncated"].apply(
         lambda s: (sum(1 for v in s if v is True) / len(s)) * 100.0 if len(s) > 0 else 0.0
     ).reset_index()
     sns.barplot(data=trunc_df, x="strategy_display", y="generation_truncated", hue="strategy_display", legend=False, ax=axes[0, 1], palette="Reds_r")

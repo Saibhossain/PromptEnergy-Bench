@@ -68,7 +68,8 @@ class RAGExperiment(BaseExperiment):
                     messages = format_gsm8k_prompt(
                         strategy=self.strategy,
                         question=sample.question,
-                        context=ret_res.context_text
+                        context=ret_res.context_text,
+                        allow_context=True
                     )
 
                     # Phase 2: Inference with Energy Monitoring

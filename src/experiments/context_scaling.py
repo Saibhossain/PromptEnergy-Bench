@@ -22,9 +22,12 @@ class ContextScalingExperiment(BaseExperiment):
             interactive=interactive
         )
 
-        self.context_sizes = [512, 1024, 2048, 4096]
-        if self.cli_args.get("include_8k", False):
-            self.context_sizes.append(8192)
+        if self.cli_args.get("context_lengths"):
+            self.context_sizes = [int(x) for x in self.cli_args["context_lengths"]]
+        else:
+            self.context_sizes = [512, 1024, 2048, 4096]
+            if self.cli_args.get("include_8k", False):
+                self.context_sizes.append(8192)
 
         self.context_types = ["relevant", "distractor"]
         self.strategy = PromptStrategy.ZERO_SHOT_DIRECT
@@ -105,7 +108,8 @@ class ContextScalingExperiment(BaseExperiment):
                         messages = format_gsm8k_prompt(
                             strategy=self.strategy,
                             question=sample.question,
-                            context=scaled_ctx.context_text
+                            context=scaled_ctx.context_text,
+                            allow_context=True
                         )
 
                         self.energy_monitor.start(phase="total")

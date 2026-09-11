@@ -95,6 +95,15 @@ class ContextBuilder:
         else:
             raise ValueError(f"Unknown context_type: {context_type}. Expected 'relevant' or 'distractor'.")
 
+        if target_tokens <= 0:
+            return ScaledContext(
+                context_type=context_type,
+                target_context_tokens=0,
+                actual_context_tokens=0,
+                context_text="",
+                context_document_ids=[]
+            )
+
         selected_ids: List[str] = []
         snippets: List[str] = []
         current_tokens = 0

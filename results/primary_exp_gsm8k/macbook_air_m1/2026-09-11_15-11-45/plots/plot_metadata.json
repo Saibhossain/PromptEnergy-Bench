@@ -1,0 +1,26 @@
+{
+    "run_id": "primary_exp_gsm8k__macbook_air_m1__2026-09-11_15-11-45",
+    "source_results_file": "/Users/mdsaibhossain/code/Research_paper/PromptEnergy-Bench/results/primary_exp_gsm8k/macbook_air_m1/2026-09-11_15-11-45/results.jsonl",
+    "plot_generation_timestamp": "2026-09-11 17:20:58",
+    "models": [
+        "qwen3.5:0.8b-mlx"
+    ],
+    "devices": [],
+    "strategies": [
+        "zero_shot_direct",
+        "few_shot_3",
+        "zero_shot_cot",
+        "short_cot",
+        "long_cot"
+    ],
+    "sample_count": 250,
+    "repetitions": 1,
+    "plot_version": "2.0-research",
+    "plot_config": {
+        "dpi": 300,
+        "font_scale": 1.15,
+        "context": "paper",
+        "style": "whitegrid",
+        "palette": "colorblind"
+    }
+}
