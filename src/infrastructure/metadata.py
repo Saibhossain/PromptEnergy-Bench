@@ -83,10 +83,12 @@ def build_experiment_paths(
     run_dir = os.path.join(results_root, experiment_name, normalized_device_name, timestamp)
     plots_dir = os.path.join(run_dir, "plots")
     logs_dir = os.path.join(run_dir, "logs")
+    tables_dir = os.path.join(run_dir, "tables")
 
     os.makedirs(run_dir, exist_ok=True)
     os.makedirs(plots_dir, exist_ok=True)
     os.makedirs(logs_dir, exist_ok=True)
+    os.makedirs(tables_dir, exist_ok=True)
 
     return {
         "run_dir": run_dir,
@@ -96,6 +98,7 @@ def build_experiment_paths(
         "summary_file": os.path.join(run_dir, "summary.json"),
         "plots_dir": plots_dir,
         "logs_dir": logs_dir,
+        "tables_dir": tables_dir,
         "log_file": os.path.join(logs_dir, "experiment.log")
     }
 

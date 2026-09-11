@@ -26,6 +26,13 @@ class InferenceOutput:
     generation_latency_ms: Optional[float] = None # Time from first token to end of generation
     total_latency_ms: float = 0.0                # Total inference duration
     
+    # Generation completion & stop metadata
+    generation_stop_reason: str = "unknown"       # stop, length, eos, error, unknown
+    generation_truncated: Optional[bool] = None  # True if stopped due to max tokens, False if normal, None if unknown
+    generation_complete: Optional[bool] = None   # True if completed normally
+    max_output_tokens: int = 1024
+    thinking_text_available: bool = False
+
     # Backend metadata
     backend_metadata: Dict[str, Any] = field(default_factory=dict)
 

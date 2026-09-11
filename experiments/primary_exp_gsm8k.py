@@ -42,6 +42,8 @@ def parse_args():
     parser.add_argument("--seed", type=int, default=42, help="Random seed")
     parser.add_argument("--top-p", type=float, default=1.0, help="Top-p sampling")
     parser.add_argument("--max-tokens", type=int, default=1024, help="Maximum generated tokens")
+    parser.add_argument("--max-output-tokens", type=int, default=None, help="Default maximum generated tokens override")
+    parser.add_argument("--generation-config", type=str, default=None, help="Path to generation YAML configuration")
 
     # Modes
     parser.add_argument("--validation", action="store_true", help="Enable validation mode (50 examples, 1 warmup, 1 rep)")
@@ -72,26 +74,39 @@ def main():
     # If validation mode was run, output the exact required validation summary format
     if args.validation or exp.eval_size == 50:
         metrics = summary.get("metrics", {})
+        gen_cfg = exp.config.get("generation", {})
+        default_max = gen_cfg.get("default_max_tokens", "N/A")
+        strat_max = gen_cfg.get("strategy_max_tokens", {})
+        strat_max_str = ", ".join(f"{k}: {v}" for k, v in strat_max.items()) if strat_max else "N/A"
+
+        trunc_count = metrics.get("truncated_generations", 0)
+        trunc_rate = metrics.get("truncation_rate", 0.0)
+        pass_status = "PASS" if metrics.get("failed_inference_runs", 0) == 0 else "FAIL"
+
         print("\n" + "=" * 60)
         print("PIPELINE VALIDATION SUMMARY")
         print("=" * 60)
-        print(f"Dataset: GSM8K")
-        print(f"Evaluation split: TEST")
-        print(f"Evaluation examples: {summary.get('evaluation_size', 50)}")
-        print(f"Model: {summary.get('model')}")
+        print("Dataset: GSM8K")
+        print("Evaluation split: TEST")
+        print(f"Evaluation examples: {summary.get('evaluation_examples', 50)}")
+        print(f"Strategies: {summary.get('strategies', 5)}")
+        print(f"Inference runs: {metrics.get('requested_inference_runs', 250)}")
+        print(f"\nModel: {summary.get('model')}")
         print(f"Backend: {summary.get('backend')}")
         print(f"Device: {summary.get('device')}")
-        print(f"Strategies: {summary.get('metrics', {}).get('requested_samples', 0)} total requests")
-        print(f"Correct: {metrics.get('correct_answers', 0)}")
-        print(f"Accuracy: {metrics.get('accuracy', 0.0)}")
-        print(f"Mean latency: {metrics.get('mean_latency_ms')} ms")
-        print(f"Mean output tokens: {metrics.get('mean_output_tokens')}")
+        print(f"\nGeneration configuration:")
+        print(f"Default max tokens: {default_max}")
+        print(f"Strategy-specific max tokens: {strat_max_str}")
+        print(f"\nTruncated generations: {trunc_count}")
+        print(f"Truncation rate: {trunc_rate * 100.0:.2f}%")
+        print(f"\nAccuracy: {metrics.get('accuracy', 0.0) * 100.0:.2f}%")
         print(f"Mean energy: {metrics.get('mean_energy_j')} J")
-        print(f"Energy measurement: {exp.energy_mode}")
-        print(f"Errors: {metrics.get('failed_samples', 0)}")
+        print(f"Mean latency: {metrics.get('mean_latency_ms')} ms")
+        print(f"Mean thinking tokens: {metrics.get('mean_thinking_tokens')}")
+        print(f"\nPipeline status: {pass_status}")
         print("=" * 60)
-        print("Pipeline status: PASS" if metrics.get("failed_samples", 0) == 0 else "Pipeline status: COMPLETED WITH ERRORS")
-        print("\nValidation completed. Full research benchmark was NOT executed.")
+        print("\nValidation completed.")
+        print("Full research benchmark was NOT executed.")
         print(f"Results saved to: {exp.paths['run_dir']}\n")
 
 

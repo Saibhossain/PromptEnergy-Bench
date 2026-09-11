@@ -95,6 +95,7 @@ class OllamaBackend(ModelBackend):
         final_eval_count = 0
         final_prompt_eval_duration_ns = 0
         final_eval_duration_ns = 0
+        raw_done_reason: Optional[str] = None
 
         try:
             if stream:
@@ -106,6 +107,10 @@ class OllamaBackend(ModelBackend):
                 )
                 for chunk in stream_resp:
                     now = time.perf_counter()
+                    dr = getattr(chunk, "done_reason", None)
+                    if dr:
+                        raw_done_reason = dr
+
                     msg = getattr(chunk, "message", None)
                     if msg:
                         # Check thinking attribute (e.g. Qwen 3.5 internal reasoning)
@@ -142,6 +147,7 @@ class OllamaBackend(ModelBackend):
                     stream=False
                 )
                 first_token_time = time.perf_counter()
+                raw_done_reason = getattr(resp, "done_reason", None)
                 msg = getattr(resp, "message", None)
                 if msg:
                     th = getattr(msg, "thinking", None)
@@ -177,6 +183,34 @@ class OllamaBackend(ModelBackend):
             text = raw_response_str
             has_thinking = False
 
+        # Stop reason and truncation normalization
+        if raw_done_reason:
+            norm_reason = str(raw_done_reason).lower().strip()
+            if norm_reason in ("length", "max_tokens"):
+                generation_stop_reason = "length"
+                generation_truncated = True
+                generation_complete = False
+            elif norm_reason in ("stop", "end_of_turn"):
+                generation_stop_reason = "stop"
+                generation_truncated = False
+                generation_complete = True
+            elif norm_reason == "eos":
+                generation_stop_reason = "eos"
+                generation_truncated = False
+                generation_complete = True
+            elif "error" in norm_reason:
+                generation_stop_reason = "error"
+                generation_truncated = False
+                generation_complete = False
+            else:
+                generation_stop_reason = norm_reason
+                generation_truncated = None
+                generation_complete = None
+        else:
+            generation_stop_reason = "unknown"
+            generation_truncated = None
+            generation_complete = None
+
         # Token accounting
         # Ollama's final_eval_count is total generated tokens (thinking + content)
         total_output_tokens = final_eval_count
@@ -184,11 +218,17 @@ class OllamaBackend(ModelBackend):
             total_output_tokens = estimate_tokens(raw_output)
 
         if has_thinking:
-            th_tokens = estimate_tokens(raw_thinking_str)
-            # Bound thinking tokens within total output tokens
-            thinking_tokens = min(th_tokens, total_output_tokens)
-            visible_output_tokens = max(0, total_output_tokens - thinking_tokens)
-            reasoning_measurement_method = "backend_reported"
+            if raw_response_str == "" and generation_truncated is True:
+                # Entire output budget was consumed inside thinking phase
+                thinking_tokens = total_output_tokens
+                visible_output_tokens = 0
+                reasoning_measurement_method = "backend_reported"
+            else:
+                # Backend does not report separate token count for thinking vs content
+                # Do NOT infer or estimate thinking token count from text length or latency
+                thinking_tokens = None
+                visible_output_tokens = total_output_tokens
+                reasoning_measurement_method = "unavailable"
         else:
             thinking_tokens = None
             visible_output_tokens = total_output_tokens
@@ -217,9 +257,15 @@ class OllamaBackend(ModelBackend):
             ttft_ms=round(ttft_ms, 2) if ttft_ms is not None else None,
             generation_latency_ms=round(generation_latency_ms, 2) if generation_latency_ms is not None else None,
             total_latency_ms=round(total_latency_ms, 2),
+            generation_stop_reason=generation_stop_reason,
+            generation_truncated=generation_truncated,
+            generation_complete=generation_complete,
+            max_output_tokens=int(max_tokens) if max_tokens is not None else 1024,
+            thinking_text_available=has_thinking,
             backend_metadata={
                 "prompt_eval_duration_ms": round(final_prompt_eval_duration_ns / 1e6, 2) if final_prompt_eval_duration_ns else None,
                 "eval_duration_ms": round(final_eval_duration_ns / 1e6, 2) if final_eval_duration_ns else None,
+                "raw_done_reason": raw_done_reason,
                 "model": self.model_name
             }
         )

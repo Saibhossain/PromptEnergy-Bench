@@ -129,6 +129,42 @@ class BaseExperiment(ABC):
                 "software": software_meta
             }
 
+            # Load generation configuration
+            gen_cfg_path = self.cli_args.get("generation_config") or "configs/generation.yaml"
+            gen_cfg = {}
+            if os.path.exists(gen_cfg_path):
+                import yaml
+                try:
+                    with open(gen_cfg_path, "r", encoding="utf-8") as f:
+                        raw_data = yaml.safe_load(f)
+                        if isinstance(raw_data, dict) and "generation" in raw_data:
+                            gen_cfg = raw_data["generation"]
+                        elif isinstance(raw_data, dict):
+                            gen_cfg = raw_data
+                except Exception as e:
+                    self.logger.warning(f"Could not parse generation config {gen_cfg_path}: {e}")
+
+            default_max_tok = gen_cfg.get("default_max_tokens", 512)
+            if self.cli_args.get("max_output_tokens") is not None:
+                default_max_tok = int(self.cli_args["max_output_tokens"])
+            elif self.cli_args.get("max_tokens") is not None and self.cli_args.get("max_tokens") != 1024:
+                default_max_tok = int(self.cli_args["max_tokens"])
+
+            strategy_max_tok = gen_cfg.get("strategy_max_tokens", {
+                "zero_shot_direct": 256,
+                "few_shot_3": 256,
+                "zero_shot_cot": 512,
+                "short_cot": 512,
+                "long_cot": 1024
+            })
+
+            generation_metadata = {
+                "default_max_tokens": default_max_tok,
+                "strategy_max_tokens": strategy_max_tok
+            }
+
+            self.metadata["generation"] = generation_metadata
+
             self.config = {
                 "run_id": self.run_id,
                 "experiment_name": self.experiment_name,
@@ -147,8 +183,9 @@ class BaseExperiment(ABC):
                     "temperature": float(self.cli_args.get("temperature", 0.0)),
                     "seed": int(self.cli_args.get("seed", 42)),
                     "top_p": float(self.cli_args.get("top_p", 1.0)),
-                    "max_tokens": int(self.cli_args.get("max_tokens", 1024))
+                    "max_tokens": default_max_tok
                 },
+                "generation": generation_metadata,
                 "warmups": self.warmups,
                 "repetitions": self.repetitions,
                 "validation": bool(self.cli_args.get("validation", False) or self.eval_size == 50)
@@ -197,9 +234,26 @@ class BaseExperiment(ABC):
         pass
 
     def finalize(self) -> Dict[str, Any]:
-        """Calculates final aggregate metrics and saves summary.json."""
+        """Calculates final aggregate metrics, generates publication tables, and saves summary.json."""
+        from src.analysis.tables import generate_all_tables
+
         records = self.checkpoint_mgr.completed_records
         metrics = compute_experiment_metrics(records)
+
+        # Detect energy interpretation
+        meas_method = self.metadata.get("measurement", {}).get("energy_method", self.energy_mode)
+        if "apple" in str(meas_method).lower() or "estimate" in str(meas_method).lower():
+            energy_interp = "software-estimated system energy"
+        else:
+            energy_interp = "hardware-reported energy"
+
+        num_examples = len(set(r.get("sample_id") for r in records if r.get("sample_id")))
+        if num_examples == 0:
+            num_examples = self.eval_size
+
+        num_strategies = len(set(r.get("strategy") for r in records if r.get("strategy")))
+        if num_strategies == 0 and hasattr(self, "strategies"):
+            num_strategies = len(self.strategies)
 
         summary = {
             "run_id": self.run_id,
@@ -208,12 +262,35 @@ class BaseExperiment(ABC):
             "device": self.normalized_device,
             "model": self.model_name,
             "backend": self.operator,
-            "evaluation_size": self.eval_size,
+            "evaluation_split": "test",
+            "evaluation_examples": num_examples,
+            "strategies": num_strategies,
+            "repetitions": self.repetitions,
             "validation": bool(self.cli_args.get("validation", False) or self.eval_size == 50),
             "full_benchmark": self.eval_size == "full",
-            "metrics": metrics
+            "generation": self.metadata.get("generation", {}),
+            "energy_interpretation": energy_interp,
+            "metrics": metrics,
+            "strategy_metrics": metrics.get("strategy_summaries", {})
         }
 
         save_summary_json(self.paths["summary_file"], summary)
         self.logger.info(f"Experiment completed. Summary saved to {self.paths['summary_file']}")
+
+        # Generate publication tables (CSV, Markdown, LaTeX)
+        try:
+            tables_dir = os.path.join(self.paths["run_dir"], "tables")
+            generate_all_tables(records, self.metadata, self.config, summary, tables_dir)
+            self.logger.info(f"Generated publication tables in {tables_dir}")
+        except Exception as e:
+            self.logger.warning(f"Failed to generate tables: {e}")
+
+        # Generate publication plots (PNG @ 300 DPI, PDF, SVG)
+        try:
+            from visual.plot_results import generate_all_plots_for_run
+            generate_all_plots_for_run(self.paths["run_dir"])
+            self.logger.info(f"Generated publication plots in {self.paths['run_dir']}")
+        except Exception as e:
+            self.logger.warning(f"Failed to generate plots: {e}")
+
         return summary

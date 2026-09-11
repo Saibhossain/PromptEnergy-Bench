@@ -1,0 +1,9 @@
+# Generation token budget configurations for PromptEnergy-Bench
+generation:
+  default_max_tokens: 512
+  strategy_max_tokens:
+    zero_shot_direct: 256
+    few_shot_3: 256
+    zero_shot_cot: 512
+    short_cot: 512
+    long_cot: 1024

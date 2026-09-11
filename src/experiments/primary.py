@@ -52,11 +52,16 @@ class PrimaryExperiment(BaseExperiment):
         top_p = sampling["top_p"]
         max_tokens = sampling["max_tokens"]
 
+        strategy_tokens_map = self.config.get("generation", {}).get("strategy_max_tokens", {})
+        default_max_tokens = self.config.get("generation", {}).get("default_max_tokens", 512)
+
         total_steps = len(eval_records) * len(self.strategies) * self.repetitions
         pbar = tqdm(total=total_steps, desc="Primary Experiment Progress")
 
         for sample in eval_records:
             for strategy in self.strategies:
+                strat_max_tokens = strategy_tokens_map.get(strategy.value, default_max_tokens)
+
                 for rep in range(1, self.repetitions + 1):
                     cond_key = compute_condition_key(
                         experiment_name=self.experiment_name,
@@ -82,7 +87,7 @@ class PrimaryExperiment(BaseExperiment):
                         infer_out = self.backend.generate(
                             messages=messages,
                             temperature=temp,
-                            max_tokens=max_tokens,
+                            max_tokens=strat_max_tokens,
                             seed=seed,
                             top_p=top_p,
                             stream=True
@@ -98,7 +103,9 @@ class PrimaryExperiment(BaseExperiment):
                     if infer_out is not None:
                         eval_res = GSM8KEvaluator.evaluate(
                             raw_output=infer_out.text,
-                            gold_answer=sample.answer
+                            gold_answer=sample.answer,
+                            raw_response=infer_out.raw_response,
+                            generation_truncated=bool(infer_out.generation_truncated)
                         )
                         record = {
                             "run_id": self.run_id,
@@ -110,6 +117,11 @@ class PrimaryExperiment(BaseExperiment):
                             "repetition": rep,
                             "condition_key": cond_key,
                             "status": status,
+                            "generation_stop_reason": infer_out.generation_stop_reason,
+                            "generation_truncated": infer_out.generation_truncated,
+                            "generation_complete": infer_out.generation_complete,
+                            "max_output_tokens": strat_max_tokens,
+                            "thinking_text_available": infer_out.thinking_text_available,
                             "input_tokens": infer_out.input_tokens,
                             "thinking_tokens": infer_out.thinking_tokens,
                             "visible_output_tokens": infer_out.visible_output_tokens,
@@ -152,6 +164,11 @@ class PrimaryExperiment(BaseExperiment):
                             "repetition": rep,
                             "condition_key": cond_key,
                             "status": "failed",
+                            "generation_stop_reason": "error",
+                            "generation_truncated": False,
+                            "generation_complete": False,
+                            "max_output_tokens": strat_max_tokens,
+                            "thinking_text_available": False,
                             "input_tokens": 0,
                             "thinking_tokens": None,
                             "visible_output_tokens": 0,

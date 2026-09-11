@@ -34,14 +34,18 @@ class TestPrompts(unittest.TestCase):
         # Few-shot examples section must be identical
         user_a = msgs_a[1]["content"]
         user_b = msgs_b[1]["content"]
-        self.assertTrue(user_a.startswith("Example 1:\nProblem: Natalia"))
-        self.assertTrue(user_b.startswith("Example 1:\nProblem: Natalia"))
+        self.assertTrue(user_a.startswith("Example 1\nProblem:\nNatalia"))
+        self.assertTrue(user_b.startswith("Example 1\nProblem:\nNatalia"))
 
     def test_prompt_hash_reproducibility(self):
         h1 = get_prompt_hash("v1.0")
         h2 = get_prompt_hash("v1.0")
         self.assertEqual(h1, h2)
         self.assertEqual(len(h1), 64)
+
+    def test_prompt_validation(self):
+        from src.prompts.gsm8k_prompts import validate_prompt_integrity
+        validate_prompt_integrity()
 
 
 if __name__ == "__main__":

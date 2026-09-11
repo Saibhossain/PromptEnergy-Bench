@@ -48,8 +48,24 @@ def find_pareto_frontier(
     minimize_keys: List[str] = None
 ) -> List[Dict[str, Any]]:
     """Returns all Pareto-efficient configurations."""
+    if not configs:
+        return []
+
     maximize_keys = maximize_keys or ["accuracy"]
-    minimize_keys = minimize_keys or ["mean_energy_j", "mean_latency_ms"]
+    if minimize_keys is None:
+        sample = configs[0]
+        detected = []
+        if "mean_energy_j" in sample:
+            detected.append("mean_energy_j")
+        elif "energy_j" in sample:
+            detected.append("energy_j")
+
+        if "mean_latency_ms" in sample:
+            detected.append("mean_latency_ms")
+        elif "latency_ms" in sample:
+            detected.append("latency_ms")
+
+        minimize_keys = detected if detected else ["mean_energy_j", "mean_latency_ms"]
 
     frontier = []
     for cfg in configs:
@@ -58,3 +74,7 @@ def find_pareto_frontier(
             cfg_copy["is_pareto"] = True
             frontier.append(cfg_copy)
     return frontier
+
+
+compute_pareto_frontier = find_pareto_frontier
+

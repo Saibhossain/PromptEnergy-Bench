@@ -31,17 +31,36 @@ class TestGSM8KEvaluator(unittest.TestCase):
         res2 = GSM8KEvaluator.evaluate("#### 1/2", "0.5")
         self.assertTrue(res2.answer_correct)
 
-    def test_incorrect_answer(self):
-        output = "16 - 3 = 13. #### 13"
-        res = GSM8KEvaluator.evaluate(output, "18")
+    def test_precedence_over_earlier_numbers(self):
+        # Example from prompt: "The building has 120 units... 30 are unoccupied. #### 30"
+        output = "The building has 120 units... 30 are unoccupied. #### 30"
+        res = GSM8KEvaluator.evaluate(output, "30")
         self.assertTrue(res.answer_parse_success)
-        self.assertFalse(res.answer_correct)
+        self.assertTrue(res.answer_correct)
+        self.assertEqual(res.extracted_answer, "30")
 
-    def test_empty_or_unparseable_output(self):
-        res = GSM8KEvaluator.evaluate("", "18")
+    def test_negative_and_comma_formatting(self):
+        res1 = GSM8KEvaluator.evaluate("Temperature dropped. #### -15", "-15")
+        self.assertTrue(res1.answer_correct)
+        self.assertEqual(res1.extracted_answer, "-15")
+
+        res2 = GSM8KEvaluator.evaluate("Total count is #### 1,200", "1200")
+        self.assertTrue(res2.answer_correct)
+        self.assertEqual(res2.extracted_answer, "1200")
+
+    def test_truncation_rejection_without_explicit_answer(self):
+        truncated_output = "<think>\nThe building has 120 units and 30 are"
+        res = GSM8KEvaluator.evaluate(truncated_output, "30", generation_truncated=True)
         self.assertFalse(res.answer_parse_success)
         self.assertFalse(res.answer_correct)
         self.assertIsNone(res.extracted_answer)
+
+    def test_truncation_with_explicit_answer_present(self):
+        output = "Step 1: 15+15=30. #### 30"
+        res = GSM8KEvaluator.evaluate(output, "30", generation_truncated=True)
+        self.assertTrue(res.answer_parse_success)
+        self.assertTrue(res.answer_correct)
+        self.assertEqual(res.extracted_answer, "30")
 
 
 if __name__ == "__main__":
