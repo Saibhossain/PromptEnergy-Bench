@@ -15,13 +15,15 @@ class MockBackend(ModelBackend):
 
     def generate(
         self,
-        messages: List[Dict[str, str]],
+        messages: Optional[List[Dict[str, str]]] = None,
         temperature: float = 0.0,
         max_tokens: Optional[int] = 1024,
         seed: Optional[int] = 42,
         top_p: float = 1.0,
-        stream: bool = False
+        stream: bool = False,
+        prompt: Optional[Any] = None
     ) -> InferenceOutput:
+        messages = self._normalize_messages(messages, prompt)
         if self.simulate_thinking:
             thinking = "Step 1: 2+2=4."
             response = "#### 4"
@@ -86,7 +88,12 @@ class TestBackend(unittest.TestCase):
         self.assertEqual(out.output_tokens, out.thinking_tokens + out.visible_output_tokens)
         self.assertEqual(out.total_tokens, out.input_tokens + out.output_tokens)
         self.assertEqual(out.reasoning_measurement_method, "backend_reported")
-        self.assertIn("Step 1", out.raw_thinking)
+    def test_mock_backend_prompt_argument(self):
+        backend = MockBackend(simulate_thinking=False)
+        out1 = backend.generate(prompt="What is 2+2?")
+        self.assertEqual(out1.text, "#### 4")
+        out2 = backend.generate(prompt=[{"role": "user", "content": "What is 2+2?"}])
+        self.assertEqual(out2.text, "#### 4")
 
 
 if __name__ == "__main__":

@@ -35,13 +35,24 @@ STRATEGY_ORDER = [
 ]
 
 
+def _get_strategies(strat_summaries: Dict[str, Any]) -> List[str]:
+    """Returns sorted strategies adhering to standard order first, followed by custom strategies."""
+    strats = [s for s in STRATEGY_ORDER if s in strat_summaries]
+    for s in strat_summaries:
+        if s not in strats:
+            strats.append(s)
+    return strats
+
+
 def _format_val(val: Any, decimals: int = 2, fallback: str = "N/A") -> str:
-    """Safely formats float or None values."""
-    if val is None or (isinstance(val, float) and (math.isnan(val) or math.isinf(val))):
+    """Safely formats float, int, or None values without coercing None/NaN to 0."""
+    if val is None:
         return fallback
     if isinstance(val, (int, np.integer)):
         return str(val)
     if isinstance(val, (float, np.floating)):
+        if math.isnan(val) or math.isinf(val):
+            return fallback
         return f"{val:.{decimals}f}"
     return str(val)
 
@@ -154,14 +165,21 @@ def generate_table_2_comparison(
     if not strat_summaries:
         strat_summaries = summary.get("strategy_metrics", {})
 
+    strats = _get_strategies(strat_summaries)
+    ds_name = str(summary.get("dataset", summary.get("dataset_name", "dataset"))).upper()
+
     rows = []
-    for strat in STRATEGY_ORDER:
+    for strat in strats:
         s_data = strat_summaries.get(strat, {})
         if not s_data:
             continue
 
-        acc = s_data.get("accuracy")
-        acc_pct = f"{acc * 100.0:.2f}" if acc is not None else "N/A"
+        tot_acc = s_data.get("total_accuracy", s_data.get("accuracy"))
+        tot_acc_pct = f"{tot_acc * 100.0:.2f}" if tot_acc is not None else "N/A"
+        
+        val_acc = s_data.get("valid_accuracy")
+        val_acc_pct = f"{val_acc * 100.0:.2f}" if val_acc is not None else "N/A"
+
         th_tok = _format_val(s_data.get("mean_thinking_tokens"), 1)
         vis_tok = _format_val(s_data.get("mean_visible_output_tokens"), 1)
         tot_tok = _format_val(s_data.get("mean_output_tokens"), 1)
@@ -171,16 +189,19 @@ def generate_table_2_comparison(
         energy = _format_val(s_data.get("mean_energy_j"), 4)
         e_per_c = _format_val(s_data.get("energy_per_correct_answer_j"), 4)
         acc_j = _format_val(s_data.get("accuracy_per_joule"), 4)
+        tps = _format_val(s_data.get("tokens_per_second"), 2)
         trunc_rate = f"{s_data.get('truncation_rate', 0.0) * 100.0:.1f}"
 
         rows.append({
             "Strategy": STRATEGY_DISPLAY.get(strat, strat),
-            "Accuracy (%)": acc_pct,
+            "Total Accuracy (%)": tot_acc_pct,
+            "Valid Accuracy (%)": val_acc_pct,
+            "Valid Samples": f"{s_data.get('valid_n', 0)}/{s_data.get('n', 0)}",
             "Mean Thinking Tokens": th_tok,
             "Mean Visible Output Tokens": vis_tok,
             "Mean Total Output Tokens": tot_tok,
+            "Throughput (tok/s)": tps,
             "TTFT (ms)": ttft,
-            "Generation Latency (ms)": gen_lat,
             "Total Latency (ms)": tot_lat,
             "Energy (J)": energy,
             "Energy / Correct (J)": e_per_c,
@@ -189,7 +210,7 @@ def generate_table_2_comparison(
         })
 
     df = pd.DataFrame(rows)
-    return _save_table_formats(df, tables_dir, "strategy_comparison", caption="Prompt Strategy Comparison on GSM8K")
+    return _save_table_formats(df, tables_dir, "strategy_comparison", caption=f"Prompt Strategy Comparison on {ds_name}")
 
 
 def generate_table_3_tradeoff(
@@ -201,46 +222,53 @@ def generate_table_3_tradeoff(
     if not strat_summaries:
         strat_summaries = summary.get("strategy_metrics", {})
 
-    baseline = strat_summaries.get("zero_shot_direct", {})
-    base_acc = baseline.get("accuracy", 0.0) or 0.0
-    base_energy = baseline.get("mean_energy_j", 0.0) or 0.0
-    base_lat = baseline.get("mean_total_latency_ms", 0.0) or 0.0
+    strats = _get_strategies(strat_summaries)
+    baseline_strat = "zero_shot_direct" if "zero_shot_direct" in strat_summaries else (strats[0] if strats else "")
+    baseline = strat_summaries.get(baseline_strat, {})
+    base_acc = baseline.get("total_accuracy", baseline.get("accuracy", 0.0))
+    base_energy = baseline.get("mean_energy_j")
+    base_lat = baseline.get("mean_total_latency_ms")
 
     # Determine Pareto frontier on (energy, accuracy)
     candidates = []
-    for strat in STRATEGY_ORDER:
+    for strat in strats:
         s_data = strat_summaries.get(strat)
-        if s_data and s_data.get("accuracy") is not None and s_data.get("mean_energy_j") is not None:
+        acc_val = s_data.get("total_accuracy", s_data.get("accuracy")) if s_data else None
+        energy_val = s_data.get("mean_energy_j") if s_data else None
+        if s_data and acc_val is not None and energy_val is not None:
             candidates.append({
                 "strategy": strat,
-                "accuracy": s_data["accuracy"],
-                "energy_j": s_data["mean_energy_j"],
-                "latency_ms": s_data.get("mean_total_latency_ms", 0.0)
+                "accuracy": acc_val,
+                "energy_j": energy_val,
+                "latency_ms": s_data.get("mean_total_latency_ms", 0.0) or 0.0
             })
 
     pareto_frontier = compute_pareto_frontier(candidates) if candidates else []
     pareto_strats = {p["strategy"] for p in pareto_frontier}
 
     rows = []
-    for strat in STRATEGY_ORDER:
+    for strat in strats:
         s_data = strat_summaries.get(strat, {})
         if not s_data:
             continue
 
-        acc = s_data.get("accuracy")
+        acc = s_data.get("total_accuracy", s_data.get("accuracy"))
         acc_pct = f"{acc * 100.0:.2f}%" if acc is not None else "N/A"
         energy = _format_val(s_data.get("mean_energy_j"), 4)
         latency = _format_val(s_data.get("mean_total_latency_ms"), 1)
         th_tok = _format_val(s_data.get("mean_thinking_tokens"), 1)
         is_pareto = "Yes" if strat in pareto_strats else "No"
 
-        if strat == "zero_shot_direct":
+        if strat == baseline_strat:
             d_acc = "Baseline"
             d_energy = "Baseline"
             d_lat = "Baseline"
         else:
-            delta_acc_val = (s_data.get("accuracy", 0.0) or 0.0) - base_acc
-            d_acc = f"{delta_acc_val * 100.0:+.2f} pp"
+            if acc is not None and base_acc is not None:
+                delta_acc_val = acc - base_acc
+                d_acc = f"{delta_acc_val * 100.0:+.2f} pp"
+            else:
+                d_acc = "N/A"
 
             s_energy = s_data.get("mean_energy_j")
             if s_energy is not None and base_energy is not None:
@@ -256,14 +284,14 @@ def generate_table_3_tradeoff(
 
         rows.append({
             "Strategy": STRATEGY_DISPLAY.get(strat, strat),
-            "Accuracy": acc_pct,
+            "Total Accuracy": acc_pct,
             "Energy (J)": energy,
             "Latency (ms)": latency,
             "Thinking Tokens": th_tok,
             "Pareto Optimal": is_pareto,
-            "Accuracy Gain vs Direct": d_acc,
-            "Energy Increase vs Direct": d_energy,
-            "Latency Increase vs Direct": d_lat
+            "Accuracy Gain vs Baseline": d_acc,
+            "Energy Increase vs Baseline": d_energy,
+            "Latency Increase vs Baseline": d_lat
         })
 
     df = pd.DataFrame(rows)
@@ -283,21 +311,22 @@ def generate_table_4_meg(
     if not strat_summaries:
         strat_summaries = summary.get("strategy_metrics", {})
 
-    baseline_strat = "zero_shot_direct"
+    strats = _get_strategies(strat_summaries)
+    baseline_strat = "zero_shot_direct" if "zero_shot_direct" in strat_summaries else (strats[0] if strats else "")
     base = strat_summaries.get(baseline_strat, {})
-    base_acc = base.get("accuracy")
+    base_acc = base.get("total_accuracy", base.get("accuracy"))
     base_energy = base.get("mean_energy_j")
     base_lat = base.get("mean_total_latency_ms")
 
     rows = []
-    comparisons = [s for s in STRATEGY_ORDER if s != baseline_strat]
+    comparisons = [s for s in strats if s != baseline_strat]
 
     for comp in comparisons:
         c_data = strat_summaries.get(comp, {})
         if not c_data:
             continue
 
-        c_acc = c_data.get("accuracy")
+        c_acc = c_data.get("total_accuracy", c_data.get("accuracy"))
         c_energy = c_data.get("mean_energy_j")
         c_lat = c_data.get("mean_total_latency_ms")
 
@@ -336,7 +365,7 @@ def generate_table_4_meg(
         })
 
     df = pd.DataFrame(rows)
-    return _save_table_formats(df, tables_dir, "marginal_energy_gain", caption="Marginal Energy Gain (MEG) Relative to Zero-Shot Direct")
+    return _save_table_formats(df, tables_dir, "marginal_energy_gain", caption="Marginal Energy Gain (MEG) Relative to Baseline")
 
 
 def generate_table_5_statistical_summary(
@@ -348,34 +377,63 @@ def generate_table_5_statistical_summary(
     rows = []
     successful = [r for r in records if r.get("status") == "success"]
 
-    for strat in STRATEGY_ORDER:
+    strategies_in_recs = sorted(list(set(r.get("strategy") for r in records if r.get("strategy"))))
+    strats = [s for s in STRATEGY_ORDER if s in strategies_in_recs]
+    for s in strategies_in_recs:
+        if s not in strats:
+            strats.append(s)
+
+    for strat in strats:
         strat_recs = [r for r in successful if r.get("strategy") == strat]
         if not strat_recs:
             continue
 
         strat_name = STRATEGY_DISPLAY.get(strat, strat)
+        
+        # Valid numbers extraction helper
+        def _valid_list(key: str) -> List[float]:
+            res = []
+            for r in strat_recs:
+                v = r.get(key)
+                if v is not None and isinstance(v, (int, float)) and not (math.isnan(v) or math.isinf(v)):
+                    res.append(float(v))
+            return res
+
         metrics_map = {
-            "Accuracy": [1.0 if r.get("answer_correct") else 0.0 for r in strat_recs],
-            "Energy (J)": [r["energy_total_j"] for r in strat_recs if r.get("energy_total_j") is not None],
-            "Latency (ms)": [r["total_latency_ms"] for r in strat_recs if r.get("total_latency_ms") is not None],
-            "TTFT (ms)": [r["ttft_ms"] for r in strat_recs if r.get("ttft_ms") is not None],
-            "Thinking Tokens": [r["thinking_tokens"] for r in strat_recs if r.get("thinking_tokens") is not None],
-            "Output Tokens": [r["output_tokens"] for r in strat_recs if r.get("output_tokens") is not None]
+            "Total Accuracy": [1.0 if r.get("answer_correct") else 0.0 for r in strat_recs],
+            "Energy (J)": _valid_list("energy_total_j"),
+            "Total Latency (ms)": _valid_list("total_latency_ms"),
+            "Generation Latency (ms)": _valid_list("generation_latency_ms"),
+            "TTFT (ms)": _valid_list("ttft_ms"),
+            "Thinking Tokens": _valid_list("thinking_tokens"),
+            "Output Tokens": _valid_list("output_tokens")
         }
 
         for metric_name, vals in metrics_map.items():
             if not vals:
+                rows.append({
+                    "Strategy": strat_name,
+                    "Metric": metric_name,
+                    "Mean": "N/A",
+                    "Median": "N/A",
+                    "Standard Deviation": "N/A",
+                    "95% Confidence Interval": "N/A"
+                })
                 continue
+
             mean_v = statistics.mean(vals)
             med_v = statistics.median(vals)
             sd_v = statistics.stdev(vals) if len(vals) > 1 else 0.0
 
             if repetitions > 1 and len(vals) > 1:
                 # 95% Student-t CI
-                from scipy import stats
-                sem = stats.sem(vals)
-                margin = sem * stats.t.ppf(0.975, len(vals) - 1)
-                ci_str = f"[{mean_v - margin:.2f}, {mean_v + margin:.2f}]"
+                try:
+                    from scipy import stats
+                    sem = stats.sem(vals)
+                    margin = sem * stats.t.ppf(0.975, len(vals) - 1)
+                    ci_str = f"[{mean_v - margin:.2f}, {mean_v + margin:.2f}]"
+                except Exception:
+                    ci_str = "N/A"
             else:
                 ci_str = "N/A (n=1)"
 
@@ -414,5 +472,6 @@ def generate_all_tables(
         "table_2_comparison": t2,
         "table_3_tradeoff": t3,
         "table_4_meg": t4,
+        "table_5_statistical_summary": t5,
         "table_5_statistics": t5
     }

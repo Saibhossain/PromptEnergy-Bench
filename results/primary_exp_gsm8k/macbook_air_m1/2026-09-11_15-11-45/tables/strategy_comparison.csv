@@ -1,6 +1,6 @@
-Strategy,Accuracy (%),Mean Thinking Tokens,Mean Visible Output Tokens,Mean Total Output Tokens,TTFT (ms),Generation Latency (ms),Total Latency (ms),Energy (J),Energy / Correct (J),Accuracy / Joule,Truncation Rate (%)
-Zero-shot Direct,4.00,256,0,256,3698.6,10711.8,14410.4,115.3384,2883.4595,0.0003,100.0
-Few-shot (3),4.00,256,0,256,1468.0,10626.7,12094.6,96.8315,2420.7879,0.0004,100.0
-Zero-shot CoT,6.00,512,0,512,723.8,22226.0,22949.8,183.5446,3059.0771,0.0003,100.0
-Short CoT,4.00,512,0,512,3152.9,22116.7,25269.5,202.0968,5052.4207,0.0002,100.0
-Long CoT,14.00,1024,41.0,1024,1405.8,44917.2,46323.0,370.0934,2643.5243,0.0004,100.0
+Strategy,Total Accuracy (%),Valid Accuracy (%),Valid Samples,Mean Thinking Tokens,Mean Visible Output Tokens,Mean Total Output Tokens,Throughput (tok/s),TTFT (ms),Total Latency (ms),Energy (J),Energy / Correct (J),Accuracy / Joule,Truncation Rate (%)
+Zero-shot Direct,0.00,N/A,0/50,256,0,256,27.07,3698.6,14410.4,115.3384,N/A,0.0000,100.0
+Few-shot (3),0.00,N/A,0/50,256,0,256,27.12,1468.0,12094.6,96.8315,N/A,0.0000,100.0
+Zero-shot CoT,0.00,N/A,0/50,512,0,512,26.61,723.8,22949.8,183.5446,N/A,0.0000,100.0
+Short CoT,0.00,N/A,0/50,512,0,512,26.72,3152.9,25269.5,202.0968,N/A,0.0000,100.0
+Long CoT,0.00,N/A,0/50,1024,41.0,1024,26.01,1405.8,46323.0,370.0934,N/A,0.0000,100.0

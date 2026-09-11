@@ -7,8 +7,8 @@ from tqdm import tqdm
 from src.experiments.base_experiment import BaseExperiment
 from src.data.gsm8k import load_gsm8k
 from src.data.retrieval import BM25Retriever, RetrievalResult
-from src.prompts.gsm8k_prompts import PromptStrategy, format_gsm8k_prompt
-from src.evaluation.gsm8k_evaluator import GSM8KEvaluator
+from src.prompts.prompt_registry import PromptStrategy, format_gsm8k_prompt
+from src.evaluation import get_evaluator, EvaluationStatus
 from src.infrastructure.checkpoint import compute_condition_key
 
 
@@ -24,6 +24,7 @@ class RAGExperiment(BaseExperiment):
 
         self.top_k_options = [int(k) for k in self.cli_args.get("top_k_list", [1, 3])]
         self.strategy = PromptStrategy.ZERO_SHOT_DIRECT
+        self.evaluator = get_evaluator(self.config.get("dataset", {}).get("name", "gsm8k"))
 
     def run(self) -> Dict[str, Any]:
         self.logger.info("Initializing BM25 Index over GSM8K TRAIN corpus (Evaluation on TEST split)...")
@@ -32,43 +33,50 @@ class RAGExperiment(BaseExperiment):
         retriever = BM25Retriever(corpus=train_records)
 
         # Warmup
-        warmup_msgs = format_gsm8k_prompt(self.strategy, "What is 2+2?")
+        warmup_msgs = format_gsm8k_prompt(
+            question="What is 2+2?",
+            strategy=self.strategy
+        )
         self.run_warmup(warmup_msgs)
 
         sampling = self.config["sampling"]
         temp = sampling["temperature"]
         seed = sampling["seed"]
         top_p = sampling["top_p"]
-        max_tokens = sampling["max_tokens"]
+        max_tokens = self.get_max_tokens_for_strategy(self.strategy.value)
 
         total_steps = len(eval_records) * len(self.top_k_options) * self.repetitions
         pbar = tqdm(total=total_steps, desc="RAG Experiment Progress")
 
-        for sample in eval_records:
-            for top_k in self.top_k_options:
-                for rep in range(1, self.repetitions + 1):
+        for k in self.top_k_options:
+            for rep in range(1, self.repetitions + 1):
+                for sample in eval_records:
                     cond_key = compute_condition_key(
                         experiment_name=self.experiment_name,
                         sample_id=sample.id,
                         model=self.model_name,
-                        strategy=self.strategy.value,
+                        strategy=f"rag_top_{k}",
                         repetition=rep,
+                        context_type="bm25_retrieval",
                         retriever="bm25",
-                        top_k=top_k
+                        top_k=k
                     )
 
                     if self.checkpoint_mgr.is_completed(cond_key):
                         pbar.update(1)
                         continue
 
-                    # Phase 1: Retrieval
-                    ret_res: RetrievalResult = retriever.retrieve(query=sample.question, top_k=top_k)
+                    # Execute BM25 retrieval
+                    retrieval_res: RetrievalResult = retriever.retrieve(
+                        query=sample.question,
+                        top_k=k,
+                        exclude_id=sample.id
+                    )
 
-                    # Construct prompt with retrieved knowledge
-                    messages = format_gsm8k_prompt(
-                        strategy=self.strategy,
+                    prompt_text = format_gsm8k_prompt(
                         question=sample.question,
-                        context=ret_res.context_text,
+                        strategy=self.strategy,
+                        context=retrieval_res.context_text,
                         allow_context=True
                     )
 
@@ -80,7 +88,7 @@ class RAGExperiment(BaseExperiment):
 
                     try:
                         infer_out = self.backend.generate(
-                            messages=messages,
+                            messages=prompt_text,
                             temperature=temp,
                             max_tokens=max_tokens,
                             seed=seed,
@@ -96,25 +104,80 @@ class RAGExperiment(BaseExperiment):
                     energy_reading = self.energy_monitor.stop(phase="total")
 
                     if infer_out is not None:
-                        eval_res = GSM8KEvaluator.evaluate(
-                            raw_output=infer_out.text,
-                            gold_answer=sample.answer
+                        is_truncated = bool(
+                            infer_out.generation_truncated or
+                            infer_out.generation_stop_reason == "length"
                         )
+                        eval_res = self.evaluator.evaluate(
+                            raw_output=infer_out.text,
+                            gold_answer=sample.answer,
+                            raw_response=infer_out.raw_response,
+                            generation_truncated=is_truncated,
+                            sample_id=sample.id,
+                            context={"retrieved_context": retrieval_res.context_text}
+                        )
+                        record_error_type = "generation_truncated" if is_truncated else None
+
                         record = {
                             "run_id": self.run_id,
                             "experiment_name": self.experiment_name,
                             "sample_id": sample.id,
+                            "task_type": self.evaluator.config.task_type.value if hasattr(self.evaluator.config.task_type, "value") else str(self.evaluator.config.task_type),
                             "model": self.model_name,
                             "backend": self.operator,
-                            "strategy": self.strategy.value,
+                            "strategy": f"rag_top_{k}",
                             "repetition": rep,
                             "condition_key": cond_key,
-                            "retriever": "bm25",
-                            "top_k": top_k,
-                            "retrieval_latency_ms": ret_res.retrieval_latency_ms,
-                            "retrieved_document_ids": ret_res.retrieved_document_ids,
-                            "retrieved_context_tokens": ret_res.retrieved_context_tokens,
+                            "top_k": k,
+                            "retrieved_doc_ids": retrieval_res.retrieved_doc_ids,
+                            "retrieval_latency_ms": retrieval_res.retrieval_latency_ms,
+                            "context_tokens": retrieval_res.context_tokens,
                             "status": status,
+                            
+                            # Universal evaluation fields
+                            "reference_answer": sample.answer,
+                            "raw_response": infer_out.raw_response,
+                            "normalized_response": eval_res.normalized_response,
+                            "parsed_answer": eval_res.parsed_answer,
+                            "evaluation_status": eval_res.evaluation_status.value if hasattr(eval_res.evaluation_status, "value") else str(eval_res.evaluation_status),
+                            "answer_correct": eval_res.answer_correct,
+                            "metric_values": eval_res.metric_values,
+                            "parse_success": eval_res.parse_success,
+                            "generation_truncated": is_truncated,
+                            "generation_stop_reason": infer_out.generation_stop_reason,
+                            "generation_complete": infer_out.generation_complete and not is_truncated,
+
+                            # Token counts
+                            "actual_token_counts": {
+                                "configured_max_tokens": max_tokens,
+                                "actual_output_tokens": infer_out.output_tokens,
+                                "actual_thinking_tokens": infer_out.thinking_tokens,
+                                "actual_visible_tokens": infer_out.visible_output_tokens,
+                                "total_generated_tokens": infer_out.total_tokens
+                            },
+                            
+                            # Latency metrics
+                            "latency_metrics": {
+                                "ttft_ms": infer_out.ttft_ms,
+                                "generation_latency_ms": infer_out.generation_latency_ms,
+                                "total_latency_ms": infer_out.total_latency_ms
+                            },
+                            
+                            # Energy metrics
+                            "energy_metrics": {
+                                "energy_total_j": energy_reading.energy_total_j,
+                                "energy_prefill_j": energy_reading.energy_prefill_j,
+                                "energy_decode_j": energy_reading.energy_decode_j,
+                                "energy_embedding_j": energy_reading.energy_embedding_j,
+                                "energy_retrieval_j": energy_reading.energy_retrieval_j,
+                                "energy_overhead_j": energy_reading.energy_overhead_j,
+                                "energy_net_j": energy_reading.energy_net_j,
+                                "idle_power_w": energy_reading.idle_power_w,
+                                "energy_status": energy_reading.energy_status
+                            },
+
+                            # Legacy flat fields
+                            "max_output_tokens": max_tokens,
                             "input_tokens": infer_out.input_tokens,
                             "thinking_tokens": infer_out.thinking_tokens,
                             "visible_output_tokens": infer_out.visible_output_tokens,
@@ -143,7 +206,8 @@ class RAGExperiment(BaseExperiment):
                             "extracted_answer": eval_res.extracted_answer,
                             "answer_parse_success": eval_res.answer_parse_success,
                             "answer_correct": eval_res.answer_correct,
-                            "error_type": None,
+                            "exact_match": eval_res.exact_match,
+                            "error_type": record_error_type,
                             "error_message": None
                         }
                     else:
@@ -151,17 +215,52 @@ class RAGExperiment(BaseExperiment):
                             "run_id": self.run_id,
                             "experiment_name": self.experiment_name,
                             "sample_id": sample.id,
+                            "task_type": self.evaluator.config.task_type.value if hasattr(self.evaluator.config.task_type, "value") else str(self.evaluator.config.task_type),
                             "model": self.model_name,
                             "backend": self.operator,
-                            "strategy": self.strategy.value,
+                            "strategy": f"rag_top_{k}",
                             "repetition": rep,
                             "condition_key": cond_key,
-                            "retriever": "bm25",
-                            "top_k": top_k,
-                            "retrieval_latency_ms": ret_res.retrieval_latency_ms,
-                            "retrieved_document_ids": ret_res.retrieved_document_ids,
-                            "retrieved_context_tokens": ret_res.retrieved_context_tokens,
+                            "top_k": k,
+                            "retrieved_doc_ids": retrieval_res.retrieved_doc_ids,
+                            "retrieval_latency_ms": retrieval_res.retrieval_latency_ms,
+                            "context_tokens": retrieval_res.context_tokens,
                             "status": "failed",
+                            "reference_answer": sample.answer,
+                            "raw_response": None,
+                            "normalized_response": None,
+                            "parsed_answer": None,
+                            "evaluation_status": EvaluationStatus.EVALUATOR_ERROR.value,
+                            "answer_correct": False,
+                            "metric_values": {},
+                            "parse_success": False,
+                            "generation_stop_reason": "error",
+                            "generation_truncated": False,
+                            "generation_complete": False,
+                            "actual_token_counts": {
+                                "configured_max_tokens": max_tokens,
+                                "actual_output_tokens": 0,
+                                "actual_thinking_tokens": None,
+                                "actual_visible_tokens": 0,
+                                "total_generated_tokens": 0
+                            },
+                            "latency_metrics": {
+                                "ttft_ms": None,
+                                "generation_latency_ms": None,
+                                "total_latency_ms": None
+                            },
+                            "energy_metrics": {
+                                "energy_total_j": None,
+                                "energy_prefill_j": None,
+                                "energy_decode_j": None,
+                                "energy_embedding_j": None,
+                                "energy_retrieval_j": None,
+                                "energy_overhead_j": None,
+                                "energy_net_j": None,
+                                "idle_power_w": None,
+                                "energy_status": "unavailable"
+                            },
+                            "max_output_tokens": max_tokens,
                             "input_tokens": 0,
                             "thinking_tokens": None,
                             "visible_output_tokens": 0,

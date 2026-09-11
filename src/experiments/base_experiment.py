@@ -210,10 +210,13 @@ class BaseExperiment(ABC):
         self.backend: ModelBackend = get_backend(operator=self.operator, model_name=self.model_name)
         self.energy_monitor: EnergyMonitor = get_energy_monitor(mode=self.energy_mode)
 
-    def run_warmup(self, warmup_messages: List[Dict[str, str]]) -> None:
+    def run_warmup(self, warmup_messages: Any) -> None:
         """Executes warm-up requests without logging to results."""
         if self.warmups <= 0:
             return
+
+        if isinstance(warmup_messages, str):
+            warmup_messages = [{"role": "user", "content": warmup_messages}]
 
         self.logger.info(f"Executing {self.warmups} warmup run(s)...")
         for w in range(1, self.warmups + 1):
@@ -227,6 +230,39 @@ class BaseExperiment(ABC):
                 self.logger.info(f"Warmup {w}/{self.warmups} completed.")
             except Exception as e:
                 self.logger.warning(f"Warmup {w} failed: {e}")
+
+    execute_warmup = run_warmup
+
+    def get_max_tokens_for_strategy(self, strategy_name: str) -> int:
+        """Retrieves configured max_tokens for a given prompting strategy.
+        
+        Falls back to strategy_max_tokens dict, default_max_tokens, or sampling max_tokens.
+        """
+        # 1. Check generation metadata
+        gen_meta = self.metadata.get("generation", {})
+        if isinstance(gen_meta, dict):
+            strat_map = gen_meta.get("strategy_max_tokens", {})
+            if isinstance(strat_map, dict) and strategy_name in strat_map:
+                return int(strat_map[strategy_name])
+            if "default_max_tokens" in gen_meta:
+                return int(gen_meta["default_max_tokens"])
+
+        # 2. Check config generation
+        if isinstance(self.config, dict):
+            cfg_gen = self.config.get("generation", {})
+            if isinstance(cfg_gen, dict):
+                cfg_strat_map = cfg_gen.get("strategy_max_tokens", {})
+                if isinstance(cfg_strat_map, dict) and strategy_name in cfg_strat_map:
+                    return int(cfg_strat_map[strategy_name])
+                if "default_max_tokens" in cfg_gen:
+                    return int(cfg_gen["default_max_tokens"])
+
+            # 3. Check sampling config
+            sampling = self.config.get("sampling", {})
+            if isinstance(sampling, dict) and "max_tokens" in sampling:
+                return int(sampling["max_tokens"])
+
+        return 512
 
     @abstractmethod
     def run(self) -> Dict[str, Any]:

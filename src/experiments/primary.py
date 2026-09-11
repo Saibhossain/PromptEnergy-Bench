@@ -6,12 +6,12 @@ from tqdm import tqdm
 
 from src.experiments.base_experiment import BaseExperiment
 from src.data.gsm8k import load_gsm8k
-from src.prompts.gsm8k_prompts import (
+from src.prompts.prompt_registry import (
     PromptStrategy,
     format_gsm8k_prompt,
     get_prompt_hash
 )
-from src.evaluation.gsm8k_evaluator import GSM8KEvaluator
+from src.evaluation import get_evaluator, EvaluationStatus
 from src.infrastructure.checkpoint import compute_condition_key
 
 
@@ -36,6 +36,7 @@ class PrimaryExperiment(BaseExperiment):
         # Record prompt hash in config
         self.config["strategies"] = [s.value for s in self.strategies]
         self.config["prompt_hash"] = get_prompt_hash()
+        self.evaluator = get_evaluator(self.config.get("dataset", {}).get("name", "gsm8k"))
 
     def run(self) -> Dict[str, Any]:
         self.logger.info("Loading GSM8K evaluation dataset (TEST split)...")
@@ -43,26 +44,23 @@ class PrimaryExperiment(BaseExperiment):
         self.logger.info(f"Loaded {len(eval_records)} evaluation examples.")
 
         # Warmup with standard zero-shot direct prompt
-        warmup_msgs = format_gsm8k_prompt(PromptStrategy.ZERO_SHOT_DIRECT, "What is 2+2?")
-        self.run_warmup(warmup_msgs)
+        warmup_prompt = format_gsm8k_prompt(
+            question="If John has 5 apples and eats 2, how many apples does he have left?",
+            strategy=PromptStrategy.ZERO_SHOT_DIRECT
+        )
+        self.run_warmup(warmup_prompt)
 
-        sampling = self.config["sampling"]
-        temp = sampling["temperature"]
-        seed = sampling["seed"]
-        top_p = sampling["top_p"]
-        max_tokens = sampling["max_tokens"]
+        # Main Evaluation factorial loop
+        total_eval_steps = len(self.strategies) * self.repetitions * len(eval_records)
+        self.logger.info(f"Beginning main evaluation across {total_eval_steps} inference requests...")
 
-        strategy_tokens_map = self.config.get("generation", {}).get("strategy_max_tokens", {})
-        default_max_tokens = self.config.get("generation", {}).get("default_max_tokens", 512)
+        pbar = tqdm(total=total_eval_steps, desc="Evaluation Progress")
 
-        total_steps = len(eval_records) * len(self.strategies) * self.repetitions
-        pbar = tqdm(total=total_steps, desc="Primary Experiment Progress")
+        for strategy in self.strategies:
+            strat_max_tokens = self.get_max_tokens_for_strategy(strategy.value)
 
-        for sample in eval_records:
-            for strategy in self.strategies:
-                strat_max_tokens = strategy_tokens_map.get(strategy.value, default_max_tokens)
-
-                for rep in range(1, self.repetitions + 1):
+            for rep in range(1, self.repetitions + 1):
+                for sample in eval_records:
                     cond_key = compute_condition_key(
                         experiment_name=self.experiment_name,
                         sample_id=sample.id,
@@ -75,18 +73,26 @@ class PrimaryExperiment(BaseExperiment):
                         pbar.update(1)
                         continue
 
-                    messages = format_gsm8k_prompt(strategy, sample.question)
+                    # Construct exact prompt
+                    prompt_text = format_gsm8k_prompt(
+                        question=sample.question,
+                        strategy=strategy
+                    )
 
-                    # Measurement
+                    sampling_cfg = self.config.get("sampling", {})
+                    temperature = sampling_cfg.get("temperature", 0.0)
+                    seed = sampling_cfg.get("seed", 42)
+                    top_p = sampling_cfg.get("top_p", 1.0)
+
                     self.energy_monitor.start(phase="total")
+                    status = "success"
                     error_type = None
                     error_message = None
-                    status = "success"
 
                     try:
                         infer_out = self.backend.generate(
-                            messages=messages,
-                            temperature=temp,
+                            messages=prompt_text,
+                            temperature=temperature,
                             max_tokens=strat_max_tokens,
                             seed=seed,
                             top_p=top_p,
@@ -101,25 +107,75 @@ class PrimaryExperiment(BaseExperiment):
                     energy_reading = self.energy_monitor.stop(phase="total")
 
                     if infer_out is not None:
-                        eval_res = GSM8KEvaluator.evaluate(
+                        is_truncated = bool(
+                            infer_out.generation_truncated or
+                            infer_out.generation_stop_reason == "length"
+                        )
+                        eval_res = self.evaluator.evaluate(
                             raw_output=infer_out.text,
                             gold_answer=sample.answer,
                             raw_response=infer_out.raw_response,
-                            generation_truncated=bool(infer_out.generation_truncated)
+                            generation_truncated=is_truncated,
+                            sample_id=sample.id
                         )
+                        
+                        record_error_type = "generation_truncated" if is_truncated else None
+
                         record = {
                             "run_id": self.run_id,
                             "experiment_name": self.experiment_name,
                             "sample_id": sample.id,
+                            "task_type": self.evaluator.config.task_type.value if hasattr(self.evaluator.config.task_type, "value") else str(self.evaluator.config.task_type),
                             "model": self.model_name,
                             "backend": self.operator,
                             "strategy": strategy.value,
                             "repetition": rep,
                             "condition_key": cond_key,
                             "status": status,
+                            
+                            # Universal evaluation fields
+                            "reference_answer": sample.answer,
+                            "raw_response": infer_out.raw_response,
+                            "normalized_response": eval_res.normalized_response,
+                            "parsed_answer": eval_res.parsed_answer,
+                            "evaluation_status": eval_res.evaluation_status.value if hasattr(eval_res.evaluation_status, "value") else str(eval_res.evaluation_status),
+                            "answer_correct": eval_res.answer_correct,
+                            "metric_values": eval_res.metric_values,
+                            "parse_success": eval_res.parse_success,
+                            "generation_truncated": is_truncated,
                             "generation_stop_reason": infer_out.generation_stop_reason,
-                            "generation_truncated": infer_out.generation_truncated,
-                            "generation_complete": infer_out.generation_complete,
+                            "generation_complete": infer_out.generation_complete and not is_truncated,
+
+                            # Token counts
+                            "actual_token_counts": {
+                                "configured_max_tokens": strat_max_tokens,
+                                "actual_output_tokens": infer_out.output_tokens,
+                                "actual_thinking_tokens": infer_out.thinking_tokens,
+                                "actual_visible_tokens": infer_out.visible_output_tokens,
+                                "total_generated_tokens": infer_out.total_tokens
+                            },
+                            
+                            # Latency metrics
+                            "latency_metrics": {
+                                "ttft_ms": infer_out.ttft_ms,
+                                "generation_latency_ms": infer_out.generation_latency_ms,
+                                "total_latency_ms": infer_out.total_latency_ms
+                            },
+                            
+                            # Energy metrics
+                            "energy_metrics": {
+                                "energy_total_j": energy_reading.energy_total_j,
+                                "energy_prefill_j": energy_reading.energy_prefill_j,
+                                "energy_decode_j": energy_reading.energy_decode_j,
+                                "energy_embedding_j": energy_reading.energy_embedding_j,
+                                "energy_retrieval_j": energy_reading.energy_retrieval_j,
+                                "energy_overhead_j": energy_reading.energy_overhead_j,
+                                "energy_net_j": energy_reading.energy_net_j,
+                                "idle_power_w": energy_reading.idle_power_w,
+                                "energy_status": energy_reading.energy_status
+                            },
+                            
+                            # Legacy flat fields for backward compatibility
                             "max_output_tokens": strat_max_tokens,
                             "thinking_text_available": infer_out.thinking_text_available,
                             "input_tokens": infer_out.input_tokens,
@@ -135,6 +191,8 @@ class PrimaryExperiment(BaseExperiment):
                             "energy_total_j": energy_reading.energy_total_j,
                             "energy_prefill_j": energy_reading.energy_prefill_j,
                             "energy_decode_j": energy_reading.energy_decode_j,
+                            "energy_embedding_j": energy_reading.energy_embedding_j,
+                            "energy_retrieval_j": energy_reading.energy_retrieval_j,
                             "energy_overhead_j": energy_reading.energy_overhead_j,
                             "energy_net_j": energy_reading.energy_net_j,
                             "idle_power_w": energy_reading.idle_power_w,
@@ -149,8 +207,8 @@ class PrimaryExperiment(BaseExperiment):
                             "raw_output": infer_out.raw_output,
                             "extracted_answer": eval_res.extracted_answer,
                             "answer_parse_success": eval_res.answer_parse_success,
-                            "answer_correct": eval_res.answer_correct,
-                            "error_type": None,
+                            "exact_match": eval_res.exact_match,
+                            "error_type": record_error_type,
                             "error_message": None
                         }
                     else:
@@ -158,15 +216,47 @@ class PrimaryExperiment(BaseExperiment):
                             "run_id": self.run_id,
                             "experiment_name": self.experiment_name,
                             "sample_id": sample.id,
+                            "task_type": self.evaluator.config.task_type.value if hasattr(self.evaluator.config.task_type, "value") else str(self.evaluator.config.task_type),
                             "model": self.model_name,
                             "backend": self.operator,
                             "strategy": strategy.value,
                             "repetition": rep,
                             "condition_key": cond_key,
                             "status": "failed",
+                            "reference_answer": sample.answer,
+                            "raw_response": None,
+                            "normalized_response": None,
+                            "parsed_answer": None,
+                            "evaluation_status": EvaluationStatus.EVALUATOR_ERROR.value,
+                            "answer_correct": False,
+                            "metric_values": {},
+                            "parse_success": False,
                             "generation_stop_reason": "error",
                             "generation_truncated": False,
                             "generation_complete": False,
+                            "actual_token_counts": {
+                                "configured_max_tokens": strat_max_tokens,
+                                "actual_output_tokens": 0,
+                                "actual_thinking_tokens": None,
+                                "actual_visible_tokens": 0,
+                                "total_generated_tokens": 0
+                            },
+                            "latency_metrics": {
+                                "ttft_ms": None,
+                                "generation_latency_ms": None,
+                                "total_latency_ms": None
+                            },
+                            "energy_metrics": {
+                                "energy_total_j": None,
+                                "energy_prefill_j": None,
+                                "energy_decode_j": None,
+                                "energy_embedding_j": None,
+                                "energy_retrieval_j": None,
+                                "energy_overhead_j": None,
+                                "energy_net_j": None,
+                                "idle_power_w": None,
+                                "energy_status": "unavailable"
+                            },
                             "max_output_tokens": strat_max_tokens,
                             "thinking_text_available": False,
                             "input_tokens": 0,

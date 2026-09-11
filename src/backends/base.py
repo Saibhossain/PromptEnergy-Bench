@@ -54,15 +54,32 @@ class ModelBackend(ABC):
         """Loads or validates the model."""
         pass
 
+    def _normalize_messages(
+        self,
+        messages: Optional[Any] = None,
+        prompt: Optional[Any] = None
+    ) -> List[Dict[str, str]]:
+        """Normalizes messages/prompt input into a List[Dict[str, str]]."""
+        if messages is None and prompt is not None:
+            messages = prompt
+        if isinstance(messages, str):
+            return [{"role": "user", "content": messages}]
+        if isinstance(messages, list):
+            return messages
+        if messages is None:
+            return [{"role": "user", "content": ""}]
+        return messages
+
     @abstractmethod
     def generate(
         self,
-        messages: List[Dict[str, str]],
+        messages: Optional[List[Dict[str, str]]] = None,
         temperature: float = 0.0,
         max_tokens: Optional[int] = 1024,
         seed: Optional[int] = 42,
         top_p: float = 1.0,
-        stream: bool = True
+        stream: bool = True,
+        prompt: Optional[Any] = None
     ) -> InferenceOutput:
         """Executes generation against the model and returns standardized InferenceOutput."""
         pass

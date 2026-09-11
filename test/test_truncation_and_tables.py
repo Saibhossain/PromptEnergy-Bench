@@ -361,6 +361,58 @@ class TestTruncationAndTables(unittest.TestCase):
         self.assertEqual(len(df_d), 1)
         self.assertEqual(df_d.iloc[0]["device"], "workstation")
 
+    def test_19_get_max_tokens_for_strategy(self):
+        """19: Tests BaseExperiment.get_max_tokens_for_strategy lookup."""
+        from src.experiments.base_experiment import BaseExperiment
+        
+        class DummyExp(BaseExperiment):
+            def run(self):
+                pass
+                
+        # Mock minimal attributes
+        exp = object.__new__(DummyExp)
+        exp.metadata = {
+            "generation": {
+                "default_max_tokens": 512,
+                "strategy_max_tokens": {
+                    "zero_shot_direct": 256,
+                    "long_cot": 1024
+                }
+            }
+        }
+        exp.config = {}
+        
+        self.assertEqual(exp.get_max_tokens_for_strategy("zero_shot_direct"), 256)
+        self.assertEqual(exp.get_max_tokens_for_strategy("long_cot"), 1024)
+        self.assertEqual(exp.get_max_tokens_for_strategy("unknown_strat"), 512)
+
+    def test_20_energy_reading_dataclass_fields(self):
+        """20: Tests EnergyReading dataclass contains all expected energy metric fields."""
+        from src.monitoring.energy import EnergyReading
+        
+        er = EnergyReading(
+            energy_total_j=1.5,
+            energy_prefill_j=0.5,
+            energy_decode_j=1.0,
+            energy_embedding_j=0.1,
+            energy_retrieval_j=0.2,
+            energy_overhead_j=0.05,
+            energy_net_j=1.45,
+            idle_power_w=0.8,
+            active_power_w=12.5,
+            energy_measurement_method="apple_powermetrics",
+            energy_quality="hardware_reported",
+            energy_measurement_level="soc_package",
+            energy_status="measured"
+        )
+        self.assertEqual(er.energy_total_j, 1.5)
+        self.assertEqual(er.energy_embedding_j, 0.1)
+        self.assertEqual(er.energy_retrieval_j, 0.2)
+        d = er.to_dict()
+        self.assertIn("energy_embedding_j", d)
+        self.assertIn("energy_retrieval_j", d)
+
 
 if __name__ == "__main__":
     unittest.main()
+

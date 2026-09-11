@@ -11,7 +11,7 @@ CPU,Apple M1
 GPU,Apple M1 GPU (Count: 1)
 System RAM,8 GB
 Evaluation Examples,50
-Prompt Strategies,5
+Prompt Strategies,1
 Warmup Runs,1
 Repetitions,1
 Max Generation Tokens,Zero-shot Direct: 256 / Few-shot (3): 256 / Zero-shot CoT: 512 / Short CoT: 512 / Long CoT: 1024

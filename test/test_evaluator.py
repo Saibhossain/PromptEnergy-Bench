@@ -1,22 +1,48 @@
-"""Unit tests for GSM8K answer extraction and evaluation."""
+"""Unit tests for GSM8K answer extraction and evaluation.
+
+Tests:
+- Correct answers (explicit ####, LaTeX \boxed, phrases, fallback numbers, fractions, currencies)
+- Incorrect answers
+- Parsing failures (empty, invalid text)
+- Truncated generations (strict rejection under all circumstances)
+- Exact-match validation
+"""
 
 import unittest
-from src.evaluation.gsm8k_evaluator import GSM8KEvaluator
+from src.evaluation.gsm8k_evaluator import GSM8KEvaluator, EvaluationResult
 
 
 class TestGSM8KEvaluator(unittest.TestCase):
 
-    def test_explicit_hash_marker(self):
+    def test_explicit_hash_marker_correct(self):
         output = "To find the eggs, we calculate 16 - 3 - 4 = 9.\n9 * 2 = 18.\n#### 18"
         res = GSM8KEvaluator.evaluate(output, "18")
         self.assertTrue(res.answer_parse_success)
         self.assertTrue(res.answer_correct)
+        self.assertTrue(res.exact_match)
         self.assertEqual(res.extracted_answer, "18")
+
+    def test_explicit_hash_marker_incorrect(self):
+        output = "Calculation gave: #### 42"
+        res = GSM8KEvaluator.evaluate(output, "18")
+        self.assertTrue(res.answer_parse_success)
+        self.assertFalse(res.answer_correct)
+        self.assertFalse(res.exact_match)
+        self.assertEqual(res.extracted_answer, "42")
+
+    def test_boxed_latex_marker(self):
+        output = "The total area is \\boxed{144} square meters."
+        res = GSM8KEvaluator.evaluate(output, "144")
+        self.assertTrue(res.answer_parse_success)
+        self.assertTrue(res.answer_correct)
+        self.assertEqual(res.extracted_answer, "144")
 
     def test_currency_and_comma_formatting(self):
         output = "The total value increased.\n#### $70,000"
         res = GSM8KEvaluator.evaluate(output, "70000")
+        self.assertTrue(res.answer_parse_success)
         self.assertTrue(res.answer_correct)
+        self.assertEqual(res.extracted_answer, "70000")
 
     def test_phrase_extraction(self):
         output = "First step is adding 5 + 5. The final answer is 10."
@@ -32,7 +58,6 @@ class TestGSM8KEvaluator(unittest.TestCase):
         self.assertTrue(res2.answer_correct)
 
     def test_precedence_over_earlier_numbers(self):
-        # Example from prompt: "The building has 120 units... 30 are unoccupied. #### 30"
         output = "The building has 120 units... 30 are unoccupied. #### 30"
         res = GSM8KEvaluator.evaluate(output, "30")
         self.assertTrue(res.answer_parse_success)
@@ -48,19 +73,34 @@ class TestGSM8KEvaluator(unittest.TestCase):
         self.assertTrue(res2.answer_correct)
         self.assertEqual(res2.extracted_answer, "1200")
 
-    def test_truncation_rejection_without_explicit_answer(self):
-        truncated_output = "<think>\nThe building has 120 units and 30 are"
-        res = GSM8KEvaluator.evaluate(truncated_output, "30", generation_truncated=True)
-        self.assertFalse(res.answer_parse_success)
-        self.assertFalse(res.answer_correct)
-        self.assertIsNone(res.extracted_answer)
+    def test_parsing_failure_empty_and_unparseable(self):
+        res_empty = GSM8KEvaluator.evaluate("", "18")
+        self.assertFalse(res_empty.answer_parse_success)
+        self.assertFalse(res_empty.answer_correct)
+        self.assertIsNone(res_empty.extracted_answer)
 
-    def test_truncation_with_explicit_answer_present(self):
-        output = "Step 1: 15+15=30. #### 30"
-        res = GSM8KEvaluator.evaluate(output, "30", generation_truncated=True)
-        self.assertTrue(res.answer_parse_success)
-        self.assertTrue(res.answer_correct)
-        self.assertEqual(res.extracted_answer, "30")
+        res_unparseable = GSM8KEvaluator.evaluate("I do not know the answer to this question.", "18")
+        self.assertFalse(res_unparseable.answer_parse_success)
+        self.assertFalse(res_unparseable.answer_correct)
+        self.assertIsNone(res_unparseable.extracted_answer)
+
+    def test_strict_truncation_rejection(self):
+        # Truncated in thinking trace
+        truncated_thinking = "<think>\nJanet has 16 eggs. 16 - 7 = 9. 9 * 2 = 18. The answer is"
+        res1 = GSM8KEvaluator.evaluate(truncated_thinking, "18", generation_truncated=True)
+        self.assertFalse(res1.answer_parse_success)
+        self.assertFalse(res1.answer_correct)
+        self.assertFalse(res1.exact_match)
+        self.assertIsNone(res1.extracted_answer)
+        self.assertTrue(res1.generation_truncated)
+
+        # Truncated even if partial #### was generated
+        truncated_hash = "Calculation: #### 18"
+        res2 = GSM8KEvaluator.evaluate(truncated_hash, "18", generation_truncated=True)
+        self.assertFalse(res2.answer_parse_success)
+        self.assertFalse(res2.answer_correct)
+        self.assertIsNone(res2.extracted_answer)
+        self.assertTrue(res2.generation_truncated)
 
 
 if __name__ == "__main__":

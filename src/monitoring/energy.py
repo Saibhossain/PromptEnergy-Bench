@@ -7,6 +7,8 @@ and unavailable meters.
 
 import os
 import platform
+import re
+import subprocess
 import threading
 import time
 from abc import ABC, abstractmethod
@@ -19,6 +21,8 @@ class EnergyReading:
     energy_total_j: Optional[float] = None
     energy_prefill_j: Optional[float] = None
     energy_decode_j: Optional[float] = None
+    energy_embedding_j: Optional[float] = None
+    energy_retrieval_j: Optional[float] = None
     energy_overhead_j: Optional[float] = None
     energy_net_j: Optional[float] = None
     idle_power_w: Optional[float] = None
@@ -94,7 +98,7 @@ class CodeCarbonMonitor(EnergyMonitor):
         try:
             from codecarbon import OfflineEmissionsTracker
             # Suppress excessive logging
-            os.environ["CODECARBON_LOG_LEVEL"] = "WARNING"
+            os.environ["CODECARBON_LOG_LEVEL"] = "ERROR"
             self.tracker = OfflineEmissionsTracker(
                 country_iso_code=self.country_iso_code,
                 measure_power_secs=0.1,
@@ -103,7 +107,7 @@ class CodeCarbonMonitor(EnergyMonitor):
             self.tracker.start()
             self.start_time = time.perf_counter()
             self.is_monitoring = True
-        except Exception as e:
+        except Exception:
             self.tracker = None
             self.is_monitoring = False
 
@@ -146,6 +150,152 @@ class CodeCarbonMonitor(EnergyMonitor):
         except Exception:
             self.is_monitoring = False
             return NullEnergyMonitor().stop()
+
+
+class AppleSiliconHardwareMonitor(EnergyMonitor):
+    """Direct hardware power and energy measurement on Apple Silicon using powermetrics.
+    
+    Reads real SoC hardware counters (CPU, GPU, ANE) via /usr/bin/powermetrics.
+    Requires passwordless sudo permissions.
+    """
+
+    def __init__(self, poll_interval_ms: int = 100):
+        super().__init__()
+        self.poll_interval_ms = poll_interval_ms
+        self.power_samples: List[float] = []  # Power in Watts
+        self.sample_times: List[float] = []
+        self._thread: Optional[threading.Thread] = None
+        self._stop_event = threading.Event()
+        self.process: Optional[subprocess.Popen] = None
+        self.start_time = 0.0
+
+    def _poll_powermetrics(self):
+        cmd = [
+            "sudo", "-n", "powermetrics",
+            "-i", str(self.poll_interval_ms),
+            "-s", "cpu_power,gpu_power"
+        ]
+        try:
+            self.process = subprocess.Popen(
+                cmd,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.DEVNULL,
+                text=True,
+                bufsize=1
+            )
+        except Exception:
+            return
+
+        combined_pat = re.compile(r"Combined Power \(CPU \+ GPU \+ ANE\):\s*([0-9.]+)\s*mW", re.IGNORECASE)
+        cpu_pat = re.compile(r"CPU Power:\s*([0-9.]+)\s*mW", re.IGNORECASE)
+        gpu_pat = re.compile(r"GPU Power:\s*([0-9.]+)\s*mW", re.IGNORECASE)
+
+        cur_cpu_mw = 0.0
+
+        if not self.process.stdout:
+            return
+
+        for line in iter(self.process.stdout.readline, ''):
+            if self._stop_event.is_set():
+                break
+            line_str = line.strip()
+
+            comb_m = combined_pat.search(line_str)
+            if comb_m:
+                p_w = float(comb_m.group(1)) / 1000.0
+                now = time.perf_counter()
+                self.power_samples.append(p_w)
+                self.sample_times.append(now)
+                continue
+
+            cpu_m = cpu_pat.search(line_str)
+            if cpu_m:
+                cur_cpu_mw = float(cpu_m.group(1))
+                continue
+
+            gpu_m = gpu_pat.search(line_str)
+            if gpu_m:
+                gpu_mw = float(gpu_m.group(1))
+                p_w = (cur_cpu_mw + gpu_mw) / 1000.0
+                now = time.perf_counter()
+                self.power_samples.append(p_w)
+                self.sample_times.append(now)
+
+    def start(self, phase: str = "total") -> None:
+        self.power_samples = []
+        self.sample_times = []
+        self._stop_event.clear()
+        self.start_time = time.perf_counter()
+        self.is_monitoring = True
+        self._thread = threading.Thread(target=self._poll_powermetrics, daemon=True)
+        self._thread.start()
+
+    def stop(self, phase: str = "total") -> EnergyReading:
+        elapsed = time.perf_counter() - self.start_time
+        self.is_monitoring = False
+        self._stop_event.set()
+
+        if self.process:
+            try:
+                self.process.terminate()
+                self.process.wait(timeout=0.5)
+            except Exception:
+                try:
+                    self.process.kill()
+                except Exception:
+                    pass
+
+        if self._thread:
+            self._thread.join(timeout=1.0)
+
+        # Fallback if execution was shorter than sampling interval
+        if not self.power_samples:
+            try:
+                out = subprocess.check_output(
+                    ["sudo", "-n", "powermetrics", "-n", "1", "-i", "100", "-s", "cpu_power,gpu_power"],
+                    stderr=subprocess.DEVNULL,
+                    text=True,
+                    timeout=2.0
+                )
+                m = re.search(r"Combined Power \(CPU \+ GPU \+ ANE\):\s*([0-9.]+)\s*mW", out)
+                if m:
+                    p_w = float(m.group(1)) / 1000.0
+                    self.power_samples.append(p_w)
+                    self.sample_times.append(time.perf_counter())
+            except Exception:
+                pass
+
+        if not self.power_samples:
+            return NullEnergyMonitor().stop()
+
+        if len(self.power_samples) == 1:
+            avg_power = self.power_samples[0]
+            total_energy_j = avg_power * max(0.001, elapsed)
+        else:
+            total_energy_j = 0.0
+            for i in range(1, len(self.power_samples)):
+                dt = self.sample_times[i] - self.sample_times[i - 1]
+                avg_p = (self.power_samples[i] + self.power_samples[i - 1]) / 2.0
+                total_energy_j += avg_p * dt
+            avg_power = sum(self.power_samples) / len(self.power_samples)
+
+        net_energy = None
+        if self.idle_power_w is not None and elapsed > 0:
+            net_energy = max(0.0, total_energy_j - (self.idle_power_w * elapsed))
+
+        return EnergyReading(
+            energy_total_j=round(total_energy_j, 4),
+            energy_prefill_j=None,
+            energy_decode_j=None,
+            energy_overhead_j=None,
+            energy_net_j=round(net_energy, 4) if net_energy is not None else None,
+            idle_power_w=round(self.idle_power_w, 2) if self.idle_power_w else None,
+            active_power_w=round(avg_power, 2),
+            energy_measurement_method="apple_powermetrics",
+            energy_quality="hardware_reported",
+            energy_measurement_level="soc_package",
+            energy_status="measured"
+        )
 
 
 class NvidiaGPUMonitor(EnergyMonitor):
@@ -254,7 +404,6 @@ class PhysicalMeterMonitor(EnergyMonitor):
 
     def stop(self, phase: str = "total") -> EnergyReading:
         self.is_monitoring = False
-        # External hardware reading
         return EnergyReading(
             energy_total_j=None,
             energy_measurement_method="physical_meter",
@@ -262,6 +411,22 @@ class PhysicalMeterMonitor(EnergyMonitor):
             energy_measurement_level="whole_system",
             energy_status="unavailable"
         )
+
+
+def _check_sudo_powermetrics() -> bool:
+    """Checks if passwordless sudo powermetrics is functional."""
+    if platform.system() != "Darwin":
+        return False
+    try:
+        res = subprocess.run(
+            ["sudo", "-n", "powermetrics", "-n", "1", "-i", "10", "-s", "cpu_power"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=1.0
+        )
+        return res.returncode == 0
+    except Exception:
+        return False
 
 
 def get_energy_monitor(mode: str = "automatic") -> EnergyMonitor:
@@ -274,13 +439,21 @@ def get_energy_monitor(mode: str = "automatic") -> EnergyMonitor:
         return PhysicalMeterMonitor()
     elif mode in ("nvidia", "nvml", "nvidia_smi"):
         return NvidiaGPUMonitor()
+    elif mode in ("powermetrics", "apple_powermetrics"):
+        if _check_sudo_powermetrics():
+            return AppleSiliconHardwareMonitor()
+        return ApplePowerMonitor()
     elif mode in ("apple", "apple_power", "apple_estimated"):
+        if _check_sudo_powermetrics():
+            return AppleSiliconHardwareMonitor()
         return ApplePowerMonitor()
     elif mode in ("codecarbon", "software", "software_estimate"):
         return CodeCarbonMonitor()
     elif mode == "automatic":
         # Auto-detect best supported monitor
         if platform.system() == "Darwin":
+            if _check_sudo_powermetrics():
+                return AppleSiliconHardwareMonitor()
             return ApplePowerMonitor()
         try:
             import pynvml

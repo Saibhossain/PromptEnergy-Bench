@@ -22,13 +22,15 @@ class OpenAIBackend(ModelBackend):
 
     def generate(
         self,
-        messages: List[Dict[str, str]],
+        messages: Optional[List[Dict[str, str]]] = None,
         temperature: float = 0.0,
         max_tokens: Optional[int] = 1024,
         seed: Optional[int] = 42,
         top_p: float = 1.0,
-        stream: bool = True
+        stream: bool = True,
+        prompt: Optional[Any] = None
     ) -> InferenceOutput:
+        messages = self._normalize_messages(messages, prompt)
         if not self.is_loaded:
             self.load_model()
 

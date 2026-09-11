@@ -7,11 +7,11 @@ from typing import Dict, Any, Set, List, Optional, Tuple
 
 
 def compute_condition_key(
-    experiment_name: str,
-    sample_id: str,
-    model: str,
-    strategy: str,
-    repetition: int,
+    experiment_name: str = "",
+    sample_id: str = "",
+    model: str = "",
+    strategy: str = "",
+    repetition: int = 1,
     context_type: str = "none",
     context_target_tokens: int = 0,
     retriever: str = "none",

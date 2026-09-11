@@ -1,11 +1,18 @@
 """Unit tests for prompt formatting, 3-shot determinism, and hashing."""
 
+import os
+import sys
 import unittest
-from src.prompts.gsm8k_prompts import (
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+from src.prompts.prompt_registry import (
     PromptStrategy,
     format_gsm8k_prompt,
     get_prompt_hash,
-    FIXED_FEW_SHOT_EXAMPLES
+    FIXED_FEW_SHOT_EXAMPLES,
+    FIXED_FEW_SHOT_EXAMPLES_GSM8K,
+    validate_prompt_integrity
 )
 
 
@@ -44,7 +51,6 @@ class TestPrompts(unittest.TestCase):
         self.assertEqual(len(h1), 64)
 
     def test_prompt_validation(self):
-        from src.prompts.gsm8k_prompts import validate_prompt_integrity
         validate_prompt_integrity()
 
 
