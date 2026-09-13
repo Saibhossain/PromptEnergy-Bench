@@ -1,0 +1,5 @@
+# Prompt Strategy Comparison on DATASET
+
+| Strategy         |   Total Accuracy (%) | Valid Accuracy (%)   | Valid Samples   |   Mean Thinking Tokens |   Mean Visible Output Tokens |   Mean Total Output Tokens |   Throughput (tok/s) |   TTFT (ms) |   Total Latency (ms) |   Mean CPU (%) |   Peak CPU (%) |   RAM (GB) |   Energy (J) | Energy / Correct (J)   |   Accuracy / Joule |   Truncation Rate (%) |
+|:-----------------|---------------------:|:---------------------|:----------------|-----------------------:|-----------------------------:|---------------------------:|---------------------:|------------:|---------------------:|---------------:|---------------:|-----------:|-------------:|:-----------------------|-------------------:|----------------------:|
+| BM25 RAG (top-1) |                    0 | N/A                  | 0/1             |                    256 |                            0 |                        256 |                 9.61 |      7542.1 |              34191.5 |           99.7 |            100 |      15.84 |      1182.21 | N/A                    |                  0 |                   100 |
