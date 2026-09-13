@@ -1,0 +1,14 @@
+[2026-09-13 11:59:22] [INFO] Initialized Experiment: primary_exp_gsm8k
+[2026-09-13 11:59:22] [INFO] Run ID: primary_exp_gsm8k__windows_10-core_pc__2026-09-13_11-59-15
+[2026-09-13 11:59:22] [INFO] Run Directory: results\primary_exp_gsm8k\windows_10-core_pc\2026-09-13_11-59-15
+[2026-09-13 11:59:22] [INFO] Model: qwen3.5:0.8b (Backend: ollama, Format: gguf)
+[2026-09-13 11:59:22] [INFO] Device: windows_10-core_pc
+[2026-09-13 11:59:22] [INFO] Evaluation Size: 2 (Evaluation Split: TEST)
+[2026-09-13 11:59:22] [INFO] Loading GSM8K evaluation dataset (TEST split)...
+[2026-09-13 11:59:22] [INFO] Loaded 2 evaluation examples.
+[2026-09-13 11:59:22] [INFO] Executing 1 warmup run(s)...
+[2026-09-13 11:59:36] [INFO] Warmup 1/1 completed.
+[2026-09-13 11:59:36] [INFO] Beginning main evaluation across 10 inference requests...
+[2026-09-13 12:05:47] [INFO] Experiment completed. Summary saved to results\primary_exp_gsm8k\windows_10-core_pc\2026-09-13_11-59-15\summary.json
+[2026-09-13 12:05:47] [INFO] Generated publication tables in results\primary_exp_gsm8k\windows_10-core_pc\2026-09-13_11-59-15\tables
+[2026-09-13 12:06:00] [INFO] Generated publication plots in results\primary_exp_gsm8k\windows_10-core_pc\2026-09-13_11-59-15

@@ -8,7 +8,7 @@ Supports:
 
 import re
 from dataclasses import dataclass
-from typing import List, Optional, Tuple, Set
+from typing import List, Optional, Tuple, Set, Any, Dict
 from src.data.gsm8k import GSM8KRecord, load_gsm8k
 
 
@@ -56,25 +56,26 @@ class ContextBuilder:
         }
         return {w for w in words if w not in stops}
 
-    def _rank_by_relevance(self, target_question: str) -> List[int]:
+    def _rank_by_relevance(self, target_question: str, exclude_id: Optional[str] = None) -> List[int]:
         target_kws = self._extract_keywords(target_question)
-        if not target_kws:
-            return list(range(len(self.train_records)))
-
         scores = []
         for idx, kws in enumerate(self.doc_keywords):
-            overlap = len(target_kws.intersection(kws))
+            if exclude_id and self.train_records[idx].id == exclude_id:
+                continue
+            overlap = len(target_kws.intersection(kws)) if target_kws else 0
             scores.append((overlap, idx))
 
         # Higher overlap first
         scores.sort(key=lambda x: x[0], reverse=True)
         return [idx for _, idx in scores]
 
-    def _rank_by_distractor(self, target_question: str) -> List[int]:
+    def _rank_by_distractor(self, target_question: str, exclude_id: Optional[str] = None) -> List[int]:
         target_kws = self._extract_keywords(target_question)
         scores = []
         for idx, kws in enumerate(self.doc_keywords):
-            overlap = len(target_kws.intersection(kws))
+            if exclude_id and self.train_records[idx].id == exclude_id:
+                continue
+            overlap = len(target_kws.intersection(kws)) if target_kws else 0
             scores.append((overlap, idx))
 
         # Lowest overlap first (zero overlap prioritized)
@@ -83,15 +84,41 @@ class ContextBuilder:
 
     def build_context(
         self,
-        target_record: GSM8KRecord,
-        context_type: str,
-        target_tokens: int
+        target_record: Optional[Any] = None,
+        context_type: str = "relevant",
+        target_tokens: int = 0,
+        exclude_id: Optional[str] = None,
+        target_question: Optional[str] = None
     ) -> ScaledContext:
-        """Builds a context string of approximately target_tokens length."""
+        """Builds a context string of approximately target_tokens length.
+        
+        Args:
+            target_record: Target sample (GSM8KRecord) containing question and ID.
+            context_type: 'relevant' (default) or 'distractor'.
+            target_tokens: Desired token length (e.g., 0, 512, 1024, 2048, 4096, 8192).
+            exclude_id: Optional ID to exclude from reference context (prevents contamination).
+            target_question: Optional direct query string if target_record is omitted.
+        """
+        # Extract target question and exclude_id
+        q_text = ""
+        ex_id = exclude_id
+        if target_record is not None:
+            if hasattr(target_record, "question"):
+                q_text = target_record.question
+            elif isinstance(target_record, dict):
+                q_text = target_record.get("question", "")
+            if ex_id is None:
+                if hasattr(target_record, "id"):
+                    ex_id = target_record.id
+                elif isinstance(target_record, dict):
+                    ex_id = target_record.get("id")
+        elif target_question:
+            q_text = target_question
+
         if context_type == "relevant":
-            indices = self._rank_by_relevance(target_record.question)
+            indices = self._rank_by_relevance(q_text, exclude_id=ex_id)
         elif context_type == "distractor":
-            indices = self._rank_by_distractor(target_record.question)
+            indices = self._rank_by_distractor(q_text, exclude_id=ex_id)
         else:
             raise ValueError(f"Unknown context_type: {context_type}. Expected 'relevant' or 'distractor'.")
 

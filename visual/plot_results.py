@@ -79,7 +79,16 @@ STRATEGY_ORDER = [
     "few_shot_3",
     "zero_shot_cot",
     "short_cot",
-    "long_cot"
+    "long_cot",
+    "ctx_0",
+    "ctx_512",
+    "ctx_1024",
+    "ctx_2048",
+    "ctx_4096",
+    "ctx_8192",
+    "rag_top_1",
+    "rag_top_3",
+    "rag_top_5"
 ]
 
 STRATEGY_LABELS = {
@@ -87,13 +96,34 @@ STRATEGY_LABELS = {
     "few_shot_3": "Few-shot (3)",
     "zero_shot_cot": "Zero-shot CoT",
     "short_cot": "Short CoT",
-    "long_cot": "Long CoT"
+    "long_cot": "Long CoT",
+    "ctx_0": "Context 0 tokens",
+    "ctx_512": "Context 512 tokens",
+    "ctx_1024": "Context 1024 tokens",
+    "ctx_2048": "Context 2048 tokens",
+    "ctx_4096": "Context 4096 tokens",
+    "ctx_8192": "Context 8192 tokens",
+    "rag_top_1": "BM25 RAG (top-1)",
+    "rag_top_3": "BM25 RAG (top-3)",
+    "rag_top_5": "BM25 RAG (top-5)"
 }
 
-# Consistent color mapping
-_palette_colors = sns.color_palette("colorblind", n_colors=len(STRATEGY_ORDER))
-STRATEGY_PALETTE = dict(zip(STRATEGY_ORDER, _palette_colors))
-STRATEGY_DISPLAY_PALETTE = {STRATEGY_LABELS[k]: v for k, v in STRATEGY_PALETTE.items()}
+
+def get_strategy_label(strat: str) -> str:
+    if strat in STRATEGY_LABELS:
+        return STRATEGY_LABELS[strat]
+    if str(strat).startswith("ctx_"):
+        return f"Context {strat[4:]} tokens"
+    if str(strat).startswith("rag_top_"):
+        return f"BM25 RAG (top-{strat[8:]})"
+    return str(strat).replace("_", " ").title()
+
+
+def get_palette_for_items(items: List[Any]) -> Dict[str, Any]:
+    """Dynamically builds a color mapping for a list of items."""
+    unique_items = [str(x) for x in list(dict.fromkeys(items))]
+    colors = sns.color_palette("colorblind", n_colors=max(len(unique_items), 1))
+    return dict(zip(unique_items, colors))
 
 
 def save_publication_figure(fig: plt.Figure, output_dir: str, stem: str) -> List[str]:
@@ -137,9 +167,12 @@ def load_and_filter_results(
 
     # Map strategy display names and categories
     if "strategy" in df_all.columns:
-        df_all["strategy_display"] = df_all["strategy"].map(lambda s: STRATEGY_LABELS.get(s, s))
-        # Ensure categorical order
-        cat_order = [STRATEGY_LABELS.get(s, s) for s in STRATEGY_ORDER if s in df_all["strategy"].unique()]
+        df_all["strategy_display"] = df_all["strategy"].map(get_strategy_label)
+        cat_order = [get_strategy_label(s) for s in STRATEGY_ORDER if s in df_all["strategy"].unique()]
+        for s in df_all["strategy"].unique():
+            disp = get_strategy_label(s)
+            if disp not in cat_order:
+                cat_order.append(disp)
         df_all["strategy_display"] = pd.Categorical(df_all["strategy_display"], categories=cat_order, ordered=True)
 
     df_success = df_all[df_all["status"] == "success"].copy() if "status" in df_all.columns else df_all.copy()
@@ -156,12 +189,13 @@ def plot_01_accuracy_by_strategy(df_all: pd.DataFrame, reps: int, out_dir: str) 
     acc_df = df_all.groupby(["strategy", "strategy_display"], as_index=False, observed=True)["answer_correct"].mean()
     acc_df["accuracy_pct"] = acc_df["answer_correct"] * 100.0
 
+    palette = get_palette_for_items(acc_df["strategy_display"])
     bars = sns.barplot(
         data=acc_df,
         x="strategy_display",
         y="accuracy_pct",
         hue="strategy_display",
-        palette=STRATEGY_DISPLAY_PALETTE,
+        palette=palette,
         legend=False,
         edgecolor="#333333",
         linewidth=1.0,
@@ -191,12 +225,13 @@ def plot_02_energy_by_strategy(df_success: pd.DataFrame, reps: int, out_dir: str
 
     # If reps > 1 show 95% CI, if reps == 1 show mean without fake CI
     errorbar = ("ci", 95) if reps > 1 else None
+    palette = get_palette_for_items(df_success["strategy_display"])
     bars = sns.barplot(
         data=df_success,
         x="strategy_display",
         y="energy_total_j",
         hue="strategy_display",
-        palette=STRATEGY_DISPLAY_PALETTE,
+        palette=palette,
         legend=False,
         errorbar=errorbar,
         edgecolor="#333333",
@@ -320,7 +355,7 @@ def plot_05_accuracy_energy_pareto(df_all: pd.DataFrame, reps: int, out_dir: str
     pareto_strats = {p["strategy"] for p in pareto_pts}
 
     fig, ax = plt.subplots(figsize=(8.0, 5.5))
-    palette = [STRATEGY_PALETTE.get(s, "#4C72B0") for s in agg["strategy"]]
+    palette = get_palette_for_items(agg["strategy"])
 
     # Scatter of all strategies
     sns.scatterplot(
@@ -328,7 +363,7 @@ def plot_05_accuracy_energy_pareto(df_all: pd.DataFrame, reps: int, out_dir: str
         x="energy_total_j",
         y="accuracy_pct",
         hue="strategy",
-        palette=STRATEGY_PALETTE,
+        palette=palette,
         s=160,
         legend=False,
         edgecolor="#333333",
@@ -345,7 +380,7 @@ def plot_05_accuracy_energy_pareto(df_all: pd.DataFrame, reps: int, out_dir: str
     for _, row in agg.iterrows():
         strat = row["strategy"]
         is_p = strat in pareto_strats
-        label = f"{STRATEGY_LABELS.get(strat, strat)}{' (Pareto)' if is_p else ''}"
+        label = f"{get_strategy_label(strat)}{' (Pareto)' if is_p else ''}"
         ax.annotate(
             label,
             (row["energy_total_j"], row["accuracy_pct"]),
@@ -374,12 +409,13 @@ def plot_06_accuracy_latency(df_all: pd.DataFrame, reps: int, out_dir: str) -> L
     agg["accuracy_pct"] = agg["answer_correct"] * 100.0
 
     fig, ax = plt.subplots(figsize=(7.5, 5.0))
+    palette = get_palette_for_items(agg["strategy"])
     sns.scatterplot(
         data=agg,
         x="total_latency_ms",
         y="accuracy_pct",
         hue="strategy",
-        palette=STRATEGY_PALETTE,
+        palette=palette,
         s=150,
         legend=False,
         edgecolor="#333333",
@@ -389,7 +425,7 @@ def plot_06_accuracy_latency(df_all: pd.DataFrame, reps: int, out_dir: str) -> L
 
     for _, row in agg.iterrows():
         ax.annotate(
-            STRATEGY_LABELS.get(row["strategy"], row["strategy"]),
+            get_strategy_label(row["strategy"]),
             (row["total_latency_ms"], row["accuracy_pct"]),
             xytext=(6, 5),
             textcoords="offset points",
@@ -407,12 +443,13 @@ def plot_07_energy_vs_output_tokens(df_success: pd.DataFrame, reps: int, out_dir
         return []
 
     fig, ax = plt.subplots(figsize=(8.0, 5.2))
+    palette = get_palette_for_items(df_success["strategy"])
     sns.scatterplot(
         data=df_success,
         x="output_tokens",
         y="energy_total_j",
         hue="strategy",
-        palette=STRATEGY_PALETTE,
+        palette=palette,
         alpha=0.75,
         s=45,
         ax=ax
@@ -431,12 +468,13 @@ def plot_08_thinking_tokens_vs_energy(df_success: pd.DataFrame, reps: int, out_d
         return []
 
     fig, ax = plt.subplots(figsize=(8.0, 5.2))
+    palette = get_palette_for_items(th_df["strategy"])
     sns.scatterplot(
         data=th_df,
         x="thinking_tokens",
         y="energy_total_j",
         hue="strategy",
-        palette=STRATEGY_PALETTE,
+        palette=palette,
         alpha=0.8,
         s=50,
         ax=ax
@@ -470,12 +508,13 @@ def plot_09_thinking_tokens_vs_accuracy(df_all: pd.DataFrame, reps: int, out_dir
     agg["accuracy_pct"] = agg["answer_correct"] * 100.0
 
     fig, ax = plt.subplots(figsize=(7.5, 4.8))
+    palette = get_palette_for_items(agg["strategy"])
     sns.scatterplot(
         data=agg,
         x="thinking_tokens",
         y="accuracy_pct",
         hue="strategy",
-        palette=STRATEGY_PALETTE,
+        palette=palette,
         s=160,
         legend=False,
         edgecolor="#333333",
@@ -485,7 +524,7 @@ def plot_09_thinking_tokens_vs_accuracy(df_all: pd.DataFrame, reps: int, out_dir
 
     for _, row in agg.iterrows():
         ax.annotate(
-            STRATEGY_LABELS.get(row["strategy"], row["strategy"]),
+            get_strategy_label(row["strategy"]),
             (row["thinking_tokens"], row["accuracy_pct"]),
             xytext=(6, 5),
             textcoords="offset points",
@@ -512,12 +551,13 @@ def plot_10_efficiency_by_strategy(df_all: pd.DataFrame, reps: int, out_dir: str
     )
 
     fig, ax = plt.subplots(figsize=(7.5, 4.5))
+    palette = get_palette_for_items(agg["strategy_display"])
     bars = sns.barplot(
         data=agg,
         x="strategy_display",
         y="accuracy_per_joule",
         hue="strategy_display",
-        palette=STRATEGY_DISPLAY_PALETTE,
+        palette=palette,
         legend=False,
         edgecolor="#333333",
         linewidth=1.0,
@@ -542,7 +582,7 @@ def plot_11_energy_distribution(df_success: pd.DataFrame, reps: int, out_dir: st
         return []
 
     fig, ax = plt.subplots(figsize=(8.0, 4.8))
-    palette = [STRATEGY_PALETTE.get(s, "#4C72B0") for s in STRATEGY_ORDER if s in df_success["strategy"].unique()]
+    palette = get_palette_for_items(df_success["strategy_display"])
 
     if reps > 1:
         sns.boxplot(data=df_success, x="strategy_display", y="energy_total_j", hue="strategy_display", palette=palette, legend=False, ax=ax, width=0.4, fliersize=2)
@@ -562,7 +602,7 @@ def plot_12_latency_distribution(df_success: pd.DataFrame, reps: int, out_dir: s
         return []
 
     fig, ax = plt.subplots(figsize=(8.0, 4.8))
-    palette = [STRATEGY_PALETTE.get(s, "#4C72B0") for s in STRATEGY_ORDER if s in df_success["strategy"].unique()]
+    palette = get_palette_for_items(df_success["strategy_display"])
 
     if reps > 1:
         sns.boxplot(data=df_success, x="strategy_display", y="total_latency_ms", hue="strategy_display", palette=palette, legend=False, ax=ax, width=0.4, fliersize=2)
@@ -583,12 +623,13 @@ def plot_13_truncation_rate(df_all: pd.DataFrame, reps: int, out_dir: str) -> Li
         "generation_truncated": lambda x: (sum(1 for v in x if v is True) / len(x)) * 100.0 if len(x) > 0 else 0.0
     })
 
+    palette = get_palette_for_items(trunc_df["strategy_display"])
     bars = sns.barplot(
         data=trunc_df,
         x="strategy_display",
         y="generation_truncated",
         hue="strategy_display",
-        palette=STRATEGY_DISPLAY_PALETTE,
+        palette=palette,
         legend=False,
         edgecolor="#333333",
         linewidth=1.0,

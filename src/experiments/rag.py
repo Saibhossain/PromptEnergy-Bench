@@ -22,8 +22,20 @@ class RAGExperiment(BaseExperiment):
             interactive=interactive
         )
 
-        self.top_k_options = [int(k) for k in self.cli_args.get("top_k_list", [1, 3])]
+        top_k_input = self.cli_args.get("top_k_list")
+        if top_k_input is not None:
+            self.top_k_options = [int(k) for k in top_k_input]
+        else:
+            self.top_k_options = [1, 3]
+
+        if self.cli_args.get("include_baseline", False) or self.cli_args.get("include_direct", False):
+            if 0 not in self.top_k_options:
+                self.top_k_options = [0] + self.top_k_options
+
         self.strategy = PromptStrategy.ZERO_SHOT_DIRECT
+        self.config["top_k_list"] = self.top_k_options
+        self.config["strategy"] = self.strategy.value
+        self.config["strategies"] = [f"rag_top_{k}" if k > 0 else "zero_shot_direct" for k in self.top_k_options]
         self.evaluator = get_evaluator(self.config.get("dataset", {}).get("name", "gsm8k"))
 
     def run(self) -> Dict[str, Any]:
@@ -49,16 +61,17 @@ class RAGExperiment(BaseExperiment):
         pbar = tqdm(total=total_steps, desc="RAG Experiment Progress")
 
         for k in self.top_k_options:
+            strat_label = f"rag_top_{k}" if k > 0 else "zero_shot_direct"
             for rep in range(1, self.repetitions + 1):
                 for sample in eval_records:
                     cond_key = compute_condition_key(
                         experiment_name=self.experiment_name,
                         sample_id=sample.id,
                         model=self.model_name,
-                        strategy=f"rag_top_{k}",
+                        strategy=strat_label,
                         repetition=rep,
-                        context_type="bm25_retrieval",
-                        retriever="bm25",
+                        context_type="bm25_retrieval" if k > 0 else "none",
+                        retriever="bm25" if k > 0 else "none",
                         top_k=k
                     )
 
@@ -76,12 +89,13 @@ class RAGExperiment(BaseExperiment):
                     prompt_text = format_gsm8k_prompt(
                         question=sample.question,
                         strategy=self.strategy,
-                        context=retrieval_res.context_text,
-                        allow_context=True
+                        context=retrieval_res.context_text if k > 0 else None,
+                        allow_context=(k > 0)
                     )
 
-                    # Phase 2: Inference with Energy Monitoring
+                    # Phase 2: Inference with Energy & Resource Monitoring
                     self.energy_monitor.start(phase="total")
+                    self.resource_monitor.start()
                     error_type = None
                     error_message = None
                     status = "success"
@@ -101,6 +115,7 @@ class RAGExperiment(BaseExperiment):
                         error_message = str(e)
                         infer_out = None
 
+                    resource_reading = self.resource_monitor.stop()
                     energy_reading = self.energy_monitor.stop(phase="total")
 
                     if infer_out is not None:
@@ -114,7 +129,7 @@ class RAGExperiment(BaseExperiment):
                             raw_response=infer_out.raw_response,
                             generation_truncated=is_truncated,
                             sample_id=sample.id,
-                            context={"retrieved_context": retrieval_res.context_text}
+                            context={"retrieved_context": retrieval_res.context_text} if k > 0 else None
                         )
                         record_error_type = "generation_truncated" if is_truncated else None
 
@@ -125,7 +140,7 @@ class RAGExperiment(BaseExperiment):
                             "task_type": self.evaluator.config.task_type.value if hasattr(self.evaluator.config.task_type, "value") else str(self.evaluator.config.task_type),
                             "model": self.model_name,
                             "backend": self.operator,
-                            "strategy": f"rag_top_{k}",
+                            "strategy": strat_label,
                             "repetition": rep,
                             "condition_key": cond_key,
                             "top_k": k,
@@ -160,7 +175,8 @@ class RAGExperiment(BaseExperiment):
                             "latency_metrics": {
                                 "ttft_ms": infer_out.ttft_ms,
                                 "generation_latency_ms": infer_out.generation_latency_ms,
-                                "total_latency_ms": infer_out.total_latency_ms
+                                "total_latency_ms": infer_out.total_latency_ms,
+                                "retrieval_latency_ms": retrieval_res.retrieval_latency_ms
                             },
                             
                             # Energy metrics
@@ -176,8 +192,12 @@ class RAGExperiment(BaseExperiment):
                                 "energy_status": energy_reading.energy_status
                             },
 
+                            # Resource metrics (CPU, RAM)
+                            "resource_metrics": resource_reading.to_dict(),
+
                             # Legacy flat fields
                             "max_output_tokens": max_tokens,
+                            "thinking_text_available": infer_out.thinking_text_available,
                             "input_tokens": infer_out.input_tokens,
                             "thinking_tokens": infer_out.thinking_tokens,
                             "visible_output_tokens": infer_out.visible_output_tokens,
@@ -188,9 +208,15 @@ class RAGExperiment(BaseExperiment):
                             "ttft_ms": infer_out.ttft_ms,
                             "generation_latency_ms": infer_out.generation_latency_ms,
                             "total_latency_ms": infer_out.total_latency_ms,
+                            "cpu_percent": resource_reading.cpu_percent_mean,
+                            "cpu_percent_peak": resource_reading.cpu_percent_peak,
+                            "ram_used_gb": resource_reading.ram_used_gb_mean,
+                            "ram_percent": resource_reading.ram_percent,
                             "energy_total_j": energy_reading.energy_total_j,
                             "energy_prefill_j": energy_reading.energy_prefill_j,
                             "energy_decode_j": energy_reading.energy_decode_j,
+                            "energy_embedding_j": energy_reading.energy_embedding_j,
+                            "energy_retrieval_j": energy_reading.energy_retrieval_j,
                             "energy_overhead_j": energy_reading.energy_overhead_j,
                             "energy_net_j": energy_reading.energy_net_j,
                             "idle_power_w": energy_reading.idle_power_w,
@@ -218,7 +244,7 @@ class RAGExperiment(BaseExperiment):
                             "task_type": self.evaluator.config.task_type.value if hasattr(self.evaluator.config.task_type, "value") else str(self.evaluator.config.task_type),
                             "model": self.model_name,
                             "backend": self.operator,
-                            "strategy": f"rag_top_{k}",
+                            "strategy": strat_label,
                             "repetition": rep,
                             "condition_key": cond_key,
                             "top_k": k,
@@ -247,7 +273,8 @@ class RAGExperiment(BaseExperiment):
                             "latency_metrics": {
                                 "ttft_ms": None,
                                 "generation_latency_ms": None,
-                                "total_latency_ms": None
+                                "total_latency_ms": None,
+                                "retrieval_latency_ms": retrieval_res.retrieval_latency_ms
                             },
                             "energy_metrics": {
                                 "energy_total_j": None,
@@ -260,7 +287,9 @@ class RAGExperiment(BaseExperiment):
                                 "idle_power_w": None,
                                 "energy_status": "unavailable"
                             },
+                            "resource_metrics": resource_reading.to_dict(),
                             "max_output_tokens": max_tokens,
+                            "thinking_text_available": False,
                             "input_tokens": 0,
                             "thinking_tokens": None,
                             "visible_output_tokens": 0,
@@ -271,6 +300,10 @@ class RAGExperiment(BaseExperiment):
                             "ttft_ms": None,
                             "generation_latency_ms": None,
                             "total_latency_ms": None,
+                            "cpu_percent": resource_reading.cpu_percent_mean,
+                            "cpu_percent_peak": resource_reading.cpu_percent_peak,
+                            "ram_used_gb": resource_reading.ram_used_gb_mean,
+                            "ram_percent": resource_reading.ram_percent,
                             "energy_total_j": None,
                             "energy_prefill_j": None,
                             "energy_decode_j": None,

@@ -10,7 +10,7 @@ from src.monitoring.energy import (
     get_energy_monitor
 )
 from src.monitoring.latency import LatencyTracker
-from src.monitoring.resources import ResourceSampler
+from src.monitoring.resources import ResourceSampler, BackgroundResourceMonitor, ResourceReading, ResourceSnapshot
 
 __all__ = [
     "EnergyMonitor",
@@ -22,5 +22,8 @@ __all__ = [
     "NullEnergyMonitor",
     "get_energy_monitor",
     "LatencyTracker",
-    "ResourceSampler"
+    "ResourceSampler",
+    "BackgroundResourceMonitor",
+    "ResourceReading",
+    "ResourceSnapshot"
 ]

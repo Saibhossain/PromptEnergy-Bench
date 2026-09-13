@@ -39,3 +39,16 @@ devices:
     default_energy_method: "codecarbon_estimated"
     default_operator: "llama.cpp"
     default_model_format: "gguf"
+
+  windows_10core_pc:
+    device_name: "Windows 10-Core PC"
+    os: "Windows"
+    cpu: "10-Core x64 CPU"
+    gpu_available: false
+    gpu_count: 0
+    gpu_name: null
+    gpu_vram_gb: null
+    ram_gb: 32
+    default_energy_method: "codecarbon_estimated"
+    default_operator: "ollama"
+    default_model_format: "gguf"

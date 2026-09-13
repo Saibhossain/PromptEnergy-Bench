@@ -1,0 +1,36 @@
+Strategy,Metric,Mean,Median,Standard Deviation,95% Confidence Interval
+Zero-shot Direct,Total Accuracy,0.08,0.00,0.27,N/A (n=1)
+Zero-shot Direct,Energy (J),316.77,296.38,100.98,N/A (n=1)
+Zero-shot Direct,Total Latency (ms),6954.56,6711.24,1888.25,N/A (n=1)
+Zero-shot Direct,Generation Latency (ms),1425.98,1142.08,1609.18,N/A (n=1)
+Zero-shot Direct,TTFT (ms),5528.57,5506.05,851.54,N/A (n=1)
+Zero-shot Direct,Thinking Tokens,N/A,N/A,N/A,N/A
+Zero-shot Direct,Output Tokens,11.34,8.00,11.69,N/A (n=1)
+Few-shot (3),Total Accuracy,0.18,0.00,0.39,N/A (n=1)
+Few-shot (3),Energy (J),807.08,808.00,122.95,N/A (n=1)
+Few-shot (3),Total Latency (ms),13946.83,14046.47,1214.96,N/A (n=1)
+Few-shot (3),Generation Latency (ms),657.96,620.62,167.77,N/A (n=1)
+Few-shot (3),TTFT (ms),13288.88,13493.24,1150.22,N/A (n=1)
+Few-shot (3),Thinking Tokens,N/A,N/A,N/A,N/A
+Few-shot (3),Output Tokens,5.42,5.00,0.99,N/A (n=1)
+Zero-shot CoT,Total Accuracy,0.80,1.00,0.40,N/A (n=1)
+Zero-shot CoT,Energy (J),2869.60,2794.17,1083.60,N/A (n=1)
+Zero-shot CoT,Total Latency (ms),48414.50,47334.75,18270.62,N/A (n=1)
+Zero-shot CoT,Generation Latency (ms),42500.33,41673.36,17904.51,N/A (n=1)
+Zero-shot CoT,TTFT (ms),5914.18,5815.49,814.98,N/A (n=1)
+Zero-shot CoT,Thinking Tokens,N/A,N/A,N/A,N/A
+Zero-shot CoT,Output Tokens,306.00,303.00,125.89,N/A (n=1)
+Short CoT,Total Accuracy,0.76,1.00,0.43,N/A (n=1)
+Short CoT,Energy (J),1394.11,1239.83,710.61,N/A (n=1)
+Short CoT,Total Latency (ms),24587.64,22416.89,12159.83,N/A (n=1)
+Short CoT,Generation Latency (ms),18646.54,16268.05,12050.61,N/A (n=1)
+Short CoT,TTFT (ms),5941.10,5917.33,823.61,N/A (n=1)
+Short CoT,Thinking Tokens,N/A,N/A,N/A,N/A
+Short CoT,Output Tokens,137.12,122.00,85.07,N/A (n=1)
+Long CoT,Total Accuracy,0.86,1.00,0.35,N/A (n=1)
+Long CoT,Energy (J),3919.54,3021.00,2355.09,N/A (n=1)
+Long CoT,Total Latency (ms),64954.91,50040.56,38964.29,N/A (n=1)
+Long CoT,Generation Latency (ms),58792.54,43789.22,38725.37,N/A (n=1)
+Long CoT,TTFT (ms),6162.38,6043.93,903.10,N/A (n=1)
+Long CoT,Thinking Tokens,N/A,N/A,N/A,N/A
+Long CoT,Output Tokens,411.04,315.50,258.44,N/A (n=1)

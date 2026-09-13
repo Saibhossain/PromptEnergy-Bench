@@ -1,0 +1,14 @@
+[2026-09-13 13:24:11] [INFO] Initialized Experiment: primary_exp_gsm8k
+[2026-09-13 13:24:11] [INFO] Run ID: primary_exp_gsm8k__windows_10-core_pc__2026-09-13_13-23-46
+[2026-09-13 13:24:11] [INFO] Run Directory: results\primary_exp_gsm8k\windows_10-core_pc\2026-09-13_13-23-46
+[2026-09-13 13:24:11] [INFO] Model: gemma3:4b (Backend: ollama, Format: gguf)
+[2026-09-13 13:24:11] [INFO] Device: windows_10-core_pc
+[2026-09-13 13:24:11] [INFO] Evaluation Size: 50 (Evaluation Split: TEST)
+[2026-09-13 13:24:11] [INFO] Loading GSM8K evaluation dataset (TEST split)...
+[2026-09-13 13:24:11] [INFO] Loaded 50 evaluation examples.
+[2026-09-13 13:24:11] [INFO] Executing 1 warmup run(s)...
+[2026-09-13 13:24:38] [INFO] Warmup 1/1 completed.
+[2026-09-13 13:24:38] [INFO] Beginning main evaluation across 250 inference requests...
+[2026-09-13 15:51:54] [INFO] Experiment completed. Summary saved to results\primary_exp_gsm8k\windows_10-core_pc\2026-09-13_13-23-46\summary.json
+[2026-09-13 15:51:54] [INFO] Generated publication tables in results\primary_exp_gsm8k\windows_10-core_pc\2026-09-13_13-23-46\tables
+[2026-09-13 15:52:10] [INFO] Generated publication plots in results\primary_exp_gsm8k\windows_10-core_pc\2026-09-13_13-23-46

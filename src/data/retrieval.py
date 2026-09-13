@@ -23,10 +23,18 @@ class RetrievalResult:
     retrieved_context_tokens: int
     context_text: str
 
+    @property
+    def retrieved_doc_ids(self) -> List[str]:
+        return self.retrieved_document_ids
+
+    @property
+    def context_tokens(self) -> int:
+        return self.retrieved_context_tokens
+
 
 class BaseRetriever(ABC):
     @abstractmethod
-    def retrieve(self, query: str, top_k: int = 3) -> RetrievalResult:
+    def retrieve(self, query: str, top_k: int = 3, exclude_id: Optional[str] = None) -> RetrievalResult:
         """Retrieves top_k documents for a given query."""
         pass
 
@@ -65,7 +73,17 @@ class BM25Retriever(BaseRetriever):
     def _tokenize(text: str) -> List[str]:
         return re.findall(r"\b[a-zA-Z0-9_]+\b", text.lower())
 
-    def retrieve(self, query: str, top_k: int = 3) -> RetrievalResult:
+    def retrieve(self, query: str, top_k: int = 3, exclude_id: Optional[str] = None) -> RetrievalResult:
+        if top_k <= 0:
+            return RetrievalResult(
+                retriever_name="bm25",
+                top_k=0,
+                retrieval_latency_ms=0.0,
+                retrieved_document_ids=[],
+                retrieved_context_tokens=0,
+                context_text=""
+            )
+
         start_time = time.perf_counter()
         query_tokens = self._tokenize(query)
 
@@ -75,6 +93,9 @@ class BM25Retriever(BaseRetriever):
                 continue
             idf_val = self.idf[q_token]
             for doc_idx, tokens in enumerate(self.doc_tokens):
+                if exclude_id and self.doc_ids[doc_idx] == exclude_id:
+                    scores[doc_idx] = -1e9
+                    continue
                 tf = tokens.count(q_token)
                 if tf > 0:
                     doc_len = self.doc_lens[doc_idx]
@@ -82,7 +103,10 @@ class BM25Retriever(BaseRetriever):
                     denom = tf + self.k1 * (1 - self.b + self.b * (doc_len / self.avg_doc_len))
                     scores[doc_idx] += idf_val * (num / denom)
 
-        ranked_indices = sorted(range(self.num_docs), key=lambda i: scores[i], reverse=True)[:top_k]
+        ranked_indices = [
+            idx for idx in sorted(range(self.num_docs), key=lambda i: scores[i], reverse=True)
+            if scores[idx] > -1e8
+        ][:top_k]
         latency_ms = (time.perf_counter() - start_time) * 1000.0
 
         retrieved_ids = [self.doc_ids[idx] for idx in ranked_indices]
