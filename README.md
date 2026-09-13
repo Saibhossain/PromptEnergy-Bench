@@ -304,3 +304,4 @@ models:
 1. Subclass `ModelBackend` in `src/backends/base.py`.
 2. Implement `load_model`, `generate`, and `get_model_metadata`.
 3. Register the backend in `get_backend()` inside `src/backends/__init__.py`.
+# CNN-or-ViT
