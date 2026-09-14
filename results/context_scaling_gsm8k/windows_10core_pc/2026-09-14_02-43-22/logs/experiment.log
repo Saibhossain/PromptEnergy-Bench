@@ -8,3 +8,6 @@
 [2026-09-14 02:43:29] [INFO] Loading GSM8K Test split for Evaluation...
 [2026-09-14 02:43:29] [INFO] Executing 1 warmup run(s)...
 [2026-09-14 02:43:55] [INFO] Warmup 1/1 completed.
+[2026-09-14 11:41:03] [INFO] Experiment completed. Summary saved to results\context_scaling_gsm8k\windows_10core_pc\2026-09-14_02-43-22\summary.json
+[2026-09-14 11:41:04] [INFO] Generated publication tables in results\context_scaling_gsm8k\windows_10core_pc\2026-09-14_02-43-22\tables
+[2026-09-14 11:41:21] [INFO] Generated publication plots in results\context_scaling_gsm8k\windows_10core_pc\2026-09-14_02-43-22
