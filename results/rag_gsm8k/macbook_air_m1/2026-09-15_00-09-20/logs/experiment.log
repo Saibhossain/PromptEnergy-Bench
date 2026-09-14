@@ -1,0 +1,12 @@
+[2026-09-15 00:09:20] [INFO] Initialized Experiment: rag_gsm8k
+[2026-09-15 00:09:20] [INFO] Run ID: rag_gsm8k__macbook_air_m1__2026-09-15_00-09-20
+[2026-09-15 00:09:20] [INFO] Run Directory: results/rag_gsm8k/macbook_air_m1/2026-09-15_00-09-20
+[2026-09-15 00:09:20] [INFO] Model: qwen3.5:0.8b-mlx (Backend: ollama, Format: mlx)
+[2026-09-15 00:09:20] [INFO] Device: macbook_air_m1
+[2026-09-15 00:09:20] [INFO] Evaluation Size: 20 (Evaluation Split: TEST)
+[2026-09-15 00:09:21] [INFO] Initializing BM25 Index over GSM8K TRAIN corpus (Evaluation on TEST split)...
+[2026-09-15 00:09:21] [INFO] Executing 1 warmup run(s)...
+[2026-09-15 00:09:24] [INFO] Warmup 1/1 completed.
+[2026-09-15 00:23:48] [INFO] Experiment completed. Summary saved to results/rag_gsm8k/macbook_air_m1/2026-09-15_00-09-20/summary.json
+[2026-09-15 00:23:48] [INFO] Generated publication tables in results/rag_gsm8k/macbook_air_m1/2026-09-15_00-09-20/tables
+[2026-09-15 00:23:53] [INFO] Generated publication plots in results/rag_gsm8k/macbook_air_m1/2026-09-15_00-09-20

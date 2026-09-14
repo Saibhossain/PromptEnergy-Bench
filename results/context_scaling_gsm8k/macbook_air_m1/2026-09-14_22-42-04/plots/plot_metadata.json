@@ -1,0 +1,27 @@
+{
+    "run_id": "context_scaling_gsm8k__macbook_air_m1__2026-09-14_22-42-04",
+    "source_results_file": "/Users/mdsaibhossain/code/Research_paper/PromptEnergy-Bench/results/context_scaling_gsm8k/macbook_air_m1/2026-09-14_22-42-04/results.jsonl",
+    "plot_generation_timestamp": "2026-09-15 00:09:20",
+    "models": [
+        "qwen3.5:0.8b-mlx"
+    ],
+    "devices": [],
+    "strategies": [
+        "ctx_0",
+        "ctx_512",
+        "ctx_1024",
+        "ctx_2048",
+        "ctx_4096",
+        "ctx_8192"
+    ],
+    "sample_count": 120,
+    "repetitions": 1,
+    "plot_version": "2.0-research",
+    "plot_config": {
+        "dpi": 300,
+        "font_scale": 1.15,
+        "context": "paper",
+        "style": "whitegrid",
+        "palette": "colorblind"
+    }
+}

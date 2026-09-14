@@ -8,3 +8,6 @@
 [2026-09-14 22:42:05] [INFO] Loading GSM8K Test split for Evaluation...
 [2026-09-14 22:42:05] [INFO] Executing 1 warmup run(s)...
 [2026-09-14 22:42:07] [INFO] Warmup 1/1 completed.
+[2026-09-15 00:09:13] [INFO] Experiment completed. Summary saved to results/context_scaling_gsm8k/macbook_air_m1/2026-09-14_22-42-04/summary.json
+[2026-09-15 00:09:14] [INFO] Generated publication tables in results/context_scaling_gsm8k/macbook_air_m1/2026-09-14_22-42-04/tables
+[2026-09-15 00:09:20] [INFO] Generated publication plots in results/context_scaling_gsm8k/macbook_air_m1/2026-09-14_22-42-04

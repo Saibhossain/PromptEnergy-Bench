@@ -1,0 +1,6 @@
+Baseline Strategy,Comparison Strategy,Accuracy Change,Energy Change,Marginal Energy Gain (% / J),Latency Change
+Context 0 tokens,Context 512 tokens,+0.00 pp,+11.7622 J,0.0000 %/J,+5893.3 ms
+Context 0 tokens,Context 1024 tokens,+0.00 pp,+65.4775 J,0.0000 %/J,+38517.3 ms
+Context 0 tokens,Context 2048 tokens,+0.00 pp,+55.5563 J,0.0000 %/J,+27447.8 ms
+Context 0 tokens,Context 4096 tokens,+0.00 pp,+59.5135 J,0.0000 %/J,+19374.5 ms
+Context 0 tokens,Context 8192 tokens,+0.00 pp,+119.5148 J,0.0000 %/J,+35963.0 ms
