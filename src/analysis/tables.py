@@ -23,7 +23,16 @@ STRATEGY_DISPLAY = {
     "few_shot_3": "Few-shot (3)",
     "zero_shot_cot": "Zero-shot CoT",
     "short_cot": "Short CoT",
-    "long_cot": "Long CoT"
+    "long_cot": "Long CoT",
+    "ctx_0": "Context 0 tokens",
+    "ctx_512": "Context 512 tokens",
+    "ctx_1024": "Context 1024 tokens",
+    "ctx_2048": "Context 2048 tokens",
+    "ctx_4096": "Context 4096 tokens",
+    "ctx_8192": "Context 8192 tokens",
+    "rag_top_1": "BM25 RAG (top-1)",
+    "rag_top_3": "BM25 RAG (top-3)",
+    "rag_top_5": "BM25 RAG (top-5)"
 }
 
 STRATEGY_ORDER = [
@@ -31,7 +40,16 @@ STRATEGY_ORDER = [
     "few_shot_3",
     "zero_shot_cot",
     "short_cot",
-    "long_cot"
+    "long_cot",
+    "ctx_0",
+    "ctx_512",
+    "ctx_1024",
+    "ctx_2048",
+    "ctx_4096",
+    "ctx_8192",
+    "rag_top_1",
+    "rag_top_3",
+    "rag_top_5"
 ]
 
 
@@ -42,6 +60,17 @@ def _get_strategies(strat_summaries: Dict[str, Any]) -> List[str]:
         if s not in strats:
             strats.append(s)
     return strats
+
+
+def get_strategy_display_name(strat: str) -> str:
+    """Returns human-readable strategy display name."""
+    if strat in STRATEGY_DISPLAY:
+        return STRATEGY_DISPLAY[strat]
+    if strat.startswith("ctx_"):
+        return f"Context {strat[4:]} tokens"
+    if strat.startswith("rag_top_"):
+        return f"BM25 RAG (top-{strat[8:]})"
+    return strat.replace("_", " ").title()
 
 
 def _format_val(val: Any, decimals: int = 2, fallback: str = "N/A") -> str:
@@ -125,7 +154,7 @@ def generate_table_1_config(
     gen_cfg = config.get("generation", {})
     strat_max = gen_cfg.get("strategy_max_tokens", {})
     if strat_max:
-        max_tok_str = " / ".join(f"{STRATEGY_DISPLAY.get(k, k)}: {v}" for k, v in strat_max.items())
+        max_tok_str = " / ".join(f"{get_strategy_display_name(k)}: {v}" for k, v in strat_max.items())
     else:
         max_tok_str = str(sampling.get("max_tokens", 512))
 
@@ -186,6 +215,9 @@ def generate_table_2_comparison(
         ttft = _format_val(s_data.get("mean_ttft_ms"), 1)
         gen_lat = _format_val(s_data.get("mean_generation_latency_ms"), 1)
         tot_lat = _format_val(s_data.get("mean_total_latency_ms"), 1)
+        mean_cpu = _format_val(s_data.get("mean_cpu_percent"), 1)
+        peak_cpu = _format_val(s_data.get("peak_cpu_percent"), 1)
+        ram_gb = _format_val(s_data.get("mean_ram_used_gb"), 2)
         energy = _format_val(s_data.get("mean_energy_j"), 4)
         e_per_c = _format_val(s_data.get("energy_per_correct_answer_j"), 4)
         acc_j = _format_val(s_data.get("accuracy_per_joule"), 4)
@@ -193,7 +225,7 @@ def generate_table_2_comparison(
         trunc_rate = f"{s_data.get('truncation_rate', 0.0) * 100.0:.1f}"
 
         rows.append({
-            "Strategy": STRATEGY_DISPLAY.get(strat, strat),
+            "Strategy": get_strategy_display_name(strat),
             "Total Accuracy (%)": tot_acc_pct,
             "Valid Accuracy (%)": val_acc_pct,
             "Valid Samples": f"{s_data.get('valid_n', 0)}/{s_data.get('n', 0)}",
@@ -203,6 +235,9 @@ def generate_table_2_comparison(
             "Throughput (tok/s)": tps,
             "TTFT (ms)": ttft,
             "Total Latency (ms)": tot_lat,
+            "Mean CPU (%)": mean_cpu,
+            "Peak CPU (%)": peak_cpu,
+            "RAM (GB)": ram_gb,
             "Energy (J)": energy,
             "Energy / Correct (J)": e_per_c,
             "Accuracy / Joule": acc_j,
@@ -283,7 +318,7 @@ def generate_table_3_tradeoff(
                 d_lat = "N/A"
 
         rows.append({
-            "Strategy": STRATEGY_DISPLAY.get(strat, strat),
+            "Strategy": get_strategy_display_name(strat),
             "Total Accuracy": acc_pct,
             "Energy (J)": energy,
             "Latency (ms)": latency,
@@ -356,8 +391,8 @@ def generate_table_4_meg(
             d_lat_str = "N/A"
 
         rows.append({
-            "Baseline Strategy": STRATEGY_DISPLAY.get(baseline_strat, baseline_strat),
-            "Comparison Strategy": STRATEGY_DISPLAY.get(comp, comp),
+            "Baseline Strategy": get_strategy_display_name(baseline_strat),
+            "Comparison Strategy": get_strategy_display_name(comp),
             "Accuracy Change": d_acc_str,
             "Energy Change": d_energy_str,
             "Marginal Energy Gain (% / J)": meg_str,
@@ -388,7 +423,7 @@ def generate_table_5_statistical_summary(
         if not strat_recs:
             continue
 
-        strat_name = STRATEGY_DISPLAY.get(strat, strat)
+        strat_name = get_strategy_display_name(strat)
         
         # Valid numbers extraction helper
         def _valid_list(key: str) -> List[float]:

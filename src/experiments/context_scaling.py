@@ -29,9 +29,15 @@ class ContextScalingExperiment(BaseExperiment):
             if self.cli_args.get("include_8k", False):
                 self.context_lengths.append(8192)
 
+        self.context_type = str(self.cli_args.get("context_type", "relevant")).lower()
+        if self.context_type not in ["relevant", "distractor"]:
+            self.context_type = "relevant"
+
         self.strategy = PromptStrategy.ZERO_SHOT_COT
         self.config["context_lengths"] = self.context_lengths
+        self.config["context_type"] = self.context_type
         self.config["strategy"] = self.strategy.value
+        self.config["strategies"] = [f"ctx_{c}" for c in self.context_lengths]
         self.evaluator = get_evaluator(self.config.get("dataset", {}).get("name", "gsm8k"))
 
     def run(self) -> Dict[str, Any]:
@@ -67,7 +73,7 @@ class ContextScalingExperiment(BaseExperiment):
                         model=self.model_name,
                         strategy=f"ctx_{ctx_size}",
                         repetition=rep,
-                        context_type="gsm8k_train_corpus" if ctx_size > 0 else "none",
+                        context_type=f"gsm8k_{self.context_type}_corpus" if ctx_size > 0 else "none",
                         context_target_tokens=ctx_size
                     )
 
@@ -76,11 +82,13 @@ class ContextScalingExperiment(BaseExperiment):
                         continue
 
                     scaled_ctx = context_builder.build_context(
+                        target_record=sample,
+                        context_type=self.context_type,
                         target_tokens=ctx_size,
                         exclude_id=sample.id
                     )
 
-                    ctx_type = "empty" if ctx_size == 0 else "gsm8k_train_corpus"
+                    ctx_type = "empty" if ctx_size == 0 else f"gsm8k_{self.context_type}_corpus"
 
                     prompt_text = format_gsm8k_prompt(
                         question=sample.question,
@@ -90,6 +98,7 @@ class ContextScalingExperiment(BaseExperiment):
                     )
 
                     self.energy_monitor.start(phase="total")
+                    self.resource_monitor.start()
                     error_type = None
                     error_message = None
                     status = "success"
@@ -109,6 +118,7 @@ class ContextScalingExperiment(BaseExperiment):
                         error_message = str(e)
                         infer_out = None
 
+                    resource_reading = self.resource_monitor.stop()
                     energy_reading = self.energy_monitor.stop(phase="total")
 
                     if infer_out is not None:
@@ -183,8 +193,12 @@ class ContextScalingExperiment(BaseExperiment):
                                 "energy_status": energy_reading.energy_status
                             },
 
+                            # Resource metrics
+                            "resource_metrics": resource_reading.to_dict(),
+
                             # Legacy flat fields
                             "max_output_tokens": max_tokens,
+                            "thinking_text_available": infer_out.thinking_text_available,
                             "input_tokens": infer_out.input_tokens,
                             "thinking_tokens": infer_out.thinking_tokens,
                             "visible_output_tokens": infer_out.visible_output_tokens,
@@ -195,6 +209,10 @@ class ContextScalingExperiment(BaseExperiment):
                             "ttft_ms": infer_out.ttft_ms,
                             "generation_latency_ms": infer_out.generation_latency_ms,
                             "total_latency_ms": infer_out.total_latency_ms,
+                            "cpu_percent": resource_reading.cpu_percent_mean,
+                            "cpu_percent_peak": resource_reading.cpu_percent_peak,
+                            "ram_used_gb": resource_reading.ram_used_gb_mean,
+                            "ram_percent": resource_reading.ram_percent,
                             "energy_total_j": energy_reading.energy_total_j,
                             "energy_prefill_j": energy_reading.energy_prefill_j,
                             "energy_decode_j": energy_reading.energy_decode_j,
@@ -266,6 +284,7 @@ class ContextScalingExperiment(BaseExperiment):
                                 "idle_power_w": None,
                                 "energy_status": "unavailable"
                             },
+                            "resource_metrics": resource_reading.to_dict(),
                             "max_output_tokens": max_tokens,
                             "input_tokens": 0,
                             "thinking_tokens": None,
@@ -277,6 +296,10 @@ class ContextScalingExperiment(BaseExperiment):
                             "ttft_ms": None,
                             "generation_latency_ms": None,
                             "total_latency_ms": None,
+                            "cpu_percent": resource_reading.cpu_percent_mean,
+                            "cpu_percent_peak": resource_reading.cpu_percent_peak,
+                            "ram_used_gb": resource_reading.ram_used_gb_mean,
+                            "ram_percent": resource_reading.ram_percent,
                             "energy_total_j": None,
                             "energy_prefill_j": None,
                             "energy_decode_j": None,

@@ -329,6 +329,12 @@ def compute_strategy_summary(records: List[Dict[str, Any]], task_type: Optional[
         else None
     )
 
+    # CPU and RAM resource metrics
+    cpus = [r["cpu_percent"] for r in successful if _is_valid_num(r.get("cpu_percent"))]
+    peak_cpus = [r["cpu_percent_peak"] for r in successful if _is_valid_num(r.get("cpu_percent_peak"))]
+    rams = [r["ram_used_gb"] for r in successful if _is_valid_num(r.get("ram_used_gb"))]
+    ram_pcts = [r["ram_percent"] for r in successful if _is_valid_num(r.get("ram_percent"))]
+
     return {
         # Sample lifecycle counts
         "requested_samples": total_requested,
@@ -412,6 +418,13 @@ def compute_strategy_summary(records: List[Dict[str, Any]], task_type: Optional[
         "mean_net_energy_j": _safe_mean(net_energies, 4),
         "mean_idle_power_w": _safe_mean(idle_powers, 4),
 
+        # Resource Utilization (CPU & RAM)
+        "mean_cpu_percent": _safe_mean(cpus, 2),
+        "peak_cpu_percent": round(max(peak_cpus), 2) if peak_cpus else None,
+        "mean_ram_used_gb": _safe_mean(rams, 2),
+        "peak_ram_used_gb": round(max(rams), 2) if rams else None,
+        "mean_ram_percent": _safe_mean(ram_pcts, 2),
+
         # Throughput and Green AI Efficiency
         "tokens_per_second": tokens_per_second,
         "energy_per_output_token_j": energy_per_output_token_j,
@@ -419,6 +432,7 @@ def compute_strategy_summary(records: List[Dict[str, Any]], task_type: Optional[
         "energy_per_correct_answer_j": energy_per_correct_answer_j,
         "accuracy_per_joule": accuracy_per_joule
     }
+
 
 
 def compute_experiment_metrics(records: List[Dict[str, Any]], task_type: Optional[str] = None) -> Dict[str, Any]:

@@ -32,6 +32,8 @@ def parse_args():
 
     # RAG specific
     parser.add_argument("--top-k-list", nargs="+", type=int, default=[1, 3], help="List of top-k documents to retrieve")
+    parser.add_argument("--include-baseline", action="store_true", help="Include direct zero-shot baseline (top-k=0) for marginal gain comparison")
+    parser.add_argument("--include-direct", action="store_true", help="Alias for --include-baseline")
 
     # Dataset / execution flags
     parser.add_argument("--eval-size", type=str, default=None, help="Evaluation dataset size ('50' or 'full')")
@@ -69,23 +71,26 @@ def main():
     exp = RAGExperiment(cli_args=cli_dict, interactive=is_interactive)
     summary = exp.run()
 
-    if args.validation or exp.eval_size == 50:
+    if args.validation or exp.eval_size == 50 or isinstance(exp.eval_size, int):
         metrics = summary.get("metrics", {})
         print("\n" + "=" * 60)
-        print("PIPELINE VALIDATION SUMMARY: BM25 RAG")
+        print("PIPELINE SUMMARY: RETRIEVAL-AUGMENTED GENERATION (RAG)")
         print("=" * 60)
         print(f"Dataset: GSM8K")
         print(f"Evaluation split: TEST")
         print(f"Corpus split: TRAIN")
-        print(f"Evaluation examples: {summary.get('evaluation_size', 50)}")
+        print(f"Evaluation examples: {summary.get('evaluation_size', exp.eval_size)}")
+        print(f"Top-k list: {exp.top_k_options}")
         print(f"Model: {summary.get('model')}")
         print(f"Backend: {summary.get('backend')}")
         print(f"Device: {summary.get('device')}")
         print(f"Accuracy: {metrics.get('accuracy', 0.0)}")
-        print(f"Mean latency: {metrics.get('mean_latency_ms')} ms")
-        print(f"Mean energy: {metrics.get('mean_energy_j')} J")
+        print(f"Mean TTFT: {metrics.get('mean_ttft_ms', 'N/A')} ms")
+        print(f"Mean latency: {metrics.get('mean_total_latency_ms', metrics.get('mean_latency_ms', 'N/A'))} ms")
+        print(f"Mean CPU: {metrics.get('mean_cpu_percent', 'N/A')} % (Peak: {metrics.get('peak_cpu_percent', 'N/A')} %)")
+        print(f"Mean RAM: {metrics.get('mean_ram_used_gb', 'N/A')} GB")
+        print(f"Mean energy: {metrics.get('mean_energy_j', 'N/A')} J")
         print("=" * 60)
-        print("\nValidation completed. Full research benchmark was NOT executed.")
         print(f"Results saved to: {exp.paths['run_dir']}\n")
 
 

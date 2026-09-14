@@ -32,6 +32,7 @@ from src.infrastructure.metadata import (
     get_software_metadata
 )
 from src.monitoring.energy import get_energy_monitor, EnergyMonitor
+from src.monitoring.resources import BackgroundResourceMonitor, ResourceReading
 
 
 class BaseExperiment(ABC):
@@ -206,9 +207,10 @@ class BaseExperiment(ABC):
         self.logger.info(f"Device: {self.normalized_device}")
         self.logger.info(f"Evaluation Size: {self.eval_size} (Evaluation Split: TEST)")
 
-        # Instantiate backend and energy monitor
+        # Instantiate backend and energy/resource monitors
         self.backend: ModelBackend = get_backend(operator=self.operator, model_name=self.model_name)
         self.energy_monitor: EnergyMonitor = get_energy_monitor(mode=self.energy_mode)
+        self.resource_monitor: BackgroundResourceMonitor = BackgroundResourceMonitor(poll_interval_ms=50)
 
     def run_warmup(self, warmup_messages: Any) -> None:
         """Executes warm-up requests without logging to results."""

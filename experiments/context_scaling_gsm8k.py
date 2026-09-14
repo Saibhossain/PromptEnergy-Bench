@@ -33,6 +33,7 @@ def parse_args():
     # Context experiment specific
     parser.add_argument("--context-lengths", nargs="+", type=int, default=None, help="List of context token lengths (e.g. 0 512 1024 2048 4096)")
     parser.add_argument("--include-8k", action="store_true", help="Attempt 8192 token context scaling if model permits")
+    parser.add_argument("--context-type", type=str, default="relevant", choices=["relevant", "distractor"], help="Context type ('relevant' or 'distractor')")
 
     # Dataset / execution flags
     parser.add_argument("--eval-size", type=str, default=None, help="Evaluation dataset size ('50' or 'full')")
@@ -70,22 +71,26 @@ def main():
     exp = ContextScalingExperiment(cli_args=cli_dict, interactive=is_interactive)
     summary = exp.run()
 
-    if args.validation or exp.eval_size == 50:
+    if args.validation or exp.eval_size == 50 or isinstance(exp.eval_size, int):
         metrics = summary.get("metrics", {})
         print("\n" + "=" * 60)
-        print("PIPELINE VALIDATION SUMMARY: CONTEXT SCALING")
+        print("PIPELINE SUMMARY: CONTROLLED CONTEXT SCALING")
         print("=" * 60)
         print(f"Dataset: GSM8K")
         print(f"Evaluation split: TEST")
-        print(f"Evaluation examples: {summary.get('evaluation_size', 50)}")
+        print(f"Evaluation examples: {summary.get('evaluation_size', exp.eval_size)}")
+        print(f"Context type: {exp.context_type}")
+        print(f"Context lengths: {exp.context_lengths}")
         print(f"Model: {summary.get('model')}")
         print(f"Backend: {summary.get('backend')}")
         print(f"Device: {summary.get('device')}")
         print(f"Accuracy: {metrics.get('accuracy', 0.0)}")
-        print(f"Mean latency: {metrics.get('mean_latency_ms')} ms")
-        print(f"Mean energy: {metrics.get('mean_energy_j')} J")
+        print(f"Mean TTFT: {metrics.get('mean_ttft_ms', 'N/A')} ms")
+        print(f"Mean latency: {metrics.get('mean_total_latency_ms', metrics.get('mean_latency_ms', 'N/A'))} ms")
+        print(f"Mean CPU: {metrics.get('mean_cpu_percent', 'N/A')} % (Peak: {metrics.get('peak_cpu_percent', 'N/A')} %)")
+        print(f"Mean RAM: {metrics.get('mean_ram_used_gb', 'N/A')} GB")
+        print(f"Mean energy: {metrics.get('mean_energy_j', 'N/A')} J")
         print("=" * 60)
-        print("\nValidation completed. Full research benchmark was NOT executed.")
         print(f"Results saved to: {exp.paths['run_dir']}\n")
 
 

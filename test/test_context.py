@@ -66,6 +66,24 @@ class TestContextBuilder(unittest.TestCase):
         ctx_200: ScaledContext = self.builder.build_context(self.target, "relevant", target_tokens=200)
         self.assertLessEqual(ctx_50.actual_context_tokens, ctx_200.actual_context_tokens)
 
+    def test_zero_token_returns_empty_context(self):
+        ctx_0 = self.builder.build_context(self.target, "relevant", target_tokens=0)
+        self.assertEqual(ctx_0.actual_context_tokens, 0)
+        self.assertEqual(ctx_0.context_text, "")
+        self.assertEqual(ctx_0.context_document_ids, [])
+
+    def test_contamination_prevention_excludes_id(self):
+        # Target with exact same ID as a training sample
+        target_clone = GSM8KRecord(
+            id="gsm8k_train_0001",
+            question="John buys 5 apples for $2 each. How much does he pay?",
+            answer="10",
+            solution="5 * 2 = 10",
+            raw_answer="5 * 2 = 10\n#### 10"
+        )
+        ctx = self.builder.build_context(target_record=target_clone, context_type="relevant", target_tokens=100)
+        self.assertNotIn("gsm8k_train_0001", ctx.context_document_ids)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -85,6 +85,7 @@ class PrimaryExperiment(BaseExperiment):
                     top_p = sampling_cfg.get("top_p", 1.0)
 
                     self.energy_monitor.start(phase="total")
+                    self.resource_monitor.start()
                     status = "success"
                     error_type = None
                     error_message = None
@@ -104,6 +105,7 @@ class PrimaryExperiment(BaseExperiment):
                         error_message = str(e)
                         infer_out = None
 
+                    resource_reading = self.resource_monitor.stop()
                     energy_reading = self.energy_monitor.stop(phase="total")
 
                     if infer_out is not None:
@@ -175,6 +177,9 @@ class PrimaryExperiment(BaseExperiment):
                                 "energy_status": energy_reading.energy_status
                             },
                             
+                            # Resource metrics (CPU, RAM, GPU)
+                            "resource_metrics": resource_reading.to_dict(),
+                            
                             # Legacy flat fields for backward compatibility
                             "max_output_tokens": strat_max_tokens,
                             "thinking_text_available": infer_out.thinking_text_available,
@@ -188,6 +193,10 @@ class PrimaryExperiment(BaseExperiment):
                             "ttft_ms": infer_out.ttft_ms,
                             "generation_latency_ms": infer_out.generation_latency_ms,
                             "total_latency_ms": infer_out.total_latency_ms,
+                            "cpu_percent": resource_reading.cpu_percent_mean,
+                            "cpu_percent_peak": resource_reading.cpu_percent_peak,
+                            "ram_used_gb": resource_reading.ram_used_gb_mean,
+                            "ram_percent": resource_reading.ram_percent,
                             "energy_total_j": energy_reading.energy_total_j,
                             "energy_prefill_j": energy_reading.energy_prefill_j,
                             "energy_decode_j": energy_reading.energy_decode_j,
@@ -257,6 +266,7 @@ class PrimaryExperiment(BaseExperiment):
                                 "idle_power_w": None,
                                 "energy_status": "unavailable"
                             },
+                            "resource_metrics": resource_reading.to_dict(),
                             "max_output_tokens": strat_max_tokens,
                             "thinking_text_available": False,
                             "input_tokens": 0,
@@ -269,6 +279,10 @@ class PrimaryExperiment(BaseExperiment):
                             "ttft_ms": None,
                             "generation_latency_ms": None,
                             "total_latency_ms": None,
+                            "cpu_percent": resource_reading.cpu_percent_mean,
+                            "cpu_percent_peak": resource_reading.cpu_percent_peak,
+                            "ram_used_gb": resource_reading.ram_used_gb_mean,
+                            "ram_percent": resource_reading.ram_percent,
                             "energy_total_j": None,
                             "energy_prefill_j": None,
                             "energy_decode_j": None,

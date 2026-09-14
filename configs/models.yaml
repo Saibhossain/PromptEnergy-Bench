@@ -42,6 +42,46 @@ models:
       seed: 42
       max_tokens: 1024
 
+  - name: "qwen3.5:0.8b"
+    backend: "ollama"
+    format: "gguf"
+    context_limit: 8192
+    supports_thinking: true
+    default_parameters:
+      temperature: 0.0
+      seed: 42
+      max_tokens: 1024
+
+  - name: "qwen3.5:9b"
+    backend: "ollama"
+    format: "gguf"
+    context_limit: 8192
+    supports_thinking: true
+    default_parameters:
+      temperature: 0.0
+      seed: 42
+      max_tokens: 1024
+
+  - name: "gemma3:4b"
+    backend: "ollama"
+    format: "gguf"
+    context_limit: 8192
+    supports_thinking: false
+    default_parameters:
+      temperature: 0.0
+      seed: 42
+      max_tokens: 1024
+
+  - name: "mistral:7b"
+    backend: "ollama"
+    format: "gguf"
+    context_limit: 8192
+    supports_thinking: false
+    default_parameters:
+      temperature: 0.0
+      seed: 42
+      max_tokens: 1024
+
   - name: "gpt-4o-mini"
     backend: "openai"
     format: "api"

@@ -1,0 +1,34 @@
+{
+    "run_id": "rag_gsm8k__windows_10core_pc__2026-09-14_02-07-40",
+    "experiment_name": "rag_gsm8k",
+    "model": {
+        "name": "qwen3.5:0.8b",
+        "backend": "ollama",
+        "format": "gguf"
+    },
+    "dataset": {
+        "name": "gsm8k",
+        "evaluation_split": "test",
+        "context_source_split": "train",
+        "evaluation_size": 1
+    },
+    "sampling": {
+        "temperature": 0.0,
+        "seed": 42,
+        "top_p": 1.0,
+        "max_tokens": 512
+    },
+    "generation": {
+        "default_max_tokens": 512,
+        "strategy_max_tokens": {
+            "zero_shot_direct": 256,
+            "few_shot_3": 256,
+            "zero_shot_cot": 512,
+            "short_cot": 512,
+            "long_cot": 1024
+        }
+    },
+    "warmups": 1,
+    "repetitions": 1,
+    "validation": false
+}
