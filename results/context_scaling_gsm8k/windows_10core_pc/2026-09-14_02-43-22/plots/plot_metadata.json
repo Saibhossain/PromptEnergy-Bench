@@ -1,0 +1,26 @@
+{
+    "run_id": "context_scaling_gsm8k__windows_10core_pc__2026-09-14_02-43-22",
+    "source_results_file": "C:\\Users\\saib\\saib_code\\GreenComputin\\results\\context_scaling_gsm8k\\windows_10core_pc\\2026-09-14_02-43-22\\results.jsonl",
+    "plot_generation_timestamp": "2026-09-14 11:41:21",
+    "models": [
+        "gemma3:4b"
+    ],
+    "devices": [],
+    "strategies": [
+        "ctx_0",
+        "ctx_512",
+        "ctx_1024",
+        "ctx_2048",
+        "ctx_4096"
+    ],
+    "sample_count": 247,
+    "repetitions": 1,
+    "plot_version": "2.0-research",
+    "plot_config": {
+        "dpi": 300,
+        "font_scale": 1.15,
+        "context": "paper",
+        "style": "whitegrid",
+        "palette": "colorblind"
+    }
+}
