@@ -1,0 +1,17 @@
+Hardware,Prompt Strategy,Mean TTFT (ms),Mean Decode Latency (ms),Mean Total Latency (ms)
+MacBook Air M1,few_shot_3,1618.9,8854.0,10472.9
+MacBook Air M1,long_cot,1537.7,25168.5,26706.2
+MacBook Air M1,short_cot,2935.8,13667.7,16603.5
+MacBook Air M1,zero_shot_cot,1039.1,14565.7,15604.8
+MacBook Air M1,zero_shot_direct,7368.7,9923.8,17292.5
+Windows 10-Core PC,ctx_0,7705.6,63966.9,71672.5
+Windows 10-Core PC,ctx_1024,59978.5,51324.1,111302.6
+Windows 10-Core PC,ctx_2048,127782.3,50808.6,178591.0
+Windows 10-Core PC,ctx_4096,113368.7,53324.6,166693.3
+Windows 10-Core PC,ctx_512,28896.7,62660.4,91557.1
+Windows 10-Core PC,few_shot_3,9877.3,13266.4,23143.7
+Windows 10-Core PC,long_cot,4151.7,58252.7,62404.3
+Windows 10-Core PC,rag_top_1,7542.1,26649.5,34191.5
+Windows 10-Core PC,short_cot,4510.2,32404.1,36914.3
+Windows 10-Core PC,zero_shot_cot,4507.6,46234.8,50742.3
+Windows 10-Core PC,zero_shot_direct,4207.5,12708.4,16916.0

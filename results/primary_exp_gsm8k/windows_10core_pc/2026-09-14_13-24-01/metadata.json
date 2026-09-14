@@ -1,0 +1,60 @@
+{
+    "run_id": "primary_exp_gsm8k__windows_10core_pc__2026-09-14_13-24-01",
+    "experiment_name": "primary_exp_gsm8k",
+    "timestamp": "2026-09-14_13-24-01",
+    "device": {
+        "name": "windows_10core_pc",
+        "normalized_name": "windows_10core_pc",
+        "os": "Windows",
+        "cpu": "Intel64 Family 6 Model 85 Stepping 4, GenuineIntel",
+        "gpu_available": false,
+        "gpu_count": 0,
+        "gpu_name": null,
+        "gpu_vram_gb": null,
+        "ram_gb": 32
+    },
+    "backend": {
+        "operator": "ollama",
+        "model_format": "gguf",
+        "model_name": "qwen3.5:0.8b"
+    },
+    "dataset": {
+        "name": "GSM8K",
+        "evaluation_split": "test",
+        "context_source_split": "train",
+        "evaluation_size": 1
+    },
+    "measurement": {
+        "energy_method": "codecarbon_estimated",
+        "energy_quality": "estimated",
+        "token_method": "backend_usage",
+        "latency_method": "perf_counter"
+    },
+    "software": {
+        "python_version": "3.12.10",
+        "platform": "Windows-11-10.0.26200-SP0",
+        "ollama_version": "0.34.0",
+        "git_commit": "e89b06a5f28b15794093f8d67da54a1d4805de06",
+        "git_dirty": true,
+        "package_versions": {
+            "datasets": "5.0.0",
+            "codecarbon": "3.2.9",
+            "ollama": "unknown",
+            "pandas": "3.0.5",
+            "matplotlib": "3.11.1",
+            "seaborn": "0.13.2",
+            "psutil": "7.2.2",
+            "scipy": "1.18.1"
+        }
+    },
+    "generation": {
+        "default_max_tokens": 512,
+        "strategy_max_tokens": {
+            "zero_shot_direct": 256,
+            "few_shot_3": 256,
+            "zero_shot_cot": 512,
+            "short_cot": 512,
+            "long_cot": 1024
+        }
+    }
+}

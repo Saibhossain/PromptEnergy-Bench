@@ -510,3 +510,250 @@ def generate_all_tables(
         "table_5_statistical_summary": t5,
         "table_5_statistics": t5
     }
+
+
+def generate_research_summary_tables(results_dir: str = "results", output_dir: str = "results/analysis") -> List[str]:
+    """Generates 8 unrounded, machine-readable CSV summary files in results/analysis/ (Section 11)."""
+    import json
+    import csv
+
+    os.makedirs(output_dir, exist_ok=True)
+    all_records = []
+
+    for root, _, files in os.walk(results_dir):
+        if "hardware_comparison" in root or "analysis" in root:
+            continue
+        for f in files:
+            if f in ("results.jsonl", "raw_results.jsonl"):
+                fpath = os.path.join(root, f)
+                try:
+                    with open(fpath, "r", encoding="utf-8") as handle:
+                        for line in handle:
+                            if line.strip():
+                                try:
+                                    all_records.append(json.loads(line.strip()))
+                                except json.JSONDecodeError:
+                                    pass
+                except Exception:
+                    pass
+
+    generated_files = []
+
+    # Helper to write raw CSV
+    def write_csv(filename: str, headers: List[str], rows: List[List[Any]]):
+        target = os.path.join(output_dir, filename)
+        with open(target, "w", newline="", encoding="utf-8") as out:
+            writer = csv.writer(out)
+            writer.writerow(headers)
+            writer.writerows(rows)
+        generated_files.append(target)
+
+    # 1. prompt_strategy_summary.csv
+    p_headers = ["dataset", "model", "hardware", "prompt_strategy", "sample_size", "accuracy", "mean_energy_j", "median_energy_j", "std_energy_j", "mean_ttft_ms", "mean_total_latency_ms", "mean_input_tokens", "mean_output_tokens", "measurement_method"]
+    p_groups: Dict[Tuple[str, str, str, str], List[Dict[str, Any]]] = {}
+    for r in all_records:
+        d = r.get("dataset", "gsm8k")
+        m = r.get("model") or r.get("model_name", "unknown")
+        h = r.get("hardware_identifier") or r.get("device", "unknown")
+        s = r.get("strategy") or r.get("prompt_strategy", "unknown")
+        p_groups.setdefault((d, m, h, s), []).append(r)
+
+    p_rows = []
+    for (d, m, h, s), recs in sorted(p_groups.items()):
+        e = [float(r["energy_total_j"]) for r in recs if r.get("energy_total_j")]
+        ttft = [float(r["ttft_ms"]) for r in recs if r.get("ttft_ms")]
+        lat = [float(r["total_latency_ms"]) for r in recs if r.get("total_latency_ms")]
+        it = [float(r["input_tokens"]) for r in recs if r.get("input_tokens") is not None]
+        ot = [float(r["output_tokens"]) for r in recs if r.get("output_tokens") is not None]
+        acc = [1.0 if r.get("answer_correct") is True else 0.0 for r in recs]
+        method = recs[0].get("energy_measurement_method", "software_estimated")
+        p_rows.append([
+            d, m, h, s, len(recs),
+            np.mean(acc) if acc else None,
+            np.mean(e) if e else None,
+            np.median(e) if e else None,
+            np.std(e) if len(e) > 1 else 0.0,
+            np.mean(ttft) if ttft else None,
+            np.mean(lat) if lat else None,
+            np.mean(it) if it else None,
+            np.mean(ot) if ot else None,
+            method
+        ])
+    write_csv("prompt_strategy_summary.csv", p_headers, p_rows)
+
+    # 2. model_summary.csv
+    m_headers = ["dataset", "model", "hardware", "sample_size", "accuracy", "mean_energy_j", "mean_throughput_tok_s", "mean_ttft_ms", "mean_latency_ms", "measurement_method"]
+    m_groups: Dict[Tuple[str, str, str], List[Dict[str, Any]]] = {}
+    for r in all_records:
+        d = r.get("dataset", "gsm8k")
+        m = r.get("model") or r.get("model_name", "unknown")
+        h = r.get("hardware_identifier") or r.get("device", "unknown")
+        m_groups.setdefault((d, m, h), []).append(r)
+
+    m_rows = []
+    for (d, m, h), recs in sorted(m_groups.items()):
+        e = [float(r["energy_total_j"]) for r in recs if r.get("energy_total_j")]
+        ttft = [float(r["ttft_ms"]) for r in recs if r.get("ttft_ms")]
+        lat = [float(r["total_latency_ms"]) for r in recs if r.get("total_latency_ms")]
+        ot = [float(r["output_tokens"]) for r in recs if r.get("output_tokens") is not None]
+        acc = [1.0 if r.get("answer_correct") is True else 0.0 for r in recs]
+        # Throughput
+        tp_list = [(ot[i] / (lat[i]/1000.0)) for i in range(min(len(ot), len(lat))) if lat[i] > 0]
+        method = recs[0].get("energy_measurement_method", "software_estimated")
+        m_rows.append([
+            d, m, h, len(recs),
+            np.mean(acc) if acc else None,
+            np.mean(e) if e else None,
+            np.mean(tp_list) if tp_list else None,
+            np.mean(ttft) if ttft else None,
+            np.mean(lat) if lat else None,
+            method
+        ])
+    write_csv("model_summary.csv", m_headers, m_rows)
+
+    # 3. context_scaling_summary.csv
+    ctx_headers = ["dataset", "model", "hardware", "target_context_tokens", "actual_context_tokens", "sample_size", "accuracy", "mean_energy_j", "mean_ttft_ms", "mean_latency_ms"]
+    ctx_recs = [r for r in all_records if str(r.get("strategy", "")).startswith("ctx_") or r.get("context_target_tokens") is not None]
+    ctx_groups: Dict[Tuple[str, str, str, int], List[Dict[str, Any]]] = {}
+    for r in ctx_recs:
+        d = r.get("dataset", "gsm8k")
+        m = r.get("model") or r.get("model_name", "unknown")
+        h = r.get("hardware_identifier") or r.get("device", "unknown")
+        target = r.get("context_target_tokens")
+        if target is None:
+            strat = r.get("strategy", "")
+            if strat.startswith("ctx_"):
+                try:
+                    target = int(strat[4:])
+                except ValueError:
+                    target = 0
+            else:
+                target = 0
+        ctx_groups.setdefault((d, m, h, int(target)), []).append(r)
+
+    ctx_rows = []
+    for (d, m, h, target), recs in sorted(ctx_groups.items()):
+        e = [float(r["energy_total_j"]) for r in recs if r.get("energy_total_j")]
+        ttft = [float(r["ttft_ms"]) for r in recs if r.get("ttft_ms")]
+        lat = [float(r["total_latency_ms"]) for r in recs if r.get("total_latency_ms")]
+        act_ctx = [float(r["actual_context_tokens"]) for r in recs if r.get("actual_context_tokens") is not None]
+        acc = [1.0 if r.get("answer_correct") is True else 0.0 for r in recs]
+        ctx_rows.append([
+            d, m, h, target,
+            np.mean(act_ctx) if act_ctx else target,
+            len(recs),
+            np.mean(acc) if acc else None,
+            np.mean(e) if e else None,
+            np.mean(ttft) if ttft else None,
+            np.mean(lat) if lat else None
+        ])
+    write_csv("context_scaling_summary.csv", ctx_headers, ctx_rows)
+
+    # 4. rag_summary.csv
+    rag_headers = ["dataset", "model", "hardware", "top_k", "sample_size", "accuracy", "mean_retrieval_latency_ms", "mean_generation_latency_ms", "mean_total_latency_ms", "mean_energy_j"]
+    rag_recs = [r for r in all_records if str(r.get("strategy", "")).startswith("rag_top_") or r.get("top_k") is not None]
+    rag_groups: Dict[Tuple[str, str, str, int], List[Dict[str, Any]]] = {}
+    for r in rag_recs:
+        d = r.get("dataset", "gsm8k")
+        m = r.get("model") or r.get("model_name", "unknown")
+        h = r.get("hardware_identifier") or r.get("device", "unknown")
+        k = r.get("top_k", 1)
+        rag_groups.setdefault((d, m, h, int(k)), []).append(r)
+
+    rag_rows = []
+    for (d, m, h, k), recs in sorted(rag_groups.items()):
+        e = [float(r["energy_total_j"]) for r in recs if r.get("energy_total_j")]
+        ret_lat = [float(r["retrieval_latency_ms"]) for r in recs if r.get("retrieval_latency_ms") is not None]
+        gen_lat = [float(r["generation_latency_ms"]) for r in recs if r.get("generation_latency_ms") is not None]
+        tot_lat = [float(r["total_latency_ms"]) for r in recs if r.get("total_latency_ms") is not None]
+        acc = [1.0 if r.get("answer_correct") is True else 0.0 for r in recs]
+        rag_rows.append([
+            d, m, h, k, len(recs),
+            np.mean(acc) if acc else None,
+            np.mean(ret_lat) if ret_lat else None,
+            np.mean(gen_lat) if gen_lat else None,
+            np.mean(tot_lat) if tot_lat else None,
+            np.mean(e) if e else None
+        ])
+    write_csv("rag_summary.csv", rag_headers, rag_rows)
+
+    # 5. hardware_summary.csv
+    hw_headers = ["hardware", "model", "prompt_strategy", "sample_size", "accuracy", "mean_energy_j", "std_energy_j", "mean_ttft_ms", "mean_latency_ms", "measurement_method"]
+    hw_rows = []
+    for (d, m, h, s), recs in sorted(p_groups.items()):
+        e = [float(r["energy_total_j"]) for r in recs if r.get("energy_total_j")]
+        ttft = [float(r["ttft_ms"]) for r in recs if r.get("ttft_ms")]
+        lat = [float(r["total_latency_ms"]) for r in recs if r.get("total_latency_ms")]
+        acc = [1.0 if r.get("answer_correct") is True else 0.0 for r in recs]
+        method = recs[0].get("energy_measurement_method", "software_estimated")
+        hw_rows.append([
+            h, m, s, len(recs),
+            np.mean(acc) if acc else None,
+            np.mean(e) if e else None,
+            np.std(e) if len(e) > 1 else 0.0,
+            np.mean(ttft) if ttft else None,
+            np.mean(lat) if lat else None,
+            method
+        ])
+    write_csv("hardware_summary.csv", hw_headers, hw_rows)
+
+    # 6. hardware_prompt_comparison.csv
+    write_csv("hardware_prompt_comparison.csv", p_headers, p_rows)
+
+    # 7. energy_accuracy_summary.csv
+    ea_headers = ["prompt_strategy", "model", "hardware", "accuracy", "mean_energy_j", "energy_per_correct_j", "accuracy_per_joule"]
+    ea_rows = []
+    for (d, m, h, s), recs in sorted(p_groups.items()):
+        e = [float(r["energy_total_j"]) for r in recs if r.get("energy_total_j")]
+        acc = [1.0 if r.get("answer_correct") is True else 0.0 for r in recs]
+        mean_e = np.mean(e) if e else 0.0
+        acc_pct = np.mean(acc) if acc else 0.0
+        corr_count = sum(acc)
+        tot_e = sum(e)
+        epc = (tot_e / corr_count) if corr_count > 0 else None
+        apj = (acc_pct / mean_e) if mean_e > 0 else 0.0
+        ea_rows.append([s, m, h, acc_pct, mean_e, epc, apj])
+    write_csv("energy_accuracy_summary.csv", ea_headers, ea_rows)
+
+    # 8. pareto_frontier_summary.csv
+    pareto_headers = ["prompt_strategy", "model", "hardware", "accuracy", "mean_energy_j", "mean_latency_ms", "pareto_optimal"]
+    pareto_rows = []
+    for (d, m, h), recs in sorted(m_groups.items()):
+        # Compute Pareto for this model & hardware
+        sub_strats: Dict[str, Tuple[float, float, float]] = {}
+        for r in recs:
+            s = r.get("strategy") or r.get("prompt_strategy", "unknown")
+            e_val = r.get("energy_total_j")
+            lat_val = r.get("total_latency_ms")
+            acc_val = 1.0 if r.get("answer_correct") is True else 0.0
+            if e_val and lat_val:
+                if s not in sub_strats:
+                    sub_strats[s] = ([], [], [])
+                sub_strats[s][0].append(float(e_val))
+                sub_strats[s][1].append(float(acc_val))
+                sub_strats[s][2].append(float(lat_val))
+
+        # Check dominance
+        pts = []
+        for s, (e_list, acc_list, lat_list) in sub_strats.items():
+            pts.append({
+                "strat": s,
+                "e": np.mean(e_list),
+                "acc": np.mean(acc_list),
+                "lat": np.mean(lat_list)
+            })
+
+        for p in pts:
+            # A point p is dominated if exists q with e_q <= e_p, lat_q <= lat_p, acc_q >= acc_p (with at least one strict)
+            is_dom = False
+            for q in pts:
+                if q == p:
+                    continue
+                if q["e"] <= p["e"] and q["lat"] <= p["lat"] and q["acc"] >= p["acc"]:
+                    if q["e"] < p["e"] or q["lat"] < p["lat"] or q["acc"] > p["acc"]:
+                        is_dom = True
+                        break
+            pareto_rows.append([p["strat"], m, h, p["acc"], p["e"], p["lat"], not is_dom])
+
+    write_csv("pareto_frontier_summary.csv", pareto_headers, pareto_rows)
+    return generated_files

@@ -1,0 +1,15 @@
+\begin{table}
+\caption{Prompt Strategy Comparison on DATASET}
+\label{tab:strategy_comparison}
+\begin{tabular}{lllllllllllllllll}
+\toprule
+Strategy & Total Accuracy (\%) & Valid Accuracy (\%) & Valid Samples & Mean Thinking Tokens & Mean Visible Output Tokens & Mean Total Output Tokens & Throughput (tok/s) & TTFT (ms) & Total Latency (ms) & Mean CPU (\%) & Peak CPU (\%) & RAM (GB) & Energy (J) & Energy / Correct (J) & Accuracy / Joule & Truncation Rate (\%) \\
+\midrule
+Zero-shot Direct & 0.00 & N/A & 0/1 & 256 & 0 & 256 & 10.33 & 3237.0 & 28014.0 & 99.7 & 100.0 & 14.26 & 911.4218 & N/A & 0.0000 & 100.0 \\
+Few-shot (3) & 0.00 & N/A & 0/1 & 256 & 0 & 256 & 9.81 & 6780.2 & 32887.6 & 99.8 & 100.0 & 14.50 & 1173.4813 & N/A & 0.0000 & 100.0 \\
+Zero-shot CoT & 0.00 & N/A & 0/1 & 512 & 0 & 512 & 9.01 & 2914.1 & 59749.2 & 99.9 & 100.0 & 14.61 & 3502.2154 & N/A & 0.0000 & 100.0 \\
+Short CoT & 0.00 & N/A & 0/1 & 512 & 0 & 512 & 9.01 & 2875.5 & 59676.5 & 99.8 & 100.0 & 14.77 & 3879.9798 & N/A & 0.0000 & 100.0 \\
+Long CoT & 0.00 & N/A & 0/1 & 1024 & 0 & 1024 & 8.02 & 3128.0 & 130798.4 & 99.9 & 100.0 & 14.99 & 10852.0117 & N/A & 0.0000 & 100.0 \\
+\bottomrule
+\end{tabular}
+\end{table}

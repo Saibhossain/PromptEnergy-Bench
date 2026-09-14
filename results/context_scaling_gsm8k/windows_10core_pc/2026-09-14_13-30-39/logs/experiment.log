@@ -1,0 +1,7 @@
+[2026-09-14 13:30:40] [INFO] Initialized Experiment: context_scaling_gsm8k
+[2026-09-14 13:30:40] [INFO] Run ID: context_scaling_gsm8k__windows_10core_pc__2026-09-14_13-30-39
+[2026-09-14 13:30:40] [INFO] Run Directory: results\context_scaling_gsm8k\windows_10core_pc\2026-09-14_13-30-39
+[2026-09-14 13:30:40] [INFO] Model: qwen3.5:0.8b (Backend: ollama, Format: gguf)
+[2026-09-14 13:30:40] [INFO] Device: windows_10core_pc
+[2026-09-14 13:30:40] [INFO] Evaluation Size: 1 (Evaluation Split: TEST)
+[2026-09-14 13:30:40] [INFO] Loading GSM8K Train split for Context Corpus...

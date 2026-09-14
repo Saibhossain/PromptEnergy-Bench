@@ -315,11 +315,26 @@ class BaseExperiment(ABC):
         save_summary_json(self.paths["summary_file"], summary)
         self.logger.info(f"Experiment completed. Summary saved to {self.paths['summary_file']}")
 
+        # Ensure raw_results.jsonl is present as alias/copy of results.jsonl (Section 2.D)
+        raw_results_path = os.path.join(self.paths["run_dir"], "raw_results.jsonl")
+        if os.path.exists(self.paths["results_file"]) and not os.path.exists(raw_results_path):
+            try:
+                import shutil
+                shutil.copyfile(self.paths["results_file"], raw_results_path)
+            except Exception:
+                pass
+
         # Generate publication tables (CSV, Markdown, LaTeX)
         try:
             tables_dir = os.path.join(self.paths["run_dir"], "tables")
             generate_all_tables(records, self.metadata, self.config, summary, tables_dir)
             self.logger.info(f"Generated publication tables in {tables_dir}")
+            # Ensure summary.csv exists in root of run directory as well
+            root_summary_csv = os.path.join(self.paths["run_dir"], "summary.csv")
+            src_csv = os.path.join(tables_dir, "strategy_comparison.csv")
+            if os.path.exists(src_csv):
+                import shutil
+                shutil.copyfile(src_csv, root_summary_csv)
         except Exception as e:
             self.logger.warning(f"Failed to generate tables: {e}")
 

@@ -213,6 +213,8 @@ class NumericEvaluator(BaseEvaluator):
             exact_match = is_correct
 
         status = EvaluationStatus.COMPLETED_CORRECT if is_correct else EvaluationStatus.COMPLETED_INCORRECT
+        err_type = "none" if is_correct else "arithmetic_error"
+        err_msg = None if is_correct else f"Predicted {pred_norm} does not match expected {gold_norm}"
 
         return EvaluationResult(
             sample_id=sample_id,
@@ -229,5 +231,7 @@ class NumericEvaluator(BaseEvaluator):
                 "relative_error": (diff / abs(gold_norm)) if (gold_norm and diff is not None and abs(gold_norm) > 1e-12) else 0.0
             },
             parse_success=True,
-            generation_truncated=False
+            generation_truncated=False,
+            error_type=err_type,
+            error_message=err_msg
         )

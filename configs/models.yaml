@@ -82,7 +82,27 @@ models:
       seed: 42
       max_tokens: 1024
 
+  - name: "llama3.2:3b"
+    backend: "ollama"
+    format: "gguf"
+    context_limit: 8192
+    supports_thinking: false
+    default_parameters:
+      temperature: 0.0
+      seed: 42
+      max_tokens: 1024
+
   - name: "gpt-4o-mini"
+    backend: "openai"
+    format: "api"
+    context_limit: 128000
+    supports_thinking: false
+    default_parameters:
+      temperature: 0.0
+      seed: 42
+      max_tokens: 1024
+
+  - name: "gpt-5-nano-2025-08-07"
     backend: "openai"
     format: "api"
     context_limit: 128000

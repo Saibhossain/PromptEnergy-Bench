@@ -1,0 +1,4 @@
+dataset,model,hardware,sample_size,accuracy,mean_energy_j,mean_throughput_tok_s,mean_ttft_ms,mean_latency_ms,measurement_method
+gsm8k,gemma3:4b,unknown,502,0.6553784860557769,7194.543805179283,3.1006038298048626,37577.02912350598,77596.12908366535,codecarbon_estimated
+gsm8k,qwen3.5:0.8b,unknown,267,0.0,3780.973034831461,11.004936884933393,3774.168838951311,44899.74385767791,codecarbon_estimated
+gsm8k,qwen3.5:0.8b-mlx,unknown,747,0.01740294511378849,nan,27.61957445763651,3059.2403882195454,17289.601767068274,apple_estimated

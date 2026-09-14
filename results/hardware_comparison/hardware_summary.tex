@@ -1,0 +1,22 @@
+\begin{tabular}{lrrrrrrrrrrrr}
+\hline
+Hardware & Model & Prompt Strategy & Accuracy (\%) & Mean Energy (J) & Median Energy (J) & Energy SD & Mean TTFT (ms) & Mean Latency (ms) & Input Tokens & Output Tokens & Measurement Method & Runs \\
+\hline
+MacBook Air M1 & qwen3.5:0.8b-mlx & few\_shot\_3 & 1.4 & nan & nan & nan & 1618.9 & 10472.9 & 306 & 225 & apple\_estimated & 146 \\
+MacBook Air M1 & qwen3.5:0.8b-mlx & long\_cot & 1.4 & 182.60 & 111.23 & 165.33 & 1537.7 & 26706.2 & 128 & 696 & apple\_estimated & 142 \\
+MacBook Air M1 & qwen3.5:0.8b-mlx & short\_cot & 1.4 & 177.85 & 70.29 & 819.90 & 2935.8 & 16603.5 & 133 & 376 & apple\_estimated & 143 \\
+MacBook Air M1 & qwen3.5:0.8b-mlx & zero\_shot\_cot & 1.4 & nan & nan & nan & 1039.1 & 15604.8 & 126 & 385 & apple\_estimated & 145 \\
+MacBook Air M1 & qwen3.5:0.8b-mlx & zero\_shot\_direct & 2.9 & nan & nan & nan & 7368.7 & 17292.5 & 376 & 267 & apple\_estimated & 171 \\
+Windows 10-Core PC & qwen3.5:0.8b & ctx\_0 & 77.6 & 7062.85 & 6809.93 & 2700.71 & 7705.6 & 71672.5 & 142 & 316 & codecarbon\_estimated & 49 \\
+Windows 10-Core PC & qwen3.5:0.8b & ctx\_1024 & 78.8 & 11269.05 & 10852.90 & 2771.03 & 59978.5 & 111302.6 & 1177 & 226 & codecarbon\_estimated & 52 \\
+Windows 10-Core PC & gemma3:4b & ctx\_2048 & 76.0 & 18199.80 & 17360.73 & 3022.90 & 127782.3 & 178591.0 & 2363 & 218 & codecarbon\_estimated & 50 \\
+Windows 10-Core PC & gemma3:4b & ctx\_4096 & 76.0 & 17046.64 & 16393.11 & 3395.32 & 113368.7 & 166693.3 & 2051 & 221 & codecarbon\_estimated & 50 \\
+Windows 10-Core PC & qwen3.5:0.8b & ctx\_512 & 71.2 & 9244.47 & 8569.65 & 3317.96 & 28896.7 & 91557.1 & 606 & 292 & codecarbon\_estimated & 52 \\
+Windows 10-Core PC & qwen3.5:0.8b & few\_shot\_3 & 8.7 & 2008.02 & 1027.05 & 1244.59 & 9877.3 & 23143.7 & 324 & 132 & codecarbon\_estimated & 103 \\
+Windows 10-Core PC & qwen3.5:0.8b & long\_cot & 42.7 & 3464.61 & 3038.72 & 1697.15 & 4151.7 & 62404.3 & 146 & 718 & codecarbon\_estimated & 103 \\
+Windows 10-Core PC & qwen3.5:0.8b & rag\_top\_1 & 0.0 & 1182.21 & 1182.21 & 0.00 & 7542.1 & 34191.5 & 356 & 256 & codecarbon\_estimated & 1 \\
+Windows 10-Core PC & qwen3.5:0.8b & short\_cot & 37.9 & 3110.39 & 2091.10 & 1993.02 & 4510.2 & 36914.3 & 145 & 326 & codecarbon\_estimated & 103 \\
+Windows 10-Core PC & qwen3.5:0.8b & zero\_shot\_cot & 39.8 & 4120.48 & 4621.27 & 1550.84 & 4507.6 & 50742.3 & 142 & 409 & codecarbon\_estimated & 103 \\
+Windows 10-Core PC & qwen3.5:0.8b & zero\_shot\_direct & 3.9 & 1324.60 & 584.08 & 1206.67 & 4207.5 & 16916.0 & 133 & 135 & codecarbon\_estimated & 103 \\
+\hline
+\end{{tabular}}

@@ -179,7 +179,12 @@ class EvaluationResult:
             "raw_output": self.raw_response or "",
             "extracted_answer": self.parsed_answer,
             "answer_parse_success": self.parse_success,
-            "exact_match": self.exact_match
+            "exact_match": self.exact_match,
+            # Research validity aliases (Section 2.A/B)
+            "raw_model_output": self.raw_response or "",
+            "extracted_prediction": self.parsed_answer,
+            "correctness": self.answer_correct,
+            "error_category": self.error_type or ("none" if self.answer_correct else "unknown_error")
         }
 
 

@@ -218,7 +218,35 @@ class PrimaryExperiment(BaseExperiment):
                             "answer_parse_success": eval_res.answer_parse_success,
                             "exact_match": eval_res.exact_match,
                             "error_type": record_error_type,
-                            "error_message": None
+                            "error_message": None,
+                            # 26 Research Reproducibility Fields (Section 2.B)
+                            "experiment_id": self.run_id,
+                            "dataset": "gsm8k",
+                            "dataset_split": "test",
+                            "dataset_version": "main",
+                            "question_id": sample.id,
+                            "prompt_strategy": strategy.value,
+                            "prompt_version": "v1.0",
+                            "model_name": self.model_name,
+                            "model_version": getattr(self.backend, "model_version", "default"),
+                            "model_quantization": self.format,
+                            "inference_engine": self.operator,
+                            "hardware_identifier": self.normalized_device,
+                            "operating_system": self.device_info.get("os", "unknown"),
+                            "generation_parameters": {"temperature": 0.0, "seed": int(self.cli_args.get("seed", 42)), "max_tokens": strat_max_tokens, "top_p": 1.0},
+                            "random_seed": int(self.cli_args.get("seed", 42)),
+                            "input_token_count": infer_out.input_tokens,
+                            "output_token_count": infer_out.output_tokens,
+                            "reasoning_token_count": infer_out.thinking_tokens,
+                            "decode_latency_ms": infer_out.generation_latency_ms,
+                            "energy_measurement_units": "Joules",
+                            "raw_energy_j": energy_reading.energy_total_j,
+                            "idle_energy_j": round(energy_reading.idle_power_w * (infer_out.total_latency_ms / 1000.0), 4) if (energy_reading.idle_power_w and infer_out.total_latency_ms) else None,
+                            "timestamp": self.timestamp,
+                            "raw_model_output": infer_out.raw_output,
+                            "extracted_prediction": eval_res.extracted_answer,
+                            "correctness": eval_res.answer_correct,
+                            "error_category": eval_res.error_type or ("none" if eval_res.answer_correct else "unknown_error")
                         }
                     else:
                         record = {
