@@ -1,0 +1,12 @@
+[2026-09-14 17:21:02] [INFO] Initialized Experiment: rag_gsm8k
+[2026-09-14 17:21:02] [INFO] Run ID: rag_gsm8k__windows_10core_pc__2026-09-14_17-21-01
+[2026-09-14 17:21:02] [INFO] Run Directory: results\rag_gsm8k\windows_10core_pc\2026-09-14_17-21-01
+[2026-09-14 17:21:02] [INFO] Model: qwen3.5:0.8b (Backend: ollama, Format: gguf)
+[2026-09-14 17:21:02] [INFO] Device: windows_10core_pc
+[2026-09-14 17:21:02] [INFO] Evaluation Size: 5 (Evaluation Split: TEST)
+[2026-09-14 17:21:02] [INFO] Initializing BM25 Index over GSM8K TRAIN corpus (Evaluation on TEST split)...
+[2026-09-14 17:21:02] [INFO] Executing 1 warmup run(s)...
+[2026-09-14 17:21:10] [INFO] Warmup 1/1 completed.
+[2026-09-14 17:33:42] [INFO] Experiment completed. Summary saved to results\rag_gsm8k\windows_10core_pc\2026-09-14_17-21-01\summary.json
+[2026-09-14 17:33:43] [INFO] Generated publication tables in results\rag_gsm8k\windows_10core_pc\2026-09-14_17-21-01\tables
+[2026-09-14 17:33:57] [INFO] Generated publication plots in results\rag_gsm8k\windows_10core_pc\2026-09-14_17-21-01

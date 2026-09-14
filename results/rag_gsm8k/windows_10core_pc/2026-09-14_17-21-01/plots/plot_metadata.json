@@ -1,0 +1,25 @@
+{
+    "run_id": "rag_gsm8k__windows_10core_pc__2026-09-14_17-21-01",
+    "source_results_file": "C:\\Users\\saib\\saib_code\\GreenComputin\\results\\rag_gsm8k\\windows_10core_pc\\2026-09-14_17-21-01\\results.jsonl",
+    "plot_generation_timestamp": "2026-09-14 17:33:57",
+    "models": [
+        "qwen3.5:0.8b"
+    ],
+    "devices": [],
+    "strategies": [
+        "zero_shot_direct",
+        "rag_top_1",
+        "rag_top_3",
+        "rag_top_5"
+    ],
+    "sample_count": 20,
+    "repetitions": 1,
+    "plot_version": "2.0-research",
+    "plot_config": {
+        "dpi": 300,
+        "font_scale": 1.15,
+        "context": "paper",
+        "style": "whitegrid",
+        "palette": "colorblind"
+    }
+}

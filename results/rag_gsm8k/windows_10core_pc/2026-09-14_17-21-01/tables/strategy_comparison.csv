@@ -1,0 +1,5 @@
+Strategy,Total Accuracy (%),Valid Accuracy (%),Valid Samples,Mean Thinking Tokens,Mean Visible Output Tokens,Mean Total Output Tokens,Throughput (tok/s),TTFT (ms),Total Latency (ms),Mean CPU (%),Peak CPU (%),RAM (GB),Energy (J),Energy / Correct (J),Accuracy / Joule,Truncation Rate (%)
+Zero-shot Direct,0.00,N/A,0/5,256,0,256,12.39,774.0,21441.7,99.6,100.0,16.75,2031.2879,N/A,0.0000,100.0
+BM25 RAG (top-1),0.00,N/A,0/5,256,0,256,12.15,8277.1,29360.7,99.8,100.0,14.82,2835.0671,N/A,0.0000,100.0
+BM25 RAG (top-3),0.00,N/A,0/5,256,0,256,12.14,17031.9,38124.9,99.8,100.0,14.98,3709.8963,N/A,0.0000,100.0
+BM25 RAG (top-5),0.00,N/A,0/5,256,0,256,11.66,20214.8,42205.5,99.8,100.0,15.05,4125.5999,N/A,0.0000,100.0

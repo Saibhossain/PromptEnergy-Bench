@@ -1,0 +1,7 @@
+Strategy,Total Accuracy (%),Valid Accuracy (%),Valid Samples,Mean Thinking Tokens,Mean Visible Output Tokens,Mean Total Output Tokens,Throughput (tok/s),TTFT (ms),Total Latency (ms),Mean CPU (%),Peak CPU (%),RAM (GB),Energy (J),Energy / Correct (J),Accuracy / Joule,Truncation Rate (%)
+Context 0 tokens,0.00,N/A,0/5,512,0,512,11.87,2245.3,45414.8,99.8,100.0,16.25,4386.5019,N/A,0.0000,100.0
+Context 512 tokens,0.00,N/A,0/5,512,0,512,11.75,12158.5,55806.6,99.8,100.0,16.32,5573.4757,N/A,0.0000,100.0
+Context 1024 tokens,0.00,N/A,0/5,512,0,512,11.61,23637.0,67748.6,99.9,100.0,16.62,6843.1597,N/A,0.0000,100.0
+Context 2048 tokens,0.00,N/A,0/5,512,0,512,10.90,37553.2,84587.8,99.9,100.0,16.67,8509.9221,N/A,0.0000,100.0
+Context 4096 tokens,0.00,N/A,0/5,512,0,512,11.25,43554.6,89101.1,99.9,100.0,16.90,9015.5421,N/A,0.0000,100.0
+Context 8192 tokens,0.00,N/A,0/5,512,0,512,11.51,44011.7,88498.3,99.9,100.0,17.36,8958.4579,N/A,0.0000,100.0

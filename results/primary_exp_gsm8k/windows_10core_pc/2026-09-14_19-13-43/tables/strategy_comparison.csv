@@ -1,0 +1,6 @@
+Strategy,Total Accuracy (%),Valid Accuracy (%),Valid Samples,Mean Thinking Tokens,Mean Visible Output Tokens,Mean Total Output Tokens,Throughput (tok/s),TTFT (ms),Total Latency (ms),Mean CPU (%),Peak CPU (%),RAM (GB),Energy (J),Energy / Correct (J),Accuracy / Joule,Truncation Rate (%)
+Zero-shot Direct,0.00,N/A,0/5,256,0,256,11.38,2989.4,25539.0,99.7,100.0,15.21,1069.4899,N/A,0.0000,100.0
+Few-shot (3),0.00,N/A,0/5,256,0,256,12.20,6807.3,27791.6,99.8,100.0,15.30,2109.5461,N/A,0.0000,100.0
+Zero-shot CoT,0.00,N/A,0/5,512,0,512,11.99,3159.5,45899.0,99.8,100.0,15.43,4097.7921,N/A,0.0000,100.0
+Short CoT,0.00,N/A,0/5,512,0,512,10.88,3009.9,50693.1,99.8,100.0,15.50,4885.0514,N/A,0.0000,100.0
+Long CoT,0.00,N/A,0/5,1024,0,1024,11.71,3318.4,90820.0,99.9,100.0,15.68,9123.9585,N/A,0.0000,100.0

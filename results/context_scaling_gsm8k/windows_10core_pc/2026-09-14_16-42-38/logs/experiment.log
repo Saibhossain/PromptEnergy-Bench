@@ -1,0 +1,13 @@
+[2026-09-14 16:42:38] [INFO] Initialized Experiment: context_scaling_gsm8k
+[2026-09-14 16:42:38] [INFO] Run ID: context_scaling_gsm8k__windows_10core_pc__2026-09-14_16-42-38
+[2026-09-14 16:42:38] [INFO] Run Directory: results\context_scaling_gsm8k\windows_10core_pc\2026-09-14_16-42-38
+[2026-09-14 16:42:38] [INFO] Model: qwen3.5:0.8b (Backend: ollama, Format: gguf)
+[2026-09-14 16:42:38] [INFO] Device: windows_10core_pc
+[2026-09-14 16:42:38] [INFO] Evaluation Size: 5 (Evaluation Split: TEST)
+[2026-09-14 16:42:38] [INFO] Loading GSM8K Train split for Context Corpus...
+[2026-09-14 16:42:39] [INFO] Loading GSM8K Test split for Evaluation...
+[2026-09-14 16:42:39] [INFO] Executing 1 warmup run(s)...
+[2026-09-14 16:42:46] [INFO] Warmup 1/1 completed.
+[2026-09-14 17:20:44] [INFO] Experiment completed. Summary saved to results\context_scaling_gsm8k\windows_10core_pc\2026-09-14_16-42-38\summary.json
+[2026-09-14 17:20:44] [INFO] Generated publication tables in results\context_scaling_gsm8k\windows_10core_pc\2026-09-14_16-42-38\tables
+[2026-09-14 17:21:01] [INFO] Generated publication plots in results\context_scaling_gsm8k\windows_10core_pc\2026-09-14_16-42-38

@@ -1,0 +1,7 @@
+# Marginal Energy Gain (MEG) Relative to Baseline
+
+| Baseline Strategy   | Comparison Strategy   | Accuracy Change   | Energy Change   | Marginal Energy Gain (% / J)   | Latency Change   |
+|:--------------------|:----------------------|:------------------|:----------------|:-------------------------------|:-----------------|
+| Zero-shot Direct    | BM25 RAG (top-1)      | +0.00 pp          | +803.7792 J     | 0.0000 %/J                     | +7919.0 ms       |
+| Zero-shot Direct    | BM25 RAG (top-3)      | +0.00 pp          | +1678.6084 J    | 0.0000 %/J                     | +16683.2 ms      |
+| Zero-shot Direct    | BM25 RAG (top-5)      | +0.00 pp          | +2094.3120 J    | 0.0000 %/J                     | +20763.8 ms      |
