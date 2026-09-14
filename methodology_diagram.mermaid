@@ -1,0 +1,73 @@
+flowchart LR
+ subgraph Inputs["Input Space"]
+    direction LR
+        D["<b>Task Families</b><br>GSM8K, NQ, CNN/DM"]
+        P["<b>Prompt Interventions (π)</b><br>Standard, CoT, RAG, Context Scaling"]
+        H["<b>Hardware Environments</b><br>ARM (M1) &amp; x86_64 (CPU/GPU)"]
+  end
+ subgraph Telemetry["Multi-Modal Metric Extraction"]
+    direction LR
+        L["<b>Latency Breakdown</b><br>T_prefill + T_decode = T_total"]
+        E["<b>Energy Decomposition</b><br>E_net = E_system - ∫P_idle dt"]
+        T["<b>Token Accounting</b><br>L_in, N_think, N_out"]
+  end
+ subgraph Stage1["Phase I: Experimental Setup, Inference & Telemetry"]
+    direction TB
+        Inputs
+        BE{{"<b>Inference Engine</b><br>(Ollama / MLX / Transformers)"}}
+        Telemetry
+  end
+ subgraph Validation["Universal Evaluation Pipeline"]
+    direction LR
+        V1("<b>Strict Truncation Check</b><br>stop_reason = length")
+        V2("<b>Zero-Coercion</b><br>Invalid ⇒ Accuracy = 0")
+        V3("<b>Metric Computation</b><br>Exact Match, F1, ROUGE-L")
+  end
+ subgraph Optimization["Analytical Framework"]
+    direction LR
+        A1("<b>Marginal Gains</b><br>MEG = ΔAcc / ΔEnergy")
+        A2("<b>3D Pareto Frontier</b><br>(Energy, Accuracy, Latency)")
+        A3("<b>Budget Solver</b><br>max A(π) s.t. E(π)≤B_E, T(π)≤B_T")
+  end
+ subgraph Stage2["Phase II: Evaluation & Analytical Optimization"]
+    direction TB
+        Validation
+        Optimization
+  end
+    D --> BE
+    P --> BE
+    H --> BE
+    BE --> Telemetry
+    V1 -- If Valid --> V3
+    V1 -- If Truncated --> V2
+    V2 --> V3
+    A1 --> A2
+    A2 --> A3
+    Validation --> Optimization
+    Telemetry --> Stage2
+
+     D:::inputNode
+     P:::inputNode
+     H:::inputNode
+     L:::metricNode
+     E:::metricNode
+     T:::metricNode
+     BE:::engineNode
+     V1:::evalNode
+     V2:::evalNode
+     V3:::evalNode
+     A1:::optNode
+     A2:::optNode
+     A3:::optNode
+    classDef inputNode fill:#eef2ff,stroke:#4f46e5,stroke-width:2px,color:#1e1b4b,rx:5,ry:5
+    classDef engineNode fill:#f0fdf4,stroke:#16a34a,stroke-width:2px,color:#14532d,rx:8,ry:8
+    classDef metricNode fill:#ffffff,stroke:#22c55e,stroke-width:1px,color:#14532d,stroke-dasharray: 5 5
+    classDef evalNode fill:#fffbeb,stroke:#d97706,stroke-width:2px,color:#78350f,rx:8,ry:8
+    classDef optNode fill:#fff1f2,stroke:#e11d48,stroke-width:2px,color:#881337,rx:8,ry:8
+    classDef outNode fill:#faf5ff,stroke:#9333ea,stroke-width:2px,color:#4c1d95,rx:5,ry:5
+    style Inputs fill:#ffffff,stroke:#cbd5e1,stroke-width:1px,stroke-dasharray: 4 4
+    style Telemetry fill:#ffffff,stroke:#cbd5e1,stroke-width:1px,stroke-dasharray: 4 4
+    style Validation fill:#ffffff,stroke:#cbd5e1,stroke-width:1px,stroke-dasharray: 4 4
+    style Optimization fill:#ffffff,stroke:#cbd5e1,stroke-width:1px,stroke-dasharray: 4 4
+    style Stage2 fill:#f8fafc,stroke:#94a3b8,stroke-width:2px,rx:10
+    style Stage1 fill:#f8fafc,stroke:#94a3b8,stroke-width:2px,rx:10

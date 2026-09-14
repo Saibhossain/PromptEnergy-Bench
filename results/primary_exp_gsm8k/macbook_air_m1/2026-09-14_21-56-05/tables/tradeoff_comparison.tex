@@ -1,0 +1,15 @@
+\begin{table}
+\caption{Energy-Accuracy-Latency Trade-off and Pareto Frontier Analysis}
+\label{tab:tradeoff_comparison}
+\begin{tabular}{lllllllll}
+\toprule
+Strategy & Total Accuracy & Energy (J) & Latency (ms) & Thinking Tokens & Pareto Optimal & Accuracy Gain vs Baseline & Energy Increase vs Baseline & Latency Increase vs Baseline \\
+\midrule
+Zero-shot Direct & 0.00\% & 30.3511 & 6509.1 & 256 & Yes & Baseline & Baseline & Baseline \\
+Few-shot (3) & 0.00\% & 11.6391 & 16738.6 & 256 & Yes & +0.00 pp & -18.7120 J & +10229.5 ms \\
+Zero-shot CoT & 0.00\% & 47.4290 & 35498.6 & 512 & No & +0.00 pp & +17.0779 J & +28989.5 ms \\
+Short CoT & 0.00\% & 38.3754 & 28230.0 & 512 & No & +0.00 pp & +8.0243 J & +21720.9 ms \\
+Long CoT & 0.00\% & 77.2864 & 49329.3 & 1024 & No & +0.00 pp & +46.9353 J & +42820.2 ms \\
+\bottomrule
+\end{tabular}
+\end{table}
