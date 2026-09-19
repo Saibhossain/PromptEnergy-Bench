@@ -2,21 +2,33 @@
 \hline
 Hardware & Model & Prompt Strategy & Accuracy (\%) & Mean Energy (J) & Energy / Correct (J) & Accuracy / Joule \\
 \hline
-MacBook Air M1 & qwen3.5:0.8b-mlx & few\_shot\_3 & 1.4 & nan & nan & 0.000000 \\
-MacBook Air M1 & qwen3.5:0.8b-mlx & long\_cot & 1.4 & 182.60 & 12964.48 & 0.000077 \\
-MacBook Air M1 & qwen3.5:0.8b-mlx & short\_cot & 1.4 & 177.85 & 12716.24 & 0.000079 \\
-MacBook Air M1 & qwen3.5:0.8b-mlx & zero\_shot\_cot & 1.4 & nan & nan & 0.000000 \\
-MacBook Air M1 & qwen3.5:0.8b-mlx & zero\_shot\_direct & 2.9 & nan & nan & 0.000000 \\
-Windows 10-Core PC & qwen3.5:0.8b & ctx\_0 & 77.6 & 7062.85 & 9107.36 & 0.000110 \\
-Windows 10-Core PC & qwen3.5:0.8b & ctx\_1024 & 78.8 & 11269.05 & 14292.46 & 0.000070 \\
-Windows 10-Core PC & gemma3:4b & ctx\_2048 & 76.0 & 18199.80 & 23947.10 & 0.000042 \\
-Windows 10-Core PC & gemma3:4b & ctx\_4096 & 76.0 & 17046.64 & 22429.79 & 0.000045 \\
-Windows 10-Core PC & qwen3.5:0.8b & ctx\_512 & 71.2 & 9244.47 & 12992.23 & 0.000077 \\
-Windows 10-Core PC & qwen3.5:0.8b & few\_shot\_3 & 8.7 & 2008.02 & 22980.65 & 0.000044 \\
-Windows 10-Core PC & qwen3.5:0.8b & long\_cot & 42.7 & 3464.61 & 8110.34 & 0.000123 \\
-Windows 10-Core PC & qwen3.5:0.8b & rag\_top\_1 & 0.0 & 1182.21 & N/A & 0.000000 \\
-Windows 10-Core PC & qwen3.5:0.8b & short\_cot & 37.9 & 3110.39 & 8214.62 & 0.000122 \\
-Windows 10-Core PC & qwen3.5:0.8b & zero\_shot\_cot & 39.8 & 4120.48 & 10351.45 & 0.000097 \\
-Windows 10-Core PC & qwen3.5:0.8b & zero\_shot\_direct & 3.9 & 1324.60 & 34108.36 & 0.000029 \\
+MacBook Air M1 & qwen3.5:0.8b-mlx & ctx\_0 & 0.0 & 33.36 & N/A & 0.000000 \\
+MacBook Air M1 & qwen3.5:0.8b-mlx & ctx\_1024 & 0.0 & 98.84 & N/A & 0.000000 \\
+MacBook Air M1 & qwen3.5:0.8b-mlx & ctx\_2048 & 0.0 & 88.92 & N/A & 0.000000 \\
+MacBook Air M1 & qwen3.5:0.8b-mlx & ctx\_4096 & 0.0 & 92.87 & N/A & 0.000000 \\
+MacBook Air M1 & qwen3.5:0.8b-mlx & ctx\_512 & 0.0 & 45.12 & N/A & 0.000000 \\
+MacBook Air M1 & qwen3.5:0.8b-mlx & ctx\_8192 & 0.0 & 152.87 & N/A & 0.000000 \\
+MacBook Air M1 & qwen3.5:0.8b-mlx & few\_shot\_3 & 1.1 & nan & nan & 0.000000 \\
+MacBook Air M1 & qwen3.5:0.8b-mlx & long\_cot & 1.1 & 159.45 & 14510.20 & 0.000069 \\
+MacBook Air M1 & qwen3.5:0.8b-mlx & rag\_top\_1 & 0.0 & 28.51 & N/A & 0.000000 \\
+MacBook Air M1 & qwen3.5:0.8b-mlx & rag\_top\_3 & 0.0 & 31.25 & N/A & 0.000000 \\
+MacBook Air M1 & qwen3.5:0.8b-mlx & rag\_top\_5 & 0.0 & 35.77 & N/A & 0.000000 \\
+MacBook Air M1 & qwen3.5:0.8b-mlx & short\_cot & 1.1 & 147.36 & 13483.75 & 0.000074 \\
+MacBook Air M1 & qwen3.5:0.8b-mlx & zero\_shot\_cot & 1.1 & nan & nan & 0.000000 \\
+MacBook Air M1 & qwen3.5:0.8b-mlx & zero\_shot\_direct & 2.0 & nan & nan & 0.000000 \\
+Windows 10-Core PC & qwen3.5:0.8b & ctx\_0 & 63.3 & 6595.98 & 10414.70 & 0.000096 \\
+Windows 10-Core PC & qwen3.5:0.8b & ctx\_1024 & 65.1 & 10507.02 & 16144.94 & 0.000062 \\
+Windows 10-Core PC & gemma3:4b & ctx\_2048 & 62.3 & 16435.11 & 26382.67 & 0.000038 \\
+Windows 10-Core PC & gemma3:4b & ctx\_4096 & 62.3 & 15606.19 & 25052.04 & 0.000040 \\
+Windows 10-Core PC & qwen3.5:0.8b & ctx\_512 & 58.7 & 8620.76 & 14678.59 & 0.000068 \\
+Windows 10-Core PC & qwen3.5:0.8b & ctx\_8192 & 0.0 & 8958.46 & N/A & 0.000000 \\
+Windows 10-Core PC & qwen3.5:0.8b & few\_shot\_3 & 3.3 & 2262.75 & 69139.66 & 0.000014 \\
+Windows 10-Core PC & qwen3.5:0.8b & long\_cot & 26.7 & 5690.18 & 21338.16 & 0.000047 \\
+Windows 10-Core PC & qwen3.5:0.8b & rag\_top\_1 & 0.0 & 2684.81 & N/A & 0.000000 \\
+Windows 10-Core PC & qwen3.5:0.8b & rag\_top\_3 & 0.0 & 3709.90 & N/A & 0.000000 \\
+Windows 10-Core PC & qwen3.5:0.8b & rag\_top\_5 & 0.0 & 4125.60 & N/A & 0.000000 \\
+Windows 10-Core PC & qwen3.5:0.8b & short\_cot & 14.2 & 4299.37 & 30316.06 & 0.000033 \\
+Windows 10-Core PC & qwen3.5:0.8b & zero\_shot\_cot & 14.9 & 4518.38 & 30306.19 & 0.000033 \\
+Windows 10-Core PC & qwen3.5:0.8b & zero\_shot\_direct & 1.4 & 1743.56 & 126408.19 & 0.000008 \\
 \hline
 \end{{tabular}}

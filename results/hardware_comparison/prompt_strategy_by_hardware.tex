@@ -2,21 +2,33 @@
 \hline
 Prompt Strategy & Hardware & Accuracy (\%) & Mean Energy (J) & Mean TTFT (ms) & Mean Latency (ms) & Runs \\
 \hline
-few\_shot\_3 & MacBook Air M1 & 1.4 & nan & 1618.9 & 10472.9 & 146 \\
-long\_cot & MacBook Air M1 & 1.4 & 182.60 & 1537.7 & 26706.2 & 142 \\
-short\_cot & MacBook Air M1 & 1.4 & 177.85 & 2935.8 & 16603.5 & 143 \\
-zero\_shot\_cot & MacBook Air M1 & 1.4 & nan & 1039.1 & 15604.8 & 145 \\
-zero\_shot\_direct & MacBook Air M1 & 2.9 & nan & 7368.7 & 17292.5 & 171 \\
-ctx\_0 & Windows 10-Core PC & 77.6 & 7062.85 & 7705.6 & 71672.5 & 49 \\
-ctx\_1024 & Windows 10-Core PC & 78.8 & 11269.05 & 59978.5 & 111302.6 & 52 \\
-ctx\_2048 & Windows 10-Core PC & 76.0 & 18199.80 & 127782.3 & 178591.0 & 50 \\
-ctx\_4096 & Windows 10-Core PC & 76.0 & 17046.64 & 113368.7 & 166693.3 & 50 \\
-ctx\_512 & Windows 10-Core PC & 71.2 & 9244.47 & 28896.7 & 91557.1 & 52 \\
-few\_shot\_3 & Windows 10-Core PC & 8.7 & 2008.02 & 9877.3 & 23143.7 & 103 \\
-long\_cot & Windows 10-Core PC & 42.7 & 3464.61 & 4151.7 & 62404.3 & 103 \\
-rag\_top\_1 & Windows 10-Core PC & 0.0 & 1182.21 & 7542.1 & 34191.5 & 1 \\
-short\_cot & Windows 10-Core PC & 37.9 & 3110.39 & 4510.2 & 36914.3 & 103 \\
-zero\_shot\_cot & Windows 10-Core PC & 39.8 & 4120.48 & 4507.6 & 50742.3 & 103 \\
-zero\_shot\_direct & Windows 10-Core PC & 3.9 & 1324.60 & 4207.5 & 16916.0 & 103 \\
+ctx\_0 & MacBook Air M1 & 0.0 & 33.36 & 373.8 & 22096.3 & 40 \\
+ctx\_1024 & MacBook Air M1 & 0.0 & 98.84 & 6725.0 & 60613.6 & 40 \\
+ctx\_2048 & MacBook Air M1 & 0.0 & 88.92 & 10022.5 & 49544.0 & 40 \\
+ctx\_4096 & MacBook Air M1 & 0.0 & 92.87 & 14902.1 & 41470.7 & 40 \\
+ctx\_512 & MacBook Air M1 & 0.0 & 45.12 & 2534.7 & 27989.6 & 40 \\
+ctx\_8192 & MacBook Air M1 & 0.0 & 152.87 & 30544.4 & 58059.3 & 40 \\
+few\_shot\_3 & MacBook Air M1 & 1.1 & nan & 1566.1 & 11820.4 & 186 \\
+long\_cot & MacBook Air M1 & 1.1 & 159.45 & 1321.7 & 31678.3 & 182 \\
+rag\_top\_1 & MacBook Air M1 & 0.0 & 28.51 & 1066.0 & 9386.8 & 40 \\
+rag\_top\_3 & MacBook Air M1 & 0.0 & 31.25 & 2098.9 & 10205.0 & 40 \\
+rag\_top\_5 & MacBook Air M1 & 0.0 & 35.77 & 2821.9 & 10969.3 & 40 \\
+short\_cot & MacBook Air M1 & 1.1 & 147.36 & 2454.9 & 19144.8 & 183 \\
+zero\_shot\_cot & MacBook Air M1 & 1.1 & nan & 1056.0 & 19906.2 & 185 \\
+zero\_shot\_direct & MacBook Air M1 & 2.0 & nan & 5145.1 & 14400.3 & 251 \\
+ctx\_0 & Windows 10-Core PC & 63.3 & 6595.98 & 6714.1 & 67151.4 & 60 \\
+ctx\_1024 & Windows 10-Core PC & 65.1 & 10507.02 & 53635.6 & 103958.3 & 63 \\
+ctx\_2048 & Windows 10-Core PC & 62.3 & 16435.11 & 111397.6 & 161542.7 & 61 \\
+ctx\_4096 & Windows 10-Core PC & 62.3 & 15606.19 & 100764.8 & 152885.2 & 61 \\
+ctx\_512 & Windows 10-Core PC & 58.7 & 8620.76 & 25897.2 & 85599.5 & 63 \\
+ctx\_8192 & Windows 10-Core PC & 0.0 & 8958.46 & 44011.7 & 88498.3 & 10 \\
+few\_shot\_3 & Windows 10-Core PC & 3.3 & 2262.75 & 5862.4 & 24756.2 & 275 \\
+long\_cot & Windows 10-Core PC & 26.7 & 5690.18 & 3788.3 & 74119.6 & 165 \\
+rag\_top\_1 & Windows 10-Core PC & 0.0 & 2684.81 & 8210.3 & 29799.8 & 11 \\
+rag\_top\_3 & Windows 10-Core PC & 0.0 & 3709.90 & 17031.9 & 38124.9 & 10 \\
+rag\_top\_5 & Windows 10-Core PC & 0.0 & 4125.60 & 20214.8 & 42205.5 & 10 \\
+short\_cot & Windows 10-Core PC & 14.2 & 4299.37 & 3506.1 & 45200.2 & 275 \\
+zero\_shot\_cot & Windows 10-Core PC & 14.9 & 4518.38 & 3424.6 & 49145.8 & 275 \\
+zero\_shot\_direct & Windows 10-Core PC & 1.4 & 1743.56 & 2363.1 & 20974.9 & 290 \\
 \hline
 \end{{tabular}}
