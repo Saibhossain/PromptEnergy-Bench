@@ -246,5 +246,3 @@ python -m unittest discover -s test
 
 * **Cloud Energy Comparability**: Cloud API energy values are software/LCA estimates and must not be compared directly against hardware-level wattmeters without explicit labeling.
 * **CPU vs GPU Power Isolation**: On CPU-only systems (e.g. standard Windows PCs), CodeCarbon measures system-level estimation; on NVIDIA servers, NVML measures GPU-only package power.
-
-
