@@ -2,6 +2,6 @@
 
 | Model | Hardware | Accuracy (%) | Mean Energy (J) | Mean Latency (ms) | Throughput (tok/s) | Runs |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| qwen3.5:0.8b-mlx | MacBook Air M1 | 1.7 | nan | 17289.6 | 27.62 | 747 |
+| qwen3.5:0.8b-mlx | MacBook Air M1 | 1.0 | nan | 22552.4 | 24.10 | 1347 |
 | gemma3:4b | Windows 10-Core PC | 65.5 | 7194.54 | 77596.1 | 3.10 | 502 |
-| qwen3.5:0.8b | Windows 10-Core PC | 0.0 | 3780.97 | 44899.7 | 11.00 | 267 |
+| qwen3.5:0.8b | Windows 10-Core PC | 0.0 | 3798.46 | 45588.0 | 10.90 | 278 |

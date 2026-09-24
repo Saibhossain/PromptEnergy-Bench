@@ -1,2 +1,6 @@
 dataset,model,hardware,top_k,sample_size,accuracy,mean_retrieval_latency_ms,mean_generation_latency_ms,mean_total_latency_ms,mean_energy_j
 gsm8k,qwen3.5:0.8b,unknown,1,1,0.0,1867.817,26649.45,34191.5,1182.2078
+gsm8k,qwen3.5:0.8b-mlx,macbook_air_m1,0,40,0.0,0.0,9390.26,9927.3995,25.355255
+gsm8k,qwen3.5:0.8b-mlx,macbook_air_m1,1,40,0.0,843.5334500000001,8320.761499999999,9386.798499999999,28.51332
+gsm8k,qwen3.5:0.8b-mlx,macbook_air_m1,3,40,0.0,812.3208000000001,8106.0785000000005,10204.9795,31.254319999999996
+gsm8k,qwen3.5:0.8b-mlx,macbook_air_m1,5,40,0.0,813.3637,8147.326499999998,10969.2695,35.768695
