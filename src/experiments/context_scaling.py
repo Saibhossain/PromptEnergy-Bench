@@ -5,9 +5,9 @@ from typing import Dict, Any, List, Optional
 from tqdm import tqdm
 
 from src.experiments.base_experiment import BaseExperiment
-from src.data.gsm8k import load_gsm8k
+from src.data.loader import load_benchmark_dataset
 from src.data.context_builder import ContextBuilder, ScaledContext
-from src.prompts.prompt_registry import PromptStrategy, format_gsm8k_prompt
+from src.prompts.prompt_registry import PromptStrategy, format_prompt, format_gsm8k_prompt
 from src.evaluation import get_evaluator, EvaluationStatus
 from src.infrastructure.checkpoint import compute_condition_key
 
@@ -41,16 +41,21 @@ class ContextScalingExperiment(BaseExperiment):
         self.evaluator = get_evaluator(self.config.get("dataset", {}).get("name", "gsm8k"))
 
     def run(self) -> Dict[str, Any]:
-        self.logger.info("Loading GSM8K Train split for Context Corpus...")
-        train_records = load_gsm8k(split="train")
+        dataset_name = self.config.get("dataset", {}).get("name", "gsm8k")
+        eval_split = self.config.get("dataset", {}).get("evaluation_split", "test")
+        corpus_split = self.config.get("dataset", {}).get("context_source_split", "train")
+
+        self.logger.info(f"Loading {dataset_name} ({corpus_split} split) for Context Corpus...")
+        train_records = load_benchmark_dataset(dataset_name, split=corpus_split)
         context_builder = ContextBuilder(train_records)
 
-        self.logger.info("Loading GSM8K Test split for Evaluation...")
-        eval_records = load_gsm8k(split="test", eval_size=self.eval_size)
+        self.logger.info(f"Loading {dataset_name} ({eval_split} split) for Evaluation...")
+        eval_records = load_benchmark_dataset(dataset_name, split=eval_split, eval_size=self.eval_size)
 
         # Warmup
-        warmup_msgs = format_gsm8k_prompt(
-            question="What is 2+2?",
+        warmup_msgs = format_prompt(
+            dataset=dataset_name,
+            input_text="What is 2+2?",
             strategy=self.strategy
         )
         self.run_warmup(warmup_msgs)
@@ -73,7 +78,7 @@ class ContextScalingExperiment(BaseExperiment):
                         model=self.model_name,
                         strategy=f"ctx_{ctx_size}",
                         repetition=rep,
-                        context_type=f"gsm8k_{self.context_type}_corpus" if ctx_size > 0 else "none",
+                        context_type=f"{dataset_name}_{self.context_type}_corpus" if ctx_size > 0 else "none",
                         context_target_tokens=ctx_size
                     )
 
@@ -88,10 +93,11 @@ class ContextScalingExperiment(BaseExperiment):
                         exclude_id=sample.id
                     )
 
-                    ctx_type = "empty" if ctx_size == 0 else f"gsm8k_{self.context_type}_corpus"
+                    ctx_type = "empty" if ctx_size == 0 else f"{dataset_name}_{self.context_type}_corpus"
 
-                    prompt_text = format_gsm8k_prompt(
-                        question=sample.question,
+                    prompt_text = format_prompt(
+                        dataset=dataset_name,
+                        input_text=sample.input_text,
                         strategy=self.strategy,
                         context=scaled_ctx.context_text,
                         allow_context=True

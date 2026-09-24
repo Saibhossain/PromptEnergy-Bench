@@ -175,9 +175,9 @@ class BaseExperiment(ABC):
                     "format": self.format
                 },
                 "dataset": {
-                    "name": "gsm8k",
-                    "evaluation_split": "test",
-                    "context_source_split": "train",
+                    "name": str(self.cli_args.get("dataset") or self.cli_args.get("dataset_name") or "gsm8k"),
+                    "evaluation_split": str(self.cli_args.get("evaluation_split") or "test"),
+                    "context_source_split": str(self.cli_args.get("context_source_split") or "train"),
                     "evaluation_size": self.eval_size
                 },
                 "sampling": {

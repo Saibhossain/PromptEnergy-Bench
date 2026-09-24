@@ -312,8 +312,36 @@ DATASET_PROMPT_REGISTRY: Dict[str, Dict[PromptStrategy, Dict[str, Any]]] = {
             "reasoning": True,
             "context_allowed": False,
         }
+    },
+    "contexteval": {
+        PromptStrategy.ZERO_SHOT_DIRECT: {
+            "system": SYSTEM_QA_ZERO_SHOT_DIRECT,
+            "builder": lambda q: build_qa_user_prompt(PromptStrategy.ZERO_SHOT_DIRECT, q),
+            "uses_demonstrations": False,
+            "reasoning": False,
+            "context_allowed": True,
+        },
+        PromptStrategy.ZERO_SHOT_COT: {
+            "system": SYSTEM_QA_ZERO_SHOT_COT,
+            "builder": lambda q: build_qa_user_prompt(PromptStrategy.ZERO_SHOT_COT, q),
+            "uses_demonstrations": False,
+            "reasoning": True,
+            "context_allowed": True,
+        },
+        PromptStrategy.RAG: {
+            "system": SYSTEM_QA_RAG,
+            "builder": lambda q: build_qa_user_prompt(PromptStrategy.RAG, q),
+            "uses_demonstrations": False,
+            "reasoning": False,
+            "context_allowed": True,
+        }
     }
 }
+
+# Aliases
+DATASET_PROMPT_REGISTRY["nq"] = DATASET_PROMPT_REGISTRY["natural_questions"]
+DATASET_PROMPT_REGISTRY["cnn"] = DATASET_PROMPT_REGISTRY["cnn_dailymail"]
+DATASET_PROMPT_REGISTRY["context_eval"] = DATASET_PROMPT_REGISTRY["contexteval"]
 
 # Backward compatibility registry alias
 PROMPT_REGISTRY = DATASET_PROMPT_REGISTRY["gsm8k"]

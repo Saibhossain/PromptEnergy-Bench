@@ -5,18 +5,20 @@ from typing import Dict, Any, List, Optional
 from tqdm import tqdm
 
 from src.experiments.base_experiment import BaseExperiment
-from src.data.gsm8k import load_gsm8k
+from src.data.loader import load_benchmark_dataset
 from src.prompts.prompt_registry import (
     PromptStrategy,
+    format_prompt,
     format_gsm8k_prompt,
-    get_prompt_hash
+    get_prompt_hash,
+    DATASET_PROMPT_REGISTRY
 )
 from src.evaluation import get_evaluator, EvaluationStatus
 from src.infrastructure.checkpoint import compute_condition_key
 
 
 class PrimaryExperiment(BaseExperiment):
-    """Orchestrates Experiment 1."""
+    """Orchestrates Experiment 1: Prompting Strategy Comparison."""
 
     def __init__(self, cli_args: Optional[Dict[str, Any]] = None, interactive: bool = False):
         super().__init__(
@@ -25,13 +27,26 @@ class PrimaryExperiment(BaseExperiment):
             interactive=interactive
         )
 
-        self.strategies = [
-            PromptStrategy.ZERO_SHOT_DIRECT,
-            PromptStrategy.FEW_SHOT_3,
-            PromptStrategy.ZERO_SHOT_COT,
-            PromptStrategy.SHORT_COT,
-            PromptStrategy.LONG_COT
-        ]
+        dataset_name = self.config.get("dataset", {}).get("name", "gsm8k")
+        if dataset_name in DATASET_PROMPT_REGISTRY:
+            supported = list(DATASET_PROMPT_REGISTRY[dataset_name].keys())
+            self.strategies = [s for s in [
+                PromptStrategy.ZERO_SHOT_DIRECT,
+                PromptStrategy.FEW_SHOT_3,
+                PromptStrategy.ZERO_SHOT_COT,
+                PromptStrategy.SHORT_COT,
+                PromptStrategy.LONG_COT
+            ] if s in supported]
+            if not self.strategies:
+                self.strategies = supported
+        else:
+            self.strategies = [
+                PromptStrategy.ZERO_SHOT_DIRECT,
+                PromptStrategy.FEW_SHOT_3,
+                PromptStrategy.ZERO_SHOT_COT,
+                PromptStrategy.SHORT_COT,
+                PromptStrategy.LONG_COT
+            ]
 
         # Record prompt hash in config
         self.config["strategies"] = [s.value for s in self.strategies]
@@ -39,14 +54,17 @@ class PrimaryExperiment(BaseExperiment):
         self.evaluator = get_evaluator(self.config.get("dataset", {}).get("name", "gsm8k"))
 
     def run(self) -> Dict[str, Any]:
-        self.logger.info("Loading GSM8K evaluation dataset (TEST split)...")
-        eval_records = load_gsm8k(split="test", eval_size=self.eval_size)
+        dataset_name = self.config.get("dataset", {}).get("name", "gsm8k")
+        eval_split = self.config.get("dataset", {}).get("evaluation_split", "test")
+        self.logger.info(f"Loading {dataset_name} evaluation dataset ({eval_split} split)...")
+        eval_records = load_benchmark_dataset(dataset_name, split=eval_split, eval_size=self.eval_size)
         self.logger.info(f"Loaded {len(eval_records)} evaluation examples.")
 
         # Warmup with standard zero-shot direct prompt
-        warmup_prompt = format_gsm8k_prompt(
-            question="If John has 5 apples and eats 2, how many apples does he have left?",
-            strategy=PromptStrategy.ZERO_SHOT_DIRECT
+        warmup_prompt = format_prompt(
+            dataset=dataset_name,
+            strategy=PromptStrategy.ZERO_SHOT_DIRECT,
+            input_text="What is 2+2?"
         )
         self.run_warmup(warmup_prompt)
 
@@ -74,9 +92,10 @@ class PrimaryExperiment(BaseExperiment):
                         continue
 
                     # Construct exact prompt
-                    prompt_text = format_gsm8k_prompt(
-                        question=sample.question,
-                        strategy=strategy
+                    prompt_text = format_prompt(
+                        dataset=dataset_name,
+                        strategy=strategy,
+                        input_text=sample.input_text
                     )
 
                     sampling_cfg = self.config.get("sampling", {})

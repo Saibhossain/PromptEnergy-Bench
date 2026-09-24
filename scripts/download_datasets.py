@@ -46,7 +46,8 @@ DATASET_REGISTRY: Dict[str, Dict[str, Any]] = {
     },
     "contexteval": {
         "hf_path": "allenai/ContextEval",
-        "config": "main",
+        "config": None,
+        "data_files": {"test": "all_data_latest_filtered_hf.jsonl"},
         "folder": "contexteval",
         "description": "Long-Context Evaluation Benchmark (ContextEval)",
         "default_splits": ["test"]
@@ -164,7 +165,9 @@ def download_single_dataset(
     t0 = time.time()
     try:
         print(f"Fetching '{meta['hf_path']}' from HuggingFace...")
-        if meta["config"]:
+        if meta.get("data_files"):
+            dataset = load_dataset(meta["hf_path"], data_files=meta["data_files"])
+        elif meta.get("config"):
             dataset = load_dataset(meta["hf_path"], meta["config"])
         else:
             dataset = load_dataset(meta["hf_path"])

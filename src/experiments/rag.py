@@ -5,9 +5,9 @@ from typing import Dict, Any, List, Optional
 from tqdm import tqdm
 
 from src.experiments.base_experiment import BaseExperiment
-from src.data.gsm8k import load_gsm8k
+from src.data.loader import load_benchmark_dataset
 from src.data.retrieval import BM25Retriever, RetrievalResult
-from src.prompts.prompt_registry import PromptStrategy, format_gsm8k_prompt
+from src.prompts.prompt_registry import PromptStrategy, format_prompt, format_gsm8k_prompt
 from src.evaluation import get_evaluator, EvaluationStatus
 from src.infrastructure.checkpoint import compute_condition_key
 
@@ -39,14 +39,19 @@ class RAGExperiment(BaseExperiment):
         self.evaluator = get_evaluator(self.config.get("dataset", {}).get("name", "gsm8k"))
 
     def run(self) -> Dict[str, Any]:
-        self.logger.info("Initializing BM25 Index over GSM8K TRAIN corpus (Evaluation on TEST split)...")
-        eval_records = load_gsm8k(split="test", eval_size=self.eval_size)
-        train_records = load_gsm8k(split="train")
+        dataset_name = self.config.get("dataset", {}).get("name", "gsm8k")
+        eval_split = self.config.get("dataset", {}).get("evaluation_split", "test")
+        corpus_split = self.config.get("dataset", {}).get("context_source_split", "train")
+
+        self.logger.info(f"Initializing BM25 Index over {dataset_name} {corpus_split.upper()} corpus (Evaluation on {eval_split.upper()} split)...")
+        eval_records = load_benchmark_dataset(dataset_name, split=eval_split, eval_size=self.eval_size)
+        train_records = load_benchmark_dataset(dataset_name, split=corpus_split)
         retriever = BM25Retriever(corpus=train_records)
 
         # Warmup
-        warmup_msgs = format_gsm8k_prompt(
-            question="What is 2+2?",
+        warmup_msgs = format_prompt(
+            dataset=dataset_name,
+            input_text="What is 2+2?",
             strategy=self.strategy
         )
         self.run_warmup(warmup_msgs)
@@ -81,13 +86,14 @@ class RAGExperiment(BaseExperiment):
 
                     # Execute BM25 retrieval
                     retrieval_res: RetrievalResult = retriever.retrieve(
-                        query=sample.question,
+                        query=sample.input_text,
                         top_k=k,
                         exclude_id=sample.id
                     )
 
-                    prompt_text = format_gsm8k_prompt(
-                        question=sample.question,
+                    prompt_text = format_prompt(
+                        dataset=dataset_name,
+                        input_text=sample.input_text,
                         strategy=self.strategy,
                         context=retrieval_res.context_text if k > 0 else None,
                         allow_context=(k > 0)
