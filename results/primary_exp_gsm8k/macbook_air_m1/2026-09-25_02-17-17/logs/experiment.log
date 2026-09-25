@@ -1,0 +1,14 @@
+[2026-09-25 02:17:17] [INFO] Initialized Experiment: primary_exp_gsm8k
+[2026-09-25 02:17:17] [INFO] Run ID: primary_exp_gsm8k__macbook_air_m1__2026-09-25_02-17-17
+[2026-09-25 02:17:17] [INFO] Run Directory: results/primary_exp_gsm8k/macbook_air_m1/2026-09-25_02-17-17
+[2026-09-25 02:17:17] [INFO] Model: qwen3.5:0.8b-mlx (Backend: ollama, Format: mlx)
+[2026-09-25 02:17:17] [INFO] Device: macbook_air_m1
+[2026-09-25 02:17:17] [INFO] Evaluation Size: 10 (Evaluation Split: TEST)
+[2026-09-25 02:17:17] [INFO] Loading cnn_dailymail evaluation dataset (test split)...
+[2026-09-25 02:17:17] [INFO] Loaded 10 evaluation examples.
+[2026-09-25 02:17:17] [INFO] Executing 1 warmup run(s)...
+[2026-09-25 02:17:19] [INFO] Warmup 1/1 completed.
+[2026-09-25 02:17:19] [INFO] Beginning main evaluation across 20 inference requests...
+[2026-09-25 02:20:34] [INFO] Experiment completed. Summary saved to results/primary_exp_gsm8k/macbook_air_m1/2026-09-25_02-17-17/summary.json
+[2026-09-25 02:20:35] [INFO] Generated publication tables in results/primary_exp_gsm8k/macbook_air_m1/2026-09-25_02-17-17/tables
+[2026-09-25 02:20:38] [INFO] Generated publication plots in results/primary_exp_gsm8k/macbook_air_m1/2026-09-25_02-17-17

@@ -1,0 +1,6 @@
+[2026-09-25 02:17:14] [INFO] Initialized Experiment: primary_exp_gsm8k
+[2026-09-25 02:17:14] [INFO] Run ID: primary_exp_gsm8k__macbook_air_m1__2026-09-25_02-17-14
+[2026-09-25 02:17:14] [INFO] Run Directory: results/primary_exp_gsm8k/macbook_air_m1/2026-09-25_02-17-14
+[2026-09-25 02:17:14] [INFO] Model: qwen3.5:0.8b-mlx (Backend: ollama, Format: mlx)
+[2026-09-25 02:17:14] [INFO] Device: macbook_air_m1
+[2026-09-25 02:17:14] [INFO] Evaluation Size: 10 (Evaluation Split: TEST)
