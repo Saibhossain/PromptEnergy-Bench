@@ -114,3 +114,57 @@ def validate_resume_directory(
         raise ValueError(f"Device mismatch in resume dir. Expected '{expected_device_name}', found '{cfg_device}'")
 
     return config, metadata
+
+
+def find_latest_resumable_run(
+    results_root: str,
+    experiment_name: str,
+    device_name: str,
+    model_name: str,
+    dataset_name: Optional[str] = None,
+    eval_size: Optional[Any] = None
+) -> Optional[str]:
+    """Finds the best existing run directory that matches the experiment parameters to resume from."""
+    device_dir = os.path.join(results_root, experiment_name, device_name)
+    if not os.path.exists(device_dir):
+        return None
+
+    candidates = []
+    for entry in sorted(os.listdir(device_dir), reverse=True):
+        run_path = os.path.join(device_dir, entry)
+        if not os.path.isdir(run_path):
+            continue
+        cfg_path = os.path.join(run_path, "config.json")
+        res_path = os.path.join(run_path, "results.jsonl")
+        meta_path = os.path.join(run_path, "metadata.json")
+
+        if os.path.exists(cfg_path) and os.path.exists(res_path) and os.path.exists(meta_path):
+            try:
+                with open(cfg_path, "r", encoding="utf-8") as f:
+                    cfg = json.load(f)
+                cfg_model = cfg.get("model", {}).get("name")
+                cfg_dataset = cfg.get("dataset", {}).get("name")
+                cfg_eval_size = cfg.get("dataset", {}).get("evaluation_size")
+
+                # Match model
+                if cfg_model != model_name:
+                    continue
+                # Match dataset if given
+                if dataset_name and cfg_dataset and cfg_dataset.lower() != dataset_name.lower():
+                    continue
+                # Match eval_size if given
+                if eval_size is not None and str(cfg_eval_size).lower() != str(eval_size).lower():
+                    continue
+
+                res_size = os.path.getsize(res_path)
+                candidates.append((run_path, res_size, entry))
+            except Exception:
+                continue
+
+    if candidates:
+        # Prioritize directory with the most completed progress, then most recent timestamp
+        candidates.sort(key=lambda x: (x[1], x[2]), reverse=True)
+        return candidates[0][0]
+
+    return None
+

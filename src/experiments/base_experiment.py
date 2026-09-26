@@ -18,7 +18,8 @@ from src.evaluation.metrics import compute_experiment_metrics
 from src.infrastructure.checkpoint import (
     CheckpointManager,
     compute_condition_key,
-    validate_resume_directory
+    validate_resume_directory,
+    find_latest_resumable_run
 )
 from src.infrastructure.device import collect_device_info, normalize_device_name
 from src.infrastructure.logging import setup_experiment_logging
@@ -49,13 +50,44 @@ class BaseExperiment(ABC):
         self.interactive = interactive
 
         self.resume_dir = self.cli_args.get("resume")
-        self.is_resumed = self.resume_dir is not None
+        self.is_resumed = self.resume_dir is not None and self.resume_dir != "auto"
 
         # Setup experiment configuration and directories
         self._initialize_run()
 
     def _initialize_run(self) -> None:
         """Sets up run directory, metadata, config, logging, and checkpoint manager."""
+        # Collect device and user info if not already resumed
+        if not self.is_resumed:
+            info = collect_device_info(interactive=self.interactive, cli_args=self.cli_args)
+            self.device_info = info["device"]
+            self.backend_info = info["backend"]
+            self.dataset_info = info["dataset"]
+            self.exec_info = info["execution"]
+
+            self.normalized_device = self.device_info["normalized_name"]
+            self.eval_size = self.dataset_info["evaluation_size"]
+            self.warmups = self.exec_info["warmups"]
+            self.repetitions = self.exec_info["repetitions"]
+            self.model_name = self.backend_info["model_name"]
+            self.operator = self.backend_info["operator"]
+            self.format = self.backend_info["model_format"]
+            self.energy_mode = self.exec_info["energy_mode"]
+
+            # If skip_existing or resume=auto requested, check if a matching run directory exists
+            if self.cli_args.get("skip_existing") or self.cli_args.get("resume") == "auto":
+                discovered_resume = find_latest_resumable_run(
+                    results_root="results",
+                    experiment_name=self.experiment_name,
+                    device_name=self.normalized_device,
+                    model_name=self.model_name,
+                    dataset_name=self.dataset_info.get("name"),
+                    eval_size=self.eval_size
+                )
+                if discovered_resume:
+                    self.resume_dir = discovered_resume
+                    self.is_resumed = True
+
         if self.is_resumed:
             # Resuming an existing run
             self.paths = {
@@ -86,24 +118,9 @@ class BaseExperiment(ABC):
             self.format = self.config["model"]["format"]
             self.energy_mode = self.metadata.get("measurement", {}).get("energy_method", "automatic")
         else:
-            # Collect device and user info
-            info = collect_device_info(interactive=self.interactive, cli_args=self.cli_args)
-            self.device_info = info["device"]
-            self.backend_info = info["backend"]
-            self.dataset_info = info["dataset"]
-            self.exec_info = info["execution"]
-
-            self.normalized_device = self.device_info["normalized_name"]
             self.timestamp = generate_timestamp()
             self.run_id = generate_run_id(self.experiment_name, self.normalized_device, self.timestamp)
 
-            self.eval_size = self.dataset_info["evaluation_size"]
-            self.warmups = self.exec_info["warmups"]
-            self.repetitions = self.exec_info["repetitions"]
-            self.model_name = self.backend_info["model_name"]
-            self.operator = self.backend_info["operator"]
-            self.format = self.backend_info["model_format"]
-            self.energy_mode = self.exec_info["energy_mode"]
 
             # Create paths
             self.paths = build_experiment_paths(
