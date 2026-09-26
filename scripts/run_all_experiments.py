@@ -153,7 +153,14 @@ def main():
     parser.add_argument(
         "--skip-existing",
         action="store_true",
-        help="Skip conditions that already exist in checkpoints"
+        default=True,
+        help="Skip conditions that already exist in checkpoints or resume existing runs"
+    )
+    parser.add_argument(
+        "--resume",
+        type=str,
+        default="auto",
+        help="Resume directory path, or 'auto' to automatically find and resume the latest matching incomplete run"
     )
     parser.add_argument(
         "--experiment",
@@ -269,6 +276,7 @@ def main():
                 "repetitions": args.runs_per_condition,
                 "seed": args.seed,
                 "skip_existing": args.skip_existing,
+                "resume": args.resume,
                 "interactive": False,
                 "non_interactive": True
             }
