@@ -280,10 +280,32 @@ def compute_strategy_summary(records: List[Dict[str, Any]], task_type: Optional[
     output_tokens = [r["output_tokens"] for r in successful if _is_valid_num(r.get("output_tokens"))]
     total_tokens = [r["total_tokens"] for r in successful if _is_valid_num(r.get("total_tokens"))]
 
-    # Energy (Preserving None for unmeasured fields)
+    # Energy calculations with mathematical phase decomposition (Prefill vs Decode)
     energies = [r["energy_total_j"] for r in successful if _is_valid_num(r.get("energy_total_j"))]
-    prefill_energies = [r["energy_prefill_j"] for r in successful if _is_valid_num(r.get("energy_prefill_j"))]
-    decode_energies = [r["energy_decode_j"] for r in successful if _is_valid_num(r.get("energy_decode_j"))]
+    prefill_energies = []
+    decode_energies = []
+    
+    for r in successful:
+        e_tot = r.get("energy_total_j")
+        ttft = r.get("ttft_ms")
+        gen_lat = r.get("generation_latency_ms")
+        tot_lat = r.get("total_latency_ms")
+
+        # Check for explicitly measured phase energy first
+        if _is_valid_num(r.get("energy_prefill_j")):
+            prefill_energies.append(float(r["energy_prefill_j"]))
+        elif _is_valid_num(e_tot) and _is_valid_num(ttft) and _is_valid_num(tot_lat) and tot_lat > 0:
+            # Proportional temporal energy decomposition
+            prefill_energies.append(float(e_tot) * (float(ttft) / float(tot_lat)))
+
+        if _is_valid_num(r.get("energy_decode_j")):
+            decode_energies.append(float(r["energy_decode_j"]))
+        elif _is_valid_num(e_tot) and _is_valid_num(tot_lat) and tot_lat > 0:
+            if _is_valid_num(gen_lat):
+                decode_energies.append(float(e_tot) * (float(gen_lat) / float(tot_lat)))
+            elif _is_valid_num(ttft):
+                decode_energies.append(float(e_tot) * ((float(tot_lat) - float(ttft)) / float(tot_lat)))
+
     embedding_energies = [r["energy_embedding_j"] for r in successful if _is_valid_num(r.get("energy_embedding_j"))]
     retrieval_energies = [r["energy_retrieval_j"] for r in successful if _is_valid_num(r.get("energy_retrieval_j"))]
     net_energies = [r["energy_net_j"] for r in successful if _is_valid_num(r.get("energy_net_j"))]
@@ -291,24 +313,54 @@ def compute_strategy_summary(records: List[Dict[str, Any]], task_type: Optional[
 
     total_energy_j = round(sum(energies), 4) if energies else None
     mean_energy_j = _safe_mean(energies, 4)
+    mean_prefill_energy_j = _safe_mean(prefill_energies, 4)
+    mean_decode_energy_j = _safe_mean(decode_energies, 4)
 
-    # Throughput: tokens per second
+    # Percentage breakdown
+    prefill_energy_pct = (
+        round((mean_prefill_energy_j / mean_energy_j) * 100.0, 2)
+        if (mean_prefill_energy_j is not None and mean_energy_j is not None and mean_energy_j > 0)
+        else None
+    )
+    decode_energy_pct = (
+        round((mean_decode_energy_j / mean_energy_j) * 100.0, 2)
+        if (mean_decode_energy_j is not None and mean_energy_j is not None and mean_energy_j > 0)
+        else None
+    )
+
+    # Throughputs: Decode and Prefill tokens per second
     tps_list = []
+    prefill_tps_list = []
     for r in successful:
-        toks = r.get("output_tokens")
-        lat_ms = r.get("generation_latency_ms") or r.get("total_latency_ms")
-        if _is_valid_num(toks) and _is_valid_num(lat_ms) and lat_ms > 0:
-            tps_list.append(toks / (lat_ms / 1000.0))
-    tokens_per_second = _safe_mean(tps_list, 2)
+        out_tok = r.get("output_tokens")
+        in_tok = r.get("input_tokens")
+        gen_lat_ms = r.get("generation_latency_ms") or r.get("total_latency_ms")
+        ttft_ms = r.get("ttft_ms")
+        if _is_valid_num(out_tok) and _is_valid_num(gen_lat_ms) and gen_lat_ms > 0:
+            tps_list.append(out_tok / (gen_lat_ms / 1000.0))
+        if _is_valid_num(in_tok) and _is_valid_num(ttft_ms) and ttft_ms > 0:
+            prefill_tps_list.append(in_tok / (ttft_ms / 1000.0))
 
-    # Efficiency metrics with safe denominators
+    tokens_per_second = _safe_mean(tps_list, 2)
+    prefill_tokens_per_second = _safe_mean(prefill_tps_list, 2)
+
+    # Token-level energy efficiency
+    sum_in_tokens = sum(in_tokens) if in_tokens else 0
     sum_out_tokens = sum(output_tokens) if output_tokens else 0
+    sum_prefill_energy = sum(prefill_energies) if prefill_energies else 0.0
+    sum_decode_energy = sum(decode_energies) if decode_energies else 0.0
     sum_gen_lat = sum(gen_lats) if gen_lats else 0.0
 
-    energy_per_output_token_j = (
-        round(total_energy_j / sum_out_tokens, 6)
-        if (total_energy_j is not None and sum_out_tokens > 0)
+    energy_per_input_token_j = (
+        round(sum_prefill_energy / sum_in_tokens, 6)
+        if (sum_prefill_energy > 0 and sum_in_tokens > 0)
         else None
+    )
+
+    energy_per_output_token_j = (
+        round(sum_decode_energy / sum_out_tokens, 6)
+        if (sum_decode_energy > 0 and sum_out_tokens > 0)
+        else (round(total_energy_j / sum_out_tokens, 6) if (total_energy_j is not None and sum_out_tokens > 0) else None)
     )
 
     latency_per_output_token_ms = (
@@ -411,8 +463,12 @@ def compute_strategy_summary(records: List[Dict[str, Any]], task_type: Optional[
         "median_energy_j": _safe_median(energies, 4),
         "std_energy_j": _safe_stdev(energies, 4),
         "energy_per_sample_j": mean_energy_j,
-        "mean_prefill_energy_j": _safe_mean(prefill_energies, 4),
-        "mean_decode_energy_j": _safe_mean(decode_energies, 4),
+        "mean_prefill_energy_j": mean_prefill_energy_j,
+        "median_prefill_energy_j": _safe_median(prefill_energies, 4),
+        "mean_decode_energy_j": mean_decode_energy_j,
+        "median_decode_energy_j": _safe_median(decode_energies, 4),
+        "prefill_energy_pct": prefill_energy_pct,
+        "decode_energy_pct": decode_energy_pct,
         "mean_embedding_energy_j": _safe_mean(embedding_energies, 4),
         "mean_retrieval_energy_j": _safe_mean(retrieval_energies, 4),
         "mean_net_energy_j": _safe_mean(net_energies, 4),
@@ -427,6 +483,8 @@ def compute_strategy_summary(records: List[Dict[str, Any]], task_type: Optional[
 
         # Throughput and Green AI Efficiency
         "tokens_per_second": tokens_per_second,
+        "prefill_tokens_per_second": prefill_tokens_per_second,
+        "energy_per_input_token_j": energy_per_input_token_j,
         "energy_per_output_token_j": energy_per_output_token_j,
         "latency_per_output_token_ms": latency_per_output_token_ms,
         "energy_per_correct_answer_j": energy_per_correct_answer_j,

@@ -53,6 +53,25 @@ STRATEGY_ORDER = [
 ]
 
 
+def _extract_strat_summaries(summary: Dict[str, Any]) -> Dict[str, Any]:
+    """Robustly extracts strategy summaries from various nested summary dictionary formats."""
+    if not summary or not isinstance(summary, dict):
+        return {}
+    if "strategy_summaries" in summary and isinstance(summary["strategy_summaries"], dict):
+        return summary["strategy_summaries"]
+    if "metrics" in summary and isinstance(summary["metrics"], dict):
+        if "strategy_summaries" in summary["metrics"]:
+            return summary["metrics"]["strategy_summaries"]
+    if "by_strategy" in summary and isinstance(summary["by_strategy"], dict):
+        return summary["by_strategy"]
+    if "strategy_metrics" in summary and isinstance(summary["strategy_metrics"], dict):
+        return summary["strategy_metrics"]
+    known_strats = {"zero_shot_direct", "few_shot_3", "zero_shot_cot", "short_cot", "long_cot", "ctx_0", "ctx_512", "ctx_1024", "rag_top_1", "rag_top_3", "rag_top_5"}
+    if any(k in summary for k in known_strats):
+        return {k: v for k, v in summary.items() if isinstance(v, dict)}
+    return {}
+
+
 def _get_strategies(strat_summaries: Dict[str, Any]) -> List[str]:
     """Returns sorted strategies adhering to standard order first, followed by custom strategies."""
     strats = [s for s in STRATEGY_ORDER if s in strat_summaries]
@@ -190,10 +209,7 @@ def generate_table_2_comparison(
     tables_dir: str
 ) -> Dict[str, str]:
     """Table 2: Prompt Strategy Comparison."""
-    strat_summaries = summary.get("metrics", {}).get("strategy_summaries", {})
-    if not strat_summaries:
-        strat_summaries = summary.get("strategy_metrics", {})
-
+    strat_summaries = _extract_strat_summaries(summary)
     strats = _get_strategies(strat_summaries)
     ds_name = str(summary.get("dataset", summary.get("dataset_name", "dataset"))).upper()
 
@@ -209,19 +225,36 @@ def generate_table_2_comparison(
         val_acc = s_data.get("valid_accuracy")
         val_acc_pct = f"{val_acc * 100.0:.2f}" if val_acc is not None else "N/A"
 
+        in_tok = _format_val(s_data.get("mean_input_tokens"), 1)
         th_tok = _format_val(s_data.get("mean_thinking_tokens"), 1)
         vis_tok = _format_val(s_data.get("mean_visible_output_tokens"), 1)
         tot_tok = _format_val(s_data.get("mean_output_tokens"), 1)
+
         ttft = _format_val(s_data.get("mean_ttft_ms"), 1)
         gen_lat = _format_val(s_data.get("mean_generation_latency_ms"), 1)
         tot_lat = _format_val(s_data.get("mean_total_latency_ms"), 1)
+
+        total_energy = _format_val(s_data.get("mean_energy_j"), 4)
+        prefill_energy = _format_val(s_data.get("mean_prefill_energy_j"), 4)
+        decode_energy = _format_val(s_data.get("mean_decode_energy_j"), 4)
+        prefill_pct = _format_val(s_data.get("prefill_energy_pct"), 1)
+        decode_pct = _format_val(s_data.get("decode_energy_pct"), 1)
+
+        # Per-token energy metrics (in mJ/token)
+        e_per_in_tok = s_data.get("energy_per_input_token_j")
+        e_per_in_tok_mj = f"{e_per_in_tok * 1000.0:.2f}" if e_per_in_tok is not None else "N/A"
+
+        e_per_out_tok = s_data.get("energy_per_output_token_j")
+        e_per_out_tok_mj = f"{e_per_out_tok * 1000.0:.2f}" if e_per_out_tok is not None else "N/A"
+
+        prefill_tps = _format_val(s_data.get("prefill_tokens_per_second"), 1)
+        decode_tps = _format_val(s_data.get("tokens_per_second"), 2)
+
         mean_cpu = _format_val(s_data.get("mean_cpu_percent"), 1)
         peak_cpu = _format_val(s_data.get("peak_cpu_percent"), 1)
         ram_gb = _format_val(s_data.get("mean_ram_used_gb"), 2)
-        energy = _format_val(s_data.get("mean_energy_j"), 4)
         e_per_c = _format_val(s_data.get("energy_per_correct_answer_j"), 4)
         acc_j = _format_val(s_data.get("accuracy_per_joule"), 4)
-        tps = _format_val(s_data.get("tokens_per_second"), 2)
         trunc_rate = f"{s_data.get('truncation_rate', 0.0) * 100.0:.1f}"
 
         rows.append({
@@ -229,23 +262,32 @@ def generate_table_2_comparison(
             "Total Accuracy (%)": tot_acc_pct,
             "Valid Accuracy (%)": val_acc_pct,
             "Valid Samples": f"{s_data.get('valid_n', 0)}/{s_data.get('n', 0)}",
-            "Mean Thinking Tokens": th_tok,
-            "Mean Visible Output Tokens": vis_tok,
-            "Mean Total Output Tokens": tot_tok,
-            "Throughput (tok/s)": tps,
+            "Input Tokens": in_tok,
+            "Thinking Tokens": th_tok,
+            "Visible Output Tokens": vis_tok,
+            "Total Output Tokens": tot_tok,
+            "Total Energy (J)": total_energy,
+            "Prefill Energy (J)": prefill_energy,
+            "Decode Energy (J)": decode_energy,
+            "Prefill Share (%)": prefill_pct,
+            "Decode Share (%)": decode_pct,
+            "Prefill (mJ/tok)": e_per_in_tok_mj,
+            "Decode (mJ/tok)": e_per_out_tok_mj,
+            "Prefill TPS (tok/s)": prefill_tps,
+            "Decode TPS (tok/s)": decode_tps,
             "TTFT (ms)": ttft,
+            "Generation Latency (ms)": gen_lat,
             "Total Latency (ms)": tot_lat,
             "Mean CPU (%)": mean_cpu,
             "Peak CPU (%)": peak_cpu,
             "RAM (GB)": ram_gb,
-            "Energy (J)": energy,
             "Energy / Correct (J)": e_per_c,
             "Accuracy / Joule": acc_j,
             "Truncation Rate (%)": trunc_rate
         })
 
     df = pd.DataFrame(rows)
-    return _save_table_formats(df, tables_dir, "strategy_comparison", caption=f"Prompt Strategy Comparison on {ds_name}")
+    return _save_table_formats(df, tables_dir, "strategy_comparison", caption=f"Prompt Strategy Performance and Energy Breakdown on {ds_name}")
 
 
 def generate_table_3_tradeoff(
@@ -253,10 +295,7 @@ def generate_table_3_tradeoff(
     tables_dir: str
 ) -> Dict[str, str]:
     """Table 3: Energy-Accuracy-Latency Trade-off & Pareto Optimality."""
-    strat_summaries = summary.get("metrics", {}).get("strategy_summaries", {})
-    if not strat_summaries:
-        strat_summaries = summary.get("strategy_metrics", {})
-
+    strat_summaries = _extract_strat_summaries(summary)
     strats = _get_strategies(strat_summaries)
     baseline_strat = "zero_shot_direct" if "zero_shot_direct" in strat_summaries else (strats[0] if strats else "")
     baseline = strat_summaries.get(baseline_strat, {})
@@ -342,9 +381,7 @@ def generate_table_4_meg(
     MEG(B1, B2) = [Accuracy(B2) - Accuracy(B1)] / [Energy(B2) - Energy(B1)]
     Units: Accuracy percentage points per Joule (% / J).
     """
-    strat_summaries = summary.get("metrics", {}).get("strategy_summaries", {})
-    if not strat_summaries:
-        strat_summaries = summary.get("strategy_metrics", {})
+    strat_summaries = _extract_strat_summaries(summary)
 
     strats = _get_strategies(strat_summaries)
     baseline_strat = "zero_shot_direct" if "zero_shot_direct" in strat_summaries else (strats[0] if strats else "")

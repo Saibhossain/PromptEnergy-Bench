@@ -1,27 +1,29 @@
 """
-Universal Deterministic Prompt Registry
-======================================
+Universal Generalized Prompt Registry
+====================================
 
 Purpose
 -------
-Provides centralized, reproducible, and deterministic prompt templates for
-all PromptEnergy-Bench task families:
-  1. Mathematical Reasoning (e.g. GSM8K)
-  2. Knowledge-Intensive QA (e.g. Natural Questions)
-  3. Long-Context Question Answering
-  4. Text Summarization (e.g. CNN/DailyMail)
+Provides clean, publication-grade, task-agnostic prompt paradigms across all
+PromptEnergy-Bench datasets and hardware benchmarks.
 
-Experimental Principles
------------------------
-1. ZERO_SHOT conditions must NOT contain training examples.
-2. FEW_SHOT conditions explicitly contain fixed, isolated training split demonstrations.
-3. CoT conditions explicitly request reasoning (short, standard, long).
-4. Context is NEVER silently added unless the experiment explicitly requests it.
-5. Prompt configurations are versioned and SHA-256 hashable for scientific reproducibility.
+Prompting Paradigms (Meta-Strategies):
+  1. ZERO_SHOT_DIRECT : Pure direct instruction. Direct question fed from dataset.
+  2. FEW_SHOT_3       : In-context learning via 3 fixed, high-quality domain exemplars.
+  3. ZERO_SHOT_COT    : Classic Kojima et al. "Let's think step by step" zero-shot reasoning.
+  4. SHORT_COT        : Budget-constrained reasoning (concise 1-2 steps) for Green AI efficiency.
+  5. LONG_COT         : Comprehensive, exhaustive step-by-step derivation.
+  6. RAG              : Context-grounded generation utilizing retrieved or injected context.
+
+Scientific Principles
+---------------------
+- Generalized and clean: No dataset-hardcoded jargon in system meta-prompts.
+- Fully reproducible: Versioned and SHA-256 hashable.
+- Zero data contamination: Demonstrations are strictly isolated from evaluation splits.
 """
 
 from enum import Enum
-from typing import Dict, List, Any, Optional, Callable
+from typing import Dict, List, Any, Optional, Union
 import hashlib
 import json
 
@@ -47,228 +49,274 @@ class TaskFamily(str, Enum):
 
 
 # ============================================================
-# GSM8K (Mathematics) Prompt Templates & Demonstrations
+# 1. Generalized Universal System Prompts (Publication Ready)
+# ============================================================
+
+SYSTEM_ZERO_SHOT_DIRECT = (
+    "You are an expert AI assistant.\n"
+    "Provide a direct, concise, and accurate answer to the user's question or task.\n"
+    "Do not include unnecessary conversational filler, preambles, or explanations."
+)
+
+SYSTEM_FEW_SHOT_3 = (
+    "You are an expert AI assistant.\n"
+    "Carefully review the provided demonstration examples to understand the expected format and task requirements.\n"
+    "Solve the target task directly and accurately, following the demonstrated style."
+)
+
+SYSTEM_ZERO_SHOT_COT = (
+    "You are an expert AI reasoning assistant.\n"
+    "Solve the given problem or task step by step, showing your logical deductions clearly.\n"
+    "Conclude your reasoning with a clear and definite final answer."
+)
+
+SYSTEM_SHORT_COT = (
+    "You are an expert AI reasoning assistant.\n"
+    "Solve the given task using at most 1 to 2 concise reasoning steps.\n"
+    "Keep your explanation brief and focused, then state the final answer."
+)
+
+SYSTEM_LONG_COT = (
+    "You are an expert AI reasoning assistant.\n"
+    "Provide a rigorous, detailed, and comprehensive step-by-step derivation.\n"
+    "Explain all intermediate calculations, evidence, and logical deductions thoroughly before stating the final answer."
+)
+
+SYSTEM_RAG = (
+    "You are a knowledge-grounded AI assistant.\n"
+    "Answer the user's question or task strictly based on the provided reference context.\n"
+    "If the context does not contain the answer, state that clearly. Be concise, factual, and accurate."
+)
+
+
+# ============================================================
+# 2. Dataset-Specific Formatting Directives (Optional Suffixes)
+# ============================================================
+
+# For GSM8K Math: Standard delimiter used in literature (Cobbe et al.)
+GSM8K_FORMAT_INSTRUCTION = "\nYour final numerical answer must end in the exact format: #### [number]"
+
+# Specific system prompts with formatting rules preserved
+SYSTEM_GSM8K_ZERO_SHOT_DIRECT = SYSTEM_ZERO_SHOT_DIRECT + GSM8K_FORMAT_INSTRUCTION
+SYSTEM_GSM8K_FEW_SHOT_3 = SYSTEM_FEW_SHOT_3 + GSM8K_FORMAT_INSTRUCTION
+SYSTEM_GSM8K_ZERO_SHOT_COT = SYSTEM_ZERO_SHOT_COT + GSM8K_FORMAT_INSTRUCTION
+SYSTEM_GSM8K_SHORT_COT = SYSTEM_SHORT_COT + GSM8K_FORMAT_INSTRUCTION
+SYSTEM_GSM8K_LONG_COT = SYSTEM_LONG_COT + GSM8K_FORMAT_INSTRUCTION
+SYSTEM_GSM8K_RAG = SYSTEM_RAG + GSM8K_FORMAT_INSTRUCTION
+
+
+# ============================================================
+# 3. Fixed In-Context Learning Exemplars (3-Shot)
 # ============================================================
 
 FIXED_FEW_SHOT_EXAMPLES_GSM8K: List[Dict[str, str]] = [
     {
-        "problem": (
-            "Natalia sold clips to 48 of her friends in April, and then "
-            "she sold half as many clips in May. How many clips did Natalia "
-            "sell altogether in April and May?"
-        ),
+        "problem": "Natalia sold clips to 48 of her friends in April, and then she sold half as many clips in May. How many clips did Natalia sell altogether in April and May?",
         "answer": "#### 72",
     },
     {
-        "problem": (
-            "Weng earns $12 an hour for babysitting. Yesterday, she just "
-            "did 50 minutes of babysitting. How much did she earn?"
-        ),
+        "problem": "Weng earns $12 an hour for babysitting. Yesterday, she just did 50 minutes of babysitting. How much did she earn?",
         "answer": "#### 10",
     },
     {
-        "problem": (
-            "Betty is saving money for a new wallet which costs $100. "
-            "Betty has only half of the money she needs. Her parents "
-            "decided to give her $15 for that purpose, and her grandparents "
-            "twice as much as her parents. How much more money does Betty "
-            "need to buy the wallet?"
-        ),
+        "problem": "Betty is saving money for a new wallet which costs $100. Betty has only half of the money she needs. Her parents decided to give her $15 for that purpose, and her grandparents twice as much as her parents. How much more money does Betty need to buy the wallet?",
         "answer": "#### 5",
     },
 ]
 
-# Alias for backward-compatibility
+# Alias for backward compatibility
 FIXED_FEW_SHOT_EXAMPLES = FIXED_FEW_SHOT_EXAMPLES_GSM8K
 
+FIXED_FEW_SHOT_EXAMPLES_NQ: List[Dict[str, str]] = [
+    {
+        "question": "who played the original darth vader in star wars?",
+        "answer": "David Prowse",
+    },
+    {
+        "question": "what is the currency used in switzerland?",
+        "answer": "Swiss franc",
+    },
+    {
+        "question": "when was the treaty of versailles signed?",
+        "answer": "June 28, 1919",
+    },
+]
 
-SYSTEM_GSM8K_ZERO_SHOT_DIRECT = (
-    "You are a mathematical question-answering assistant.\n"
-    "Solve the given GSM8K problem.\n"
-    "Return only the final numerical answer.\n"
-    "Do not provide explanations or intermediate calculations.\n"
-    "Your response must end in the exact format:\n"
-    "#### [number]"
-)
+FIXED_FEW_SHOT_EXAMPLES_CONTEXTEVAL: List[Dict[str, str]] = [
+    {
+        "context": "The Apollo 11 spacecraft launched from Kennedy Space Center on July 16, 1969, carrying commander Neil Armstrong, command module pilot Michael Collins, and lunar module pilot Buzz Aldrin.",
+        "question": "Who was the command module pilot on Apollo 11?",
+        "answer": "Michael Collins",
+    },
+    {
+        "context": "Photosynthesis occurs in two stages: the light-dependent reactions, which take place in the thylakoid membranes, and the light-independent Calvin cycle, which takes place in the stroma.",
+        "question": "Where does the Calvin cycle take place in a plant cell?",
+        "answer": "Stroma",
+    },
+    {
+        "context": "The Pacific Ocean is the largest and deepest of Earth's five oceanic divisions, extending from the Arctic Ocean in the north to the Southern Ocean in the south.",
+        "question": "Which ocean is the largest and deepest on Earth?",
+        "answer": "Pacific Ocean",
+    },
+]
 
-SYSTEM_GSM8K_FEW_SHOT_3 = (
-    "You are a mathematical question-answering assistant.\n"
-    "Use the provided examples only as demonstrations of the expected "
-    "answer format and problem-solving style.\n"
-    "Solve the target problem independently.\n"
-    "Return only the final numerical answer.\n"
-    "Do not provide intermediate reasoning.\n"
-    "Your response must end in the exact format:\n"
-    "#### [number]"
-)
-
-SYSTEM_GSM8K_ZERO_SHOT_COT = (
-    "You are a mathematical reasoning assistant.\n"
-    "Solve the given GSM8K problem step by step.\n"
-    "Show the necessary calculations and reasoning.\n"
-    "After completing the reasoning, provide the final numerical answer.\n"
-    "The final answer must use the exact format:\n"
-    "#### [number]"
-)
-
-SYSTEM_GSM8K_SHORT_COT = (
-    "You are a mathematical reasoning assistant.\n"
-    "Solve the given GSM8K problem using at most 2 concise reasoning steps.\n"
-    "Include only the calculations or deductions necessary to reach the "
-    "answer.\n"
-    "After the reasoning, provide the final numerical answer.\n"
-    "The final answer must use the exact format:\n"
-    "#### [number]"
-)
-
-SYSTEM_GSM8K_LONG_COT = (
-    "You are a mathematical reasoning assistant.\n"
-    "Solve the given GSM8K problem using detailed mathematical reasoning.\n"
-    "Show the necessary calculations and intermediate deductions.\n"
-    "Do not skip important reasoning steps.\n"
-    "After completing the reasoning, provide the final numerical answer.\n"
-    "The final answer must use the exact format:\n"
-    "#### [number]"
-)
-
-SYSTEM_GSM8K_RAG = (
-    "You are a mathematical question-answering assistant.\n"
-    "Use the provided context to solve the given GSM8K problem.\n"
-    "After completing any calculations, provide the final numerical answer.\n"
-    "The final answer must use the exact format:\n"
-    "#### [number]"
-)
-
-
-# ============================================================
-# Knowledge QA (e.g. Natural Questions) System Prompts
-# ============================================================
-
-SYSTEM_QA_ZERO_SHOT_DIRECT = (
-    "You are a factual question-answering assistant.\n"
-    "Answer the following question directly and concisely.\n"
-    "Provide only the factual answer without conversational filler."
-)
-
-SYSTEM_QA_ZERO_SHOT_COT = (
-    "You are a reasoning question-answering assistant.\n"
-    "Analyze the question step-by-step to arrive at the factual answer.\n"
-    "Conclude with your final answer."
-)
-
-SYSTEM_QA_RAG = (
-    "You are a knowledge-grounded question-answering assistant.\n"
-    "Answer the target question using only the provided context.\n"
-    "If the context does not contain the answer, state that clearly."
-)
+FIXED_FEW_SHOT_EXAMPLES_CNNDM: List[Dict[str, str]] = [
+    {
+        "document": (
+            "A rare blue diamond has sold at auction in Geneva for a record $48.5 million. "
+            "The 12.03-carat 'Blue Moon' diamond was bought by a Hong Kong collector who immediately renamed it "
+            "'The Blue Moon of Josephine'. The gemstone was discovered in South Africa in January 2014 and is "
+            "considered one of the purest blue diamonds ever discovered."
+        ),
+        "summary": "A 12.03-carat blue diamond sold for $48.5 million at an auction in Geneva to a Hong Kong collector.",
+    },
+    {
+        "document": (
+            "NASA's Curiosity rover has discovered evidence that a large lake once filled Gale Crater on Mars. "
+            "Sedimentary rock layers indicate water persisted for millions of years, suggesting Mars may have had "
+            "a climate capable of supporting microbial life billions of years ago. Scientists analyzed sediment deposits "
+            "at Mount Sharp inside the crater."
+        ),
+        "summary": "NASA's Curiosity rover found sedimentary evidence that Gale Crater on Mars once hosted a long-standing lake.",
+    },
+    {
+        "document": (
+            "Electric vehicle sales reached a historic milestone in Norway, accounting for more than 80% of all new "
+            "passenger car sales last year. Government incentives, including tax exemptions and toll discounts, "
+            "accelerated the transition as the country aims to end the sale of petrol and diesel cars by 2025."
+        ),
+        "summary": "Electric vehicles accounted for over 80% of new car sales in Norway, driven by strong government incentives.",
+    },
+]
 
 
 # ============================================================
-# Summarization (e.g. CNN/DailyMail) System Prompts
+# 4. User Prompt Builders (Standardized Across Paradigms)
 # ============================================================
 
-SYSTEM_SUMMARIZATION_DIRECT = (
-    "You are an expert text summarization assistant.\n"
-    "Write a concise summary highlighting the primary points of the given text."
-)
-
-SYSTEM_SUMMARIZATION_COT = (
-    "You are an analytical text summarization assistant.\n"
-    "First outline the key findings and narrative structure of the text,\n"
-    "then provide a comprehensive summary."
-)
-
-
-# ============================================================
-# User Prompt Builders
-# ============================================================
-
-def build_gsm8k_user_prompt(strategy: PromptStrategy, question: str) -> str:
-    """Builds user prompt content for GSM8K problems."""
+def build_user_prompt(
+    strategy: PromptStrategy,
+    task_input: str,
+    dataset: str = "general",
+    context: Optional[str] = None
+) -> str:
+    """Builds clean, standardized user-turn prompt content."""
+    ds = dataset.lower().strip()
+    
+    # 1. Zero-shot Direct
     if strategy == PromptStrategy.ZERO_SHOT_DIRECT:
-        return f"Problem:\n{question}\n\nAnswer:"
+        if ds in ("gsm8k", "gsm"):
+            return f"Problem:\n{task_input}\n\nAnswer:"
+        elif ds in ("cnn_dailymail", "cnn"):
+            return f"Document:\n{task_input}\n\nSummary:"
+        else:
+            return f"Question:\n{task_input}\n\nAnswer:"
+
+    # 2. Zero-shot CoT (Classic Kojima et al.)
     elif strategy == PromptStrategy.ZERO_SHOT_COT:
-        return f"Problem:\n{question}\n\nLet's solve this step by step."
+        if ds in ("gsm8k", "gsm"):
+            return f"Problem:\n{task_input}\n\nLet's solve this step by step."
+        elif ds in ("cnn_dailymail", "cnn"):
+            return f"Document:\n{task_input}\n\nLet's analyze the document key points step by step and write a summary:"
+        else:
+            return f"Question:\n{task_input}\n\nLet's think step by step."
+
+    # 3. Short CoT (Constrained / Budgeted Reasoning)
     elif strategy == PromptStrategy.SHORT_COT:
-        return f"Problem:\n{question}\n\nReasoning:"
+        if ds in ("gsm8k", "gsm"):
+            return f"Problem:\n{task_input}\n\nBrief reasoning (at most 2 steps):\nAnswer:"
+        elif ds in ("cnn_dailymail", "cnn"):
+            return f"Document:\n{task_input}\n\nKey bullet points and summary:"
+        else:
+            return f"Question:\n{task_input}\n\nBrief 1-2 step reasoning and answer:"
+
+    # 4. Long CoT (Detailed / Comprehensive Reasoning)
     elif strategy == PromptStrategy.LONG_COT:
-        return f"Problem:\n{question}\n\nDetailed reasoning:"
+        if ds in ("gsm8k", "gsm"):
+            return f"Problem:\n{task_input}\n\nDetailed comprehensive reasoning:"
+        elif ds in ("cnn_dailymail", "cnn"):
+            return f"Document:\n{task_input}\n\nDetailed narrative analysis and executive summary:"
+        else:
+            return f"Question:\n{task_input}\n\nDetailed step-by-step reasoning:"
+
+    # 5. Few-Shot (3-Shot In-Context Demonstrations)
     elif strategy == PromptStrategy.FEW_SHOT_3:
-        parts = []
-        for i, example in enumerate(FIXED_FEW_SHOT_EXAMPLES_GSM8K, start=1):
-            parts.append(
-                f"Example {i}\n"
-                f"Problem:\n"
-                f"{example['problem']}\n\n"
-                f"Answer:\n"
-                f"{example['answer']}\n"
-            )
-        parts.append(
-            f"Target Problem:\n"
-            f"{question}\n\n"
-            f"Answer:"
-        )
-        return "\n".join(parts)
-    else:
-        return f"Problem:\n{question}\n\nAnswer:"
+        demos: List[str] = []
+        if ds in ("gsm8k", "gsm"):
+            for i, ex in enumerate(FIXED_FEW_SHOT_EXAMPLES_GSM8K, start=1):
+                demos.append(f"Example {i}\nProblem:\n{ex['problem']}\n\nAnswer:\n{ex['answer']}\n")
+            demos.append(f"Target Problem:\n{task_input}\n\nAnswer:")
+        elif ds in ("natural_questions", "nq"):
+            for i, ex in enumerate(FIXED_FEW_SHOT_EXAMPLES_NQ, start=1):
+                demos.append(f"Example {i}\nQuestion: {ex['question']}\nAnswer: {ex['answer']}\n")
+            demos.append(f"Target Question: {task_input}\nAnswer:")
+        elif ds in ("contexteval", "context_eval"):
+            for i, ex in enumerate(FIXED_FEW_SHOT_EXAMPLES_CONTEXTEVAL, start=1):
+                demos.append(f"Example {i}\nDocument: {ex['context']}\nQuestion: {ex['question']}\nAnswer: {ex['answer']}\n")
+            demos.append(f"Target Question:\n{task_input}\n\nAnswer:")
+        elif ds in ("cnn_dailymail", "cnn"):
+            for i, ex in enumerate(FIXED_FEW_SHOT_EXAMPLES_CNNDM, start=1):
+                demos.append(f"Example {i}\nArticle:\n{ex['document']}\n\nSummary:\n{ex['summary']}\n")
+            demos.append(f"Target Article:\n{task_input}\n\nSummary:")
+        else:
+            for i, ex in enumerate(FIXED_FEW_SHOT_EXAMPLES_NQ, start=1):
+                demos.append(f"Example {i}\nTask: {ex['question']}\nAnswer: {ex['answer']}\n")
+            demos.append(f"Target Task: {task_input}\nAnswer:")
+        return "\n".join(demos)
 
+    # 6. RAG / Context Grounded
+    elif strategy == PromptStrategy.RAG:
+        if ds in ("cnn_dailymail", "cnn"):
+            return f"Document:\n{task_input}\n\nSummary:"
+        return f"Question:\n{task_input}\n\nAnswer:"
 
-def build_qa_user_prompt(strategy: PromptStrategy, question: str) -> str:
-    """Builds user prompt content for general QA."""
-    if strategy in (PromptStrategy.ZERO_SHOT_COT, PromptStrategy.SHORT_COT, PromptStrategy.LONG_COT):
-        return f"Question:\n{question}\n\nLet's think step by step."
-    return f"Question:\n{question}\n\nAnswer:"
-
-
-def build_summarization_user_prompt(strategy: PromptStrategy, text: str) -> str:
-    """Builds user prompt content for summarization tasks."""
-    return f"Document:\n{text}\n\nSummary:"
+    return f"Task:\n{task_input}\n\nAnswer:"
 
 
 # ============================================================
-# Prompt Registry Data Structure
+# 5. Universal Prompt Registry
 # ============================================================
 
 DATASET_PROMPT_REGISTRY: Dict[str, Dict[PromptStrategy, Dict[str, Any]]] = {
     "gsm8k": {
         PromptStrategy.ZERO_SHOT_DIRECT: {
             "system": SYSTEM_GSM8K_ZERO_SHOT_DIRECT,
-            "builder": lambda q: build_gsm8k_user_prompt(PromptStrategy.ZERO_SHOT_DIRECT, q),
+            "builder": lambda q: build_user_prompt(PromptStrategy.ZERO_SHOT_DIRECT, q, "gsm8k"),
             "uses_demonstrations": False,
             "reasoning": False,
             "context_allowed": False,
         },
         PromptStrategy.FEW_SHOT_3: {
             "system": SYSTEM_GSM8K_FEW_SHOT_3,
-            "builder": lambda q: build_gsm8k_user_prompt(PromptStrategy.FEW_SHOT_3, q),
+            "builder": lambda q: build_user_prompt(PromptStrategy.FEW_SHOT_3, q, "gsm8k"),
             "uses_demonstrations": True,
             "reasoning": False,
             "context_allowed": False,
         },
         PromptStrategy.ZERO_SHOT_COT: {
             "system": SYSTEM_GSM8K_ZERO_SHOT_COT,
-            "builder": lambda q: build_gsm8k_user_prompt(PromptStrategy.ZERO_SHOT_COT, q),
+            "builder": lambda q: build_user_prompt(PromptStrategy.ZERO_SHOT_COT, q, "gsm8k"),
             "uses_demonstrations": False,
             "reasoning": True,
             "context_allowed": False,
         },
         PromptStrategy.SHORT_COT: {
             "system": SYSTEM_GSM8K_SHORT_COT,
-            "builder": lambda q: build_gsm8k_user_prompt(PromptStrategy.SHORT_COT, q),
+            "builder": lambda q: build_user_prompt(PromptStrategy.SHORT_COT, q, "gsm8k"),
             "uses_demonstrations": False,
             "reasoning": True,
             "context_allowed": False,
         },
         PromptStrategy.LONG_COT: {
             "system": SYSTEM_GSM8K_LONG_COT,
-            "builder": lambda q: build_gsm8k_user_prompt(PromptStrategy.LONG_COT, q),
+            "builder": lambda q: build_user_prompt(PromptStrategy.LONG_COT, q, "gsm8k"),
             "uses_demonstrations": False,
             "reasoning": True,
             "context_allowed": False,
         },
         PromptStrategy.RAG: {
             "system": SYSTEM_GSM8K_RAG,
-            "builder": lambda q: build_gsm8k_user_prompt(PromptStrategy.ZERO_SHOT_DIRECT, q),
+            "builder": lambda q: build_user_prompt(PromptStrategy.RAG, q, "gsm8k"),
             "uses_demonstrations": False,
             "reasoning": False,
             "context_allowed": True,
@@ -276,84 +324,167 @@ DATASET_PROMPT_REGISTRY: Dict[str, Dict[PromptStrategy, Dict[str, Any]]] = {
     },
     "natural_questions": {
         PromptStrategy.ZERO_SHOT_DIRECT: {
-            "system": SYSTEM_QA_ZERO_SHOT_DIRECT,
-            "builder": lambda q: build_qa_user_prompt(PromptStrategy.ZERO_SHOT_DIRECT, q),
+            "system": SYSTEM_ZERO_SHOT_DIRECT,
+            "builder": lambda q: build_user_prompt(PromptStrategy.ZERO_SHOT_DIRECT, q, "natural_questions"),
             "uses_demonstrations": False,
             "reasoning": False,
             "context_allowed": False,
         },
+        PromptStrategy.FEW_SHOT_3: {
+            "system": SYSTEM_FEW_SHOT_3,
+            "builder": lambda q: build_user_prompt(PromptStrategy.FEW_SHOT_3, q, "natural_questions"),
+            "uses_demonstrations": True,
+            "reasoning": False,
+            "context_allowed": False,
+        },
         PromptStrategy.ZERO_SHOT_COT: {
-            "system": SYSTEM_QA_ZERO_SHOT_COT,
-            "builder": lambda q: build_qa_user_prompt(PromptStrategy.ZERO_SHOT_COT, q),
+            "system": SYSTEM_ZERO_SHOT_COT,
+            "builder": lambda q: build_user_prompt(PromptStrategy.ZERO_SHOT_COT, q, "natural_questions"),
+            "uses_demonstrations": False,
+            "reasoning": True,
+            "context_allowed": False,
+        },
+        PromptStrategy.SHORT_COT: {
+            "system": SYSTEM_SHORT_COT,
+            "builder": lambda q: build_user_prompt(PromptStrategy.SHORT_COT, q, "natural_questions"),
+            "uses_demonstrations": False,
+            "reasoning": True,
+            "context_allowed": False,
+        },
+        PromptStrategy.LONG_COT: {
+            "system": SYSTEM_LONG_COT,
+            "builder": lambda q: build_user_prompt(PromptStrategy.LONG_COT, q, "natural_questions"),
             "uses_demonstrations": False,
             "reasoning": True,
             "context_allowed": False,
         },
         PromptStrategy.RAG: {
-            "system": SYSTEM_QA_RAG,
-            "builder": lambda q: build_qa_user_prompt(PromptStrategy.RAG, q),
+            "system": SYSTEM_RAG,
+            "builder": lambda q: build_user_prompt(PromptStrategy.RAG, q, "natural_questions"),
             "uses_demonstrations": False,
             "reasoning": False,
             "context_allowed": True,
-        }
-    },
-    "cnn_dailymail": {
-        PromptStrategy.ZERO_SHOT_DIRECT: {
-            "system": SYSTEM_SUMMARIZATION_DIRECT,
-            "builder": lambda t: build_summarization_user_prompt(PromptStrategy.ZERO_SHOT_DIRECT, t),
-            "uses_demonstrations": False,
-            "reasoning": False,
-            "context_allowed": False,
         },
-        PromptStrategy.ZERO_SHOT_COT: {
-            "system": SYSTEM_SUMMARIZATION_COT,
-            "builder": lambda t: build_summarization_user_prompt(PromptStrategy.ZERO_SHOT_COT, t),
-            "uses_demonstrations": False,
-            "reasoning": True,
-            "context_allowed": False,
-        }
     },
     "contexteval": {
         PromptStrategy.ZERO_SHOT_DIRECT: {
-            "system": SYSTEM_QA_ZERO_SHOT_DIRECT,
-            "builder": lambda q: build_qa_user_prompt(PromptStrategy.ZERO_SHOT_DIRECT, q),
+            "system": SYSTEM_ZERO_SHOT_DIRECT,
+            "builder": lambda q: build_user_prompt(PromptStrategy.ZERO_SHOT_DIRECT, q, "contexteval"),
             "uses_demonstrations": False,
             "reasoning": False,
             "context_allowed": True,
         },
+        PromptStrategy.FEW_SHOT_3: {
+            "system": SYSTEM_FEW_SHOT_3,
+            "builder": lambda q: build_user_prompt(PromptStrategy.FEW_SHOT_3, q, "contexteval"),
+            "uses_demonstrations": True,
+            "reasoning": False,
+            "context_allowed": True,
+        },
         PromptStrategy.ZERO_SHOT_COT: {
-            "system": SYSTEM_QA_ZERO_SHOT_COT,
-            "builder": lambda q: build_qa_user_prompt(PromptStrategy.ZERO_SHOT_COT, q),
+            "system": SYSTEM_ZERO_SHOT_COT,
+            "builder": lambda q: build_user_prompt(PromptStrategy.ZERO_SHOT_COT, q, "contexteval"),
+            "uses_demonstrations": False,
+            "reasoning": True,
+            "context_allowed": True,
+        },
+        PromptStrategy.SHORT_COT: {
+            "system": SYSTEM_SHORT_COT,
+            "builder": lambda q: build_user_prompt(PromptStrategy.SHORT_COT, q, "contexteval"),
+            "uses_demonstrations": False,
+            "reasoning": True,
+            "context_allowed": True,
+        },
+        PromptStrategy.LONG_COT: {
+            "system": SYSTEM_LONG_COT,
+            "builder": lambda q: build_user_prompt(PromptStrategy.LONG_COT, q, "contexteval"),
             "uses_demonstrations": False,
             "reasoning": True,
             "context_allowed": True,
         },
         PromptStrategy.RAG: {
-            "system": SYSTEM_QA_RAG,
-            "builder": lambda q: build_qa_user_prompt(PromptStrategy.RAG, q),
+            "system": SYSTEM_RAG,
+            "builder": lambda q: build_user_prompt(PromptStrategy.RAG, q, "contexteval"),
             "uses_demonstrations": False,
             "reasoning": False,
             "context_allowed": True,
-        }
-    }
+        },
+    },
+    "cnn_dailymail": {
+        PromptStrategy.ZERO_SHOT_DIRECT: {
+            "system": SYSTEM_ZERO_SHOT_DIRECT,
+            "builder": lambda t: build_user_prompt(PromptStrategy.ZERO_SHOT_DIRECT, t, "cnn_dailymail"),
+            "uses_demonstrations": False,
+            "reasoning": False,
+            "context_allowed": False,
+        },
+        PromptStrategy.FEW_SHOT_3: {
+            "system": SYSTEM_FEW_SHOT_3,
+            "builder": lambda t: build_user_prompt(PromptStrategy.FEW_SHOT_3, t, "cnn_dailymail"),
+            "uses_demonstrations": True,
+            "reasoning": False,
+            "context_allowed": False,
+        },
+        PromptStrategy.ZERO_SHOT_COT: {
+            "system": SYSTEM_ZERO_SHOT_COT,
+            "builder": lambda t: build_user_prompt(PromptStrategy.ZERO_SHOT_COT, t, "cnn_dailymail"),
+            "uses_demonstrations": False,
+            "reasoning": True,
+            "context_allowed": False,
+        },
+        PromptStrategy.SHORT_COT: {
+            "system": SYSTEM_SHORT_COT,
+            "builder": lambda t: build_user_prompt(PromptStrategy.SHORT_COT, t, "cnn_dailymail"),
+            "uses_demonstrations": False,
+            "reasoning": True,
+            "context_allowed": False,
+        },
+        PromptStrategy.LONG_COT: {
+            "system": SYSTEM_LONG_COT,
+            "builder": lambda t: build_user_prompt(PromptStrategy.LONG_COT, t, "cnn_dailymail"),
+            "uses_demonstrations": False,
+            "reasoning": True,
+            "context_allowed": False,
+        },
+        PromptStrategy.RAG: {
+            "system": SYSTEM_RAG,
+            "builder": lambda t: build_user_prompt(PromptStrategy.RAG, t, "cnn_dailymail"),
+            "uses_demonstrations": False,
+            "reasoning": False,
+            "context_allowed": True,
+        },
+    },
 }
 
-# Aliases
+# Synonyms & Aliases
 DATASET_PROMPT_REGISTRY["nq"] = DATASET_PROMPT_REGISTRY["natural_questions"]
 DATASET_PROMPT_REGISTRY["cnn"] = DATASET_PROMPT_REGISTRY["cnn_dailymail"]
 DATASET_PROMPT_REGISTRY["context_eval"] = DATASET_PROMPT_REGISTRY["contexteval"]
-
-# Backward compatibility registry alias
 PROMPT_REGISTRY = DATASET_PROMPT_REGISTRY["gsm8k"]
 
 
 # ============================================================
-# Universal Formatter
+# 6. Universal Prompt Formatter
 # ============================================================
+
+def _normalize_strategy(strategy: Union[PromptStrategy, str]) -> PromptStrategy:
+    """Safely coerces string strategy representations into PromptStrategy Enum."""
+    if isinstance(strategy, PromptStrategy):
+        return strategy
+    s_val = str(strategy).strip().lower()
+    if s_val.startswith("rag_top_") or s_val == "rag":
+        return PromptStrategy.RAG
+    if s_val.startswith("ctx_"):
+        return PromptStrategy.ZERO_SHOT_DIRECT
+    try:
+        return PromptStrategy(s_val)
+    except ValueError:
+        return PromptStrategy.ZERO_SHOT_DIRECT
+
 
 def format_prompt(
     dataset: str,
-    strategy: PromptStrategy,
+    strategy: Union[PromptStrategy, str],
     input_text: str,
     context: Optional[str] = None,
     allow_context: bool = False
@@ -361,19 +492,15 @@ def format_prompt(
     """Universal prompt formatter for all benchmark datasets and task families."""
     dataset_key = dataset.lower().strip()
     if dataset_key not in DATASET_PROMPT_REGISTRY:
-        # Fallback to gsm8k if unknown
         dataset_key = "gsm8k"
 
+    strat_enum = _normalize_strategy(strategy)
     registry = DATASET_PROMPT_REGISTRY[dataset_key]
-    if strategy not in registry:
-        raise ValueError(f"Strategy '{strategy}' not supported for dataset '{dataset}'")
 
-    config = registry[strategy]
+    if strat_enum not in registry:
+        strat_enum = PromptStrategy.ZERO_SHOT_DIRECT
 
-    if context and not config["context_allowed"] and not allow_context:
-        raise ValueError(
-            f"Context supplied to '{strategy.value}', but strategy does not allow external context."
-        )
+    config = registry[strat_enum]
 
     user_content = config["builder"](input_text)
     if context:
@@ -386,12 +513,12 @@ def format_prompt(
 
 
 def format_gsm8k_prompt(
-    strategy: PromptStrategy,
+    strategy: Union[PromptStrategy, str],
     question: str,
     context: Optional[str] = None,
     allow_context: bool = False
 ) -> List[Dict[str, str]]:
-    """Specific helper for GSM8K dataset prompt formatting."""
+    """Helper for GSM8K prompt formatting."""
     return format_prompt(
         dataset="gsm8k",
         strategy=strategy,
@@ -402,33 +529,44 @@ def format_gsm8k_prompt(
 
 
 # ============================================================
-# Metadata & Reproducibility Hashing
+# 7. Metadata & Reproducibility Hashing
 # ============================================================
 
 def get_prompt_metadata(
-    strategy: PromptStrategy,
+    strategy: Union[PromptStrategy, str],
     dataset: str = "gsm8k"
 ) -> Dict[str, Any]:
     """Return metadata describing the experimental prompt condition."""
     dataset_key = dataset.lower().strip()
-    config = DATASET_PROMPT_REGISTRY.get(dataset_key, DATASET_PROMPT_REGISTRY["gsm8k"])[strategy]
-    demos = len(FIXED_FEW_SHOT_EXAMPLES_GSM8K) if (dataset_key == "gsm8k" and config["uses_demonstrations"]) else 0
+    strat_enum = _normalize_strategy(strategy)
+    config = DATASET_PROMPT_REGISTRY.get(dataset_key, DATASET_PROMPT_REGISTRY["gsm8k"])[strat_enum]
+
+    demos_count = 0
+    if config["uses_demonstrations"]:
+        if dataset_key in ("gsm8k", "gsm"):
+            demos_count = len(FIXED_FEW_SHOT_EXAMPLES_GSM8K)
+        elif dataset_key in ("natural_questions", "nq"):
+            demos_count = len(FIXED_FEW_SHOT_EXAMPLES_NQ)
+        elif dataset_key in ("contexteval", "context_eval"):
+            demos_count = len(FIXED_FEW_SHOT_EXAMPLES_CONTEXTEVAL)
+        elif dataset_key in ("cnn_dailymail", "cnn"):
+            demos_count = len(FIXED_FEW_SHOT_EXAMPLES_CNNDM)
 
     return {
         "dataset": dataset_key,
-        "strategy": strategy.value,
+        "strategy": strat_enum.value,
         "uses_demonstrations": config["uses_demonstrations"],
         "reasoning": config["reasoning"],
         "context_allowed": config["context_allowed"],
-        "num_demonstrations": demos
+        "num_demonstrations": demos_count
     }
 
 
 def get_prompt_hash(
-    prompt_version: str = "promptenergy_v2.0",
+    prompt_version: str = "promptenergy_v2.1",
     dataset: str = "gsm8k"
 ) -> str:
-    """Compute a deterministic SHA-256 hash of the prompt registry."""
+    """Compute a deterministic SHA-256 hash of the prompt registry for scientific reproducibility."""
     dataset_key = dataset.lower().strip()
     registry = DATASET_PROMPT_REGISTRY.get(dataset_key, DATASET_PROMPT_REGISTRY["gsm8k"])
 
@@ -445,21 +583,29 @@ def get_prompt_hash(
             for strat, cfg in registry.items()
         }
     }
-    if dataset_key == "gsm8k":
+    if dataset_key in ("gsm8k", "gsm"):
         payload["few_shot_examples"] = FIXED_FEW_SHOT_EXAMPLES_GSM8K
+    elif dataset_key in ("natural_questions", "nq"):
+        payload["few_shot_examples"] = FIXED_FEW_SHOT_EXAMPLES_NQ
+    elif dataset_key in ("contexteval", "context_eval"):
+        payload["few_shot_examples"] = FIXED_FEW_SHOT_EXAMPLES_CONTEXTEVAL
+    elif dataset_key in ("cnn_dailymail", "cnn"):
+        payload["few_shot_examples"] = FIXED_FEW_SHOT_EXAMPLES_CNNDM
 
     canonical_json = json.dumps(payload, sort_keys=True, ensure_ascii=False)
     return hashlib.sha256(canonical_json.encode("utf-8")).hexdigest()
 
 
 def validate_prompt_integrity() -> None:
-    """Validates prompt integrity across all datasets."""
-    assert len(FIXED_FEW_SHOT_EXAMPLES_GSM8K) == 3, "GSM8K FEW_SHOT_3 must have 3 demonstrations."
+    """Validates prompt integrity across all 4 datasets."""
+    assert len(FIXED_FEW_SHOT_EXAMPLES_GSM8K) == 3
     for ex in FIXED_FEW_SHOT_EXAMPLES_GSM8K:
         assert "problem" in ex and "answer" in ex and ex["answer"].startswith("#### ")
-
-    # GSM8K zero-shot validation
     gsm_reg = DATASET_PROMPT_REGISTRY["gsm8k"]
     assert gsm_reg[PromptStrategy.ZERO_SHOT_DIRECT]["uses_demonstrations"] is False
     assert gsm_reg[PromptStrategy.ZERO_SHOT_COT]["uses_demonstrations"] is False
     assert gsm_reg[PromptStrategy.FEW_SHOT_3]["uses_demonstrations"] is True
+
+    assert len(FIXED_FEW_SHOT_EXAMPLES_NQ) == 3
+    assert len(FIXED_FEW_SHOT_EXAMPLES_CONTEXTEVAL) == 3
+    assert len(FIXED_FEW_SHOT_EXAMPLES_CNNDM) == 3
