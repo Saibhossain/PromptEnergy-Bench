@@ -270,6 +270,20 @@ def generate_comparative_tables(records: List[Dict[str, Any]], output_dir: str) 
     tables_dir = os.path.join(output_dir, "tables")
     os.makedirs(tables_dir, exist_ok=True)
 
+    # Pre-calculate Prefill and Decode Energy per record if not present
+    for r in records:
+        e_tot = parse_numeric(r.get("energy_metrics", {}).get("energy_total_j") if isinstance(r.get("energy_metrics"), dict) else r.get("energy_total_j"))
+        ttft = parse_numeric(r.get("latency_metrics", {}).get("ttft_ms") if isinstance(r.get("latency_metrics"), dict) else r.get("ttft_ms"))
+        tot_lat = parse_numeric(r.get("latency_metrics", {}).get("total_latency_ms") if isinstance(r.get("latency_metrics"), dict) else r.get("total_latency_ms"))
+        gen_lat = parse_numeric(r.get("latency_metrics", {}).get("generation_latency_ms") if isinstance(r.get("latency_metrics"), dict) else r.get("generation_latency_ms"))
+
+        if e_tot is not None and tot_lat is not None and tot_lat > 0:
+            if "energy_prefill_j" not in r or r["energy_prefill_j"] is None:
+                r["energy_prefill_j"] = e_tot * ((ttft or 0.0) / tot_lat)
+            if "energy_decode_j" not in r or r["energy_decode_j"] is None:
+                gen_time = gen_lat if gen_lat is not None else (tot_lat - (ttft or 0.0))
+                r["energy_decode_j"] = e_tot * (gen_time / tot_lat)
+
     # 1. Model Comparison Table
     model_groups: Dict[str, List[Dict[str, Any]]] = {}
     for r in records:
@@ -279,33 +293,62 @@ def generate_comparative_tables(records: List[Dict[str, Any]], output_dir: str) 
     model_rows = []
     for m, m_recs in model_groups.items():
         devs = sorted(list(set(r.get("device") or r.get("hardware_identifier") or "unknown" for r in m_recs)))
-        e_vals = [parse_numeric(r.get("energy_metrics", {}).get("energy_total_j") if isinstance(r.get("energy_metrics"), dict) else r.get("energy_total_j")) for r in m_recs]
-        e_vals = [e for e in e_vals if e is not None]
-        
-        t_vals = [parse_numeric(r.get("latency_metrics", {}).get("total_latency_ms") if isinstance(r.get("latency_metrics"), dict) else r.get("total_latency_ms")) for r in m_recs]
+        e_vals = [parse_numeric(r.get("energy_total_j")) for r in m_recs if parse_numeric(r.get("energy_total_j")) is not None]
+        pref_e_vals = [parse_numeric(r.get("energy_prefill_j")) for r in m_recs if parse_numeric(r.get("energy_prefill_j")) is not None]
+        dec_e_vals = [parse_numeric(r.get("energy_decode_j")) for r in m_recs if parse_numeric(r.get("energy_decode_j")) is not None]
+
+        t_vals = [parse_numeric(r.get("total_latency_ms") or (r.get("latency_metrics", {}).get("total_latency_ms") if isinstance(r.get("latency_metrics"), dict) else None)) for r in m_recs]
         t_vals = [t for t in t_vals if t is not None]
 
-        ttft_vals = [parse_numeric(r.get("latency_metrics", {}).get("ttft_ms") if isinstance(r.get("latency_metrics"), dict) else r.get("ttft_ms")) for r in m_recs]
+        ttft_vals = [parse_numeric(r.get("ttft_ms") or (r.get("latency_metrics", {}).get("ttft_ms") if isinstance(r.get("latency_metrics"), dict) else None)) for r in m_recs]
         ttft_vals = [tt for tt in ttft_vals if tt is not None]
 
+        in_toks = [parse_numeric(r.get("input_tokens") or r.get("input_token_count")) for r in m_recs]
+        in_toks = [it for it in in_toks if it is not None]
+
+        out_toks = [parse_numeric(r.get("output_tokens") or r.get("output_token_count")) for r in m_recs]
+        out_toks = [ot for ot in out_toks if ot is not None]
+
         acc_vals = [1 if r.get("answer_correct") is True else 0 for r in m_recs if r.get("answer_correct") is not None]
+
+        # Unit token energy (mJ / token)
+        sum_pref_e = sum(pref_e_vals) if pref_e_vals else 0.0
+        sum_dec_e = sum(dec_e_vals) if dec_e_vals else 0.0
+        sum_in_t = sum(in_toks) if in_toks else 0
+        sum_out_t = sum(out_toks) if out_toks else 0
+
+        pref_mj = f"{(sum_pref_e / sum_in_t) * 1000.0:.2f}" if (sum_pref_e > 0 and sum_in_t > 0) else "N/A"
+        dec_mj = f"{(sum_dec_e / sum_out_t) * 1000.0:.2f}" if (sum_dec_e > 0 and sum_out_t > 0) else "N/A"
+
+        # Decode Throughput (tok/s)
+        tps_list = []
+        for r in m_recs:
+            ot = parse_numeric(r.get("output_tokens") or r.get("output_token_count"))
+            lat = parse_numeric(r.get("generation_latency_ms") or r.get("total_latency_ms"))
+            if ot is not None and lat is not None and lat > 0:
+                tps_list.append(ot / (lat / 1000.0))
+        mean_tps = f"{np.mean(tps_list):.2f}" if tps_list else "N/A"
 
         model_rows.append({
             "Model": m,
             "Hardware": ", ".join(devs),
             "Samples": len(m_recs),
             "Accuracy (%)": f"{np.mean(acc_vals)*100:.2f}%" if acc_vals else "N/A",
-            "Mean Energy (J)": f"{np.mean(e_vals):.3f}" if e_vals else "N/A",
-            "Mean Latency (ms)": f"{np.mean(t_vals):.1f}" if t_vals else "N/A",
+            "Total Energy (J)": f"{np.mean(e_vals):.3f}" if e_vals else "N/A",
+            "Prefill Energy (J)": f"{np.mean(pref_e_vals):.3f}" if pref_e_vals else "N/A",
+            "Decode Energy (J)": f"{np.mean(dec_e_vals):.3f}" if dec_e_vals else "N/A",
+            "Prefill (mJ/tok)": pref_mj,
+            "Decode (mJ/tok)": dec_mj,
+            "Decode TPS (tok/s)": mean_tps,
             "Mean TTFT (ms)": f"{np.mean(ttft_vals):.1f}" if ttft_vals else "N/A",
-            "Joules / Query": f"{np.mean(e_vals):.3f}" if e_vals else "N/A"
+            "Mean Latency (ms)": f"{np.mean(t_vals):.1f}" if t_vals else "N/A"
         })
 
     export_table(
         model_rows,
-        ["Model", "Hardware", "Samples", "Accuracy (%)", "Mean Energy (J)", "Mean Latency (ms)", "Mean TTFT (ms)", "Joules / Query"],
+        ["Model", "Hardware", "Samples", "Accuracy (%)", "Total Energy (J)", "Prefill Energy (J)", "Decode Energy (J)", "Prefill (mJ/tok)", "Decode (mJ/tok)", "Decode TPS (tok/s)", "Mean TTFT (ms)", "Mean Latency (ms)"],
         os.path.join(tables_dir, "1_model_comparison"),
-        "Cross-Model Comparative Performance & Energy Summary"
+        "Cross-Model Comparative Performance and Energy Decomposition Summary"
     )
 
     # 2. Strategy Comparison Table
@@ -317,32 +360,59 @@ def generate_comparative_tables(records: List[Dict[str, Any]], output_dir: str) 
 
     strat_rows = []
     for (m, s), s_recs in sorted(strat_groups.items()):
-        e_vals = [parse_numeric(r.get("energy_metrics", {}).get("energy_total_j") if isinstance(r.get("energy_metrics"), dict) else r.get("energy_total_j")) for r in s_recs]
-        e_vals = [e for e in e_vals if e is not None]
+        e_vals = [parse_numeric(r.get("energy_total_j")) for r in s_recs if parse_numeric(r.get("energy_total_j")) is not None]
+        pref_e_vals = [parse_numeric(r.get("energy_prefill_j")) for r in s_recs if parse_numeric(r.get("energy_prefill_j")) is not None]
+        dec_e_vals = [parse_numeric(r.get("energy_decode_j")) for r in s_recs if parse_numeric(r.get("energy_decode_j")) is not None]
 
-        t_vals = [parse_numeric(r.get("latency_metrics", {}).get("total_latency_ms") if isinstance(r.get("latency_metrics"), dict) else r.get("total_latency_ms")) for r in s_recs]
-        t_vals = [t for t in t_vals if t is not None]
+        t_vals = [parse_numeric(r.get("total_latency_ms")) for r in s_recs if parse_numeric(r.get("total_latency_ms")) is not None]
+        ttft_vals = [parse_numeric(r.get("ttft_ms")) for r in s_recs if parse_numeric(r.get("ttft_ms")) is not None]
 
-        tok_vals = [parse_numeric(r.get("output_tokens") or (r.get("actual_token_counts", {}).get("actual_output_tokens") if isinstance(r.get("actual_token_counts"), dict) else None)) for r in s_recs]
+        in_toks = [parse_numeric(r.get("input_tokens") or r.get("input_token_count")) for r in s_recs]
+        in_toks = [it for it in in_toks if it is not None]
+
+        tok_vals = [parse_numeric(r.get("output_tokens") or r.get("output_token_count")) for r in s_recs]
         tok_vals = [tk for tk in tok_vals if tk is not None]
 
         acc_vals = [1 if r.get("answer_correct") is True else 0 for r in s_recs if r.get("answer_correct") is not None]
+
+        tot_e_mean = np.mean(e_vals) if e_vals else 0.0
+        pref_e_mean = np.mean(pref_e_vals) if pref_e_vals else 0.0
+        dec_e_mean = np.mean(dec_e_vals) if dec_e_vals else 0.0
+
+        pref_share = f"{(pref_e_mean / tot_e_mean) * 100.0:.1f}%" if tot_e_mean > 0 else "N/A"
+        dec_share = f"{(dec_e_mean / tot_e_mean) * 100.0:.1f}%" if tot_e_mean > 0 else "N/A"
+
+        sum_pref_e = sum(pref_e_vals) if pref_e_vals else 0.0
+        sum_dec_e = sum(dec_e_vals) if dec_e_vals else 0.0
+        sum_in_t = sum(in_toks) if in_toks else 0
+        sum_out_t = sum(tok_vals) if tok_vals else 0
+
+        pref_mj = f"{(sum_pref_e / sum_in_t) * 100.0:.2f}" if (sum_pref_e > 0 and sum_in_t > 0) else "N/A"
+        dec_mj = f"{(sum_dec_e / sum_out_t) * 100.0:.2f}" if (sum_dec_e > 0 and sum_out_t > 0) else "N/A"
 
         strat_rows.append({
             "Model": m,
             "Strategy": s,
             "Samples": len(s_recs),
             "Accuracy (%)": f"{np.mean(acc_vals)*100:.2f}%" if acc_vals else "N/A",
-            "Mean Energy (J)": f"{np.mean(e_vals):.3f}" if e_vals else "N/A",
-            "Mean Latency (ms)": f"{np.mean(t_vals):.1f}" if t_vals else "N/A",
-            "Mean Output Tokens": f"{np.mean(tok_vals):.1f}" if tok_vals else "N/A"
+            "Total Energy (J)": f"{tot_e_mean:.3f}",
+            "Prefill Energy (J)": f"{pref_e_mean:.3f}",
+            "Decode Energy (J)": f"{dec_e_mean:.3f}",
+            "Prefill Share": pref_share,
+            "Decode Share": dec_share,
+            "Prefill (mJ/tok)": pref_mj,
+            "Decode (mJ/tok)": dec_mj,
+            "Mean Input Tokens": f"{np.mean(in_toks):.1f}" if in_toks else "N/A",
+            "Mean Output Tokens": f"{np.mean(tok_vals):.1f}" if tok_vals else "N/A",
+            "Mean TTFT (ms)": f"{np.mean(ttft_vals):.1f}" if ttft_vals else "N/A",
+            "Mean Latency (ms)": f"{np.mean(t_vals):.1f}" if t_vals else "N/A"
         })
 
     export_table(
         strat_rows,
-        ["Model", "Strategy", "Samples", "Accuracy (%)", "Mean Energy (J)", "Mean Latency (ms)", "Mean Output Tokens"],
+        ["Model", "Strategy", "Samples", "Accuracy (%)", "Total Energy (J)", "Prefill Energy (J)", "Decode Energy (J)", "Prefill Share", "Decode Share", "Prefill (mJ/tok)", "Decode (mJ/tok)", "Mean Input Tokens", "Mean Output Tokens", "Mean TTFT (ms)", "Mean Latency (ms)"],
         os.path.join(tables_dir, "2_strategy_comparison"),
-        "Prompting Strategy Performance & Energy Trade-offs"
+        "Prompting Strategy Performance & Energy Decomposition Breakdown"
     )
 
     # 3. Marginal Energy Gain (MEG) Table
@@ -356,15 +426,15 @@ def generate_comparative_tables(records: List[Dict[str, Any]], output_dir: str) 
         if baseline_key:
             b_recs = m_strats[baseline_key]
             b_acc = np.mean([1 if r.get("answer_correct") is True else 0 for r in b_recs]) if b_recs else 0.0
-            b_e_list = [parse_numeric(r.get("energy_metrics", {}).get("energy_total_j") if isinstance(r.get("energy_metrics"), dict) else r.get("energy_total_j")) for r in b_recs]
-            b_e = np.mean([e for e in b_e_list if e is not None]) if b_e_list else 0.0
+            b_e_list = [parse_numeric(r.get("energy_total_j")) for r in b_recs if parse_numeric(r.get("energy_total_j")) is not None]
+            b_e = np.mean(b_e_list) if b_e_list else 0.0
 
             for s, s_recs in m_strats.items():
                 if s == baseline_key:
                     continue
                 s_acc = np.mean([1 if r.get("answer_correct") is True else 0 for r in s_recs]) if s_recs else 0.0
-                s_e_list = [parse_numeric(r.get("energy_metrics", {}).get("energy_total_j") if isinstance(r.get("energy_metrics"), dict) else r.get("energy_total_j")) for r in s_recs]
-                s_e = np.mean([e for e in s_e_list if e is not None]) if s_e_list else 0.0
+                s_e_list = [parse_numeric(r.get("energy_total_j")) for r in s_recs if parse_numeric(r.get("energy_total_j")) is not None]
+                s_e = np.mean(s_e_list) if s_e_list else 0.0
 
                 delta_acc = (s_acc - b_acc) * 100.0
                 delta_e = s_e - b_e
@@ -412,12 +482,27 @@ def generate_comparative_figures(records: List[Dict[str, Any]], output_dir: str)
     plots_dir = os.path.join(output_dir, "plots")
     os.makedirs(plots_dir, exist_ok=True)
 
-    # Groupings
+    # Pre-calculate Prefill and Decode Energy per record if not present
+    for r in records:
+        e_tot = parse_numeric(r.get("energy_metrics", {}).get("energy_total_j") if isinstance(r.get("energy_metrics"), dict) else r.get("energy_total_j"))
+        ttft = parse_numeric(r.get("latency_metrics", {}).get("ttft_ms") if isinstance(r.get("latency_metrics"), dict) else r.get("ttft_ms"))
+        tot_lat = parse_numeric(r.get("latency_metrics", {}).get("total_latency_ms") if isinstance(r.get("latency_metrics"), dict) else r.get("total_latency_ms"))
+        gen_lat = parse_numeric(r.get("latency_metrics", {}).get("generation_latency_ms") if isinstance(r.get("latency_metrics"), dict) else r.get("generation_latency_ms"))
+
+        if e_tot is not None and tot_lat is not None and tot_lat > 0:
+            if "energy_prefill_j" not in r or r["energy_prefill_j"] is None:
+                r["energy_prefill_j"] = e_tot * ((ttft or 0.0) / tot_lat)
+            if "energy_decode_j" not in r or r["energy_decode_j"] is None:
+                gen_time = gen_lat if gen_lat is not None else (tot_lat - (ttft or 0.0))
+                r["energy_decode_j"] = e_tot * (gen_time / tot_lat)
+
     models = sorted(list(set(r.get("model", "unknown") for r in records)))
     strategies = sorted(list(set(r.get("strategy", "unknown") for r in records)))
 
     # 1. Figure: Energy vs Accuracy Pareto Curves by Model
-    fig, ax = plt.subplots(figsize=(8, 6))
+    fig, ax = plt.subplots(figsize=(8.5, 5.5))
+    offset_cycle = [(10, 8), (-12, 14), (12, -14), (-14, -14), (0, 18), (0, -20)]
+
     for idx, m in enumerate(models):
         m_recs = [r for r in records if r.get("model") == m]
         strat_points = []
@@ -425,8 +510,7 @@ def generate_comparative_figures(records: List[Dict[str, Any]], output_dir: str)
             s_recs = [r for r in m_recs if r.get("strategy") == s]
             if not s_recs:
                 continue
-            e_vals = [parse_numeric(r.get("energy_metrics", {}).get("energy_total_j") if isinstance(r.get("energy_metrics"), dict) else r.get("energy_total_j")) for r in s_recs]
-            e_vals = [e for e in e_vals if e is not None]
+            e_vals = [parse_numeric(r.get("energy_total_j")) for r in s_recs if parse_numeric(r.get("energy_total_j")) is not None]
             acc_vals = [1 if r.get("answer_correct") is True else 0 for r in s_recs if r.get("answer_correct") is not None]
             if e_vals and acc_vals:
                 strat_points.append((np.mean(e_vals), np.mean(acc_vals) * 100.0, s))
@@ -436,46 +520,66 @@ def generate_comparative_figures(records: List[Dict[str, Any]], output_dir: str)
             xs = [p[0] for p in strat_points]
             ys = [p[1] for p in strat_points]
             labels = [p[2] for p in strat_points]
-            ax.scatter(xs, ys, label=m, color=color, s=90, alpha=0.9, edgecolors="black", zorder=4)
-            for x, y, lab in zip(xs, ys, labels):
-                ax.annotate(lab.replace("_", " "), (x, y), textcoords="offset points", xytext=(0, 7), ha="center", fontsize=8)
+            ax.scatter(xs, ys, label=m, color=color, s=120, alpha=0.9, edgecolors="black", linewidths=1.0, zorder=5)
 
-            # Sort and draw frontier line
+            for p_idx, (x, y, lab) in enumerate(zip(xs, ys, labels)):
+                off = offset_cycle[p_idx % len(offset_cycle)]
+                if y < 1.0:
+                    off = (off[0], 10 + (p_idx % 3) * 14)
+                ax.annotate(
+                    lab.replace("_", " "),
+                    (x, y),
+                    textcoords="offset points",
+                    xytext=off,
+                    fontsize=8.5,
+                    bbox=dict(boxstyle="round,pad=0.25", facecolor="white", alpha=0.88, edgecolor="#CCCCCC", linewidth=0.6),
+                    arrowprops=dict(arrowstyle="-", color="#888888", linewidth=0.6, alpha=0.6) if abs(off[0]) > 14 or abs(off[1]) > 14 else None,
+                    zorder=6
+                )
+
             sorted_pts = sorted(strat_points, key=lambda p: p[0])
-            ax.plot([p[0] for p in sorted_pts], [p[1] for p in sorted_pts], color=color, linestyle="--", alpha=0.6)
+            ax.plot([p[0] for p in sorted_pts], [p[1] for p in sorted_pts], color=color, linestyle="--", linewidth=1.8, alpha=0.7)
 
     ax.set_xlabel("Mean Total Energy per Query (Joules)")
     ax.set_ylabel("Accuracy (%)")
-    ax.set_title("Energy-Accuracy Trade-off & Pareto Frontier by Model")
+    ax.set_title("Energy-Accuracy Trade-off & Pareto Frontier by Model", fontsize=12, fontweight="semibold")
     ax.grid(True, linestyle=":", alpha=0.6)
     ax.legend(loc="lower right")
     save_plot(fig, plots_dir, "01_energy_vs_accuracy_pareto")
 
-    # 2. Figure: Mean Energy by Model & Strategy (Grouped Bars)
-    if len(models) > 0 and len(strategies) > 0:
-        fig, ax = plt.subplots(figsize=(10, 5))
+    # 2. Figure: Prefill vs Decode Stacked Energy Comparison
+    if len(strategies) > 0:
+        fig, ax = plt.subplots(figsize=(9.0, 5.2))
+        strat_disp = [s.replace("_", "\n") for s in strategies]
         x = np.arange(len(strategies))
-        width = 0.8 / len(models)
+        width = 0.52
 
-        for idx, m in enumerate(models):
-            m_recs = [r for r in records if r.get("model") == m]
-            means = []
-            for s in strategies:
-                s_recs = [r for r in m_recs if r.get("strategy") == s]
-                e_vals = [parse_numeric(r.get("energy_metrics", {}).get("energy_total_j") if isinstance(r.get("energy_metrics"), dict) else r.get("energy_total_j")) for r in s_recs]
-                e_vals = [e for e in e_vals if e is not None]
-                means.append(np.mean(e_vals) if e_vals else 0.0)
+        pref_means = []
+        dec_means = []
+        tot_means = []
 
-            offset = (idx - len(models) / 2.0 + 0.5) * width
-            ax.bar(x + offset, means, width, label=m, color=PALETTE[idx % len(PALETTE)], alpha=0.85, edgecolor="black")
+        for s in strategies:
+            s_recs = [r for r in records if r.get("strategy") == s]
+            pe = [parse_numeric(r.get("energy_prefill_j")) for r in s_recs if parse_numeric(r.get("energy_prefill_j")) is not None]
+            de = [parse_numeric(r.get("energy_decode_j")) for r in s_recs if parse_numeric(r.get("energy_decode_j")) is not None]
+            te = [parse_numeric(r.get("energy_total_j")) for r in s_recs if parse_numeric(r.get("energy_total_j")) is not None]
+            pref_means.append(np.mean(pe) if pe else 0.0)
+            dec_means.append(np.mean(de) if de else 0.0)
+            tot_means.append(np.mean(te) if te else 0.0)
+
+        p1 = ax.bar(x, pref_means, width, label="Prompt Processing (Prefill)", color="#0072B2", edgecolor="black", linewidth=0.8)
+        p2 = ax.bar(x, dec_means, width, bottom=pref_means, label="Generation (Decode)", color="#D55E00", edgecolor="black", linewidth=0.8)
+
+        for i, (tot, pref, dec) in enumerate(zip(tot_means, pref_means, dec_means)):
+            ax.annotate(f"{tot:.1f} J", (i, tot), ha="center", va="bottom", xytext=(0, 4), textcoords="offset points", fontsize=9.5, fontweight="bold")
 
         ax.set_xticks(x)
-        ax.set_xticklabels([s.replace("_", "\n") for s in strategies], fontsize=9)
-        ax.set_ylabel("Mean Energy per Query (Joules)")
-        ax.set_title("Comparative Energy Consumption across Prompt Strategies & Models")
-        ax.legend()
+        ax.set_xticklabels(strat_disp, fontsize=9.5)
+        ax.set_ylabel("Inference Energy (Joules)")
+        ax.set_title("Prompt Processing (Prefill) vs. Autoregressive (Decode) Energy Breakdown", fontsize=12, fontweight="semibold")
+        ax.legend(loc="upper left")
         ax.grid(True, axis="y", linestyle=":", alpha=0.6)
-        save_plot(fig, plots_dir, "02_strategy_energy_comparison")
+        save_plot(fig, plots_dir, "02_strategy_energy_breakdown")
 
     # 3. Figure: Latency & TTFT Breakdown
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
@@ -485,9 +589,9 @@ def generate_comparative_figures(records: List[Dict[str, Any]], output_dir: str)
 
     for m in models:
         m_recs = [r for r in records if r.get("model") == m]
-        ttft_vals = [parse_numeric(r.get("latency_metrics", {}).get("ttft_ms") if isinstance(r.get("latency_metrics"), dict) else r.get("ttft_ms")) for r in m_recs]
+        ttft_vals = [parse_numeric(r.get("ttft_ms") or (r.get("latency_metrics", {}).get("ttft_ms") if isinstance(r.get("latency_metrics"), dict) else None)) for r in m_recs]
         ttft_vals = [t for t in ttft_vals if t is not None]
-        tot_vals = [parse_numeric(r.get("latency_metrics", {}).get("total_latency_ms") if isinstance(r.get("latency_metrics"), dict) else r.get("total_latency_ms")) for r in m_recs]
+        tot_vals = [parse_numeric(r.get("total_latency_ms") or (r.get("latency_metrics", {}).get("total_latency_ms") if isinstance(r.get("latency_metrics"), dict) else None)) for r in m_recs]
         tot_vals = [t for t in tot_vals if t is not None]
 
         if tot_vals:
@@ -501,30 +605,69 @@ def generate_comparative_figures(records: List[Dict[str, Any]], output_dir: str)
         ax1.set_yticks(y_pos)
         ax1.set_yticklabels(model_labels)
         ax1.set_xlabel("Time-To-First-Token (ms)")
-        ax1.set_title("Prefill Latency (TTFT)")
+        ax1.set_title("Prefill Latency (TTFT)", fontsize=11, fontweight="semibold")
         ax1.grid(True, axis="x", linestyle=":", alpha=0.6)
 
         ax2.barh(y_pos, latency_means, color="#0072B2", edgecolor="black", alpha=0.85)
         ax2.set_yticks(y_pos)
         ax2.set_yticklabels([])
         ax2.set_xlabel("Total Generation Latency (ms)")
-        ax2.set_title("End-to-End Latency")
+        ax2.set_title("End-to-End Latency", fontsize=11, fontweight="semibold")
         ax2.grid(True, axis="x", linestyle=":", alpha=0.6)
 
-        plt.suptitle("Cross-Model Latency & Responsiveness Breakdown")
+        plt.suptitle("Cross-Model Latency & Responsiveness Breakdown", fontsize=12, fontweight="bold")
         save_plot(fig, plots_dir, "03_latency_ttft_breakdown")
 
-    # 4. Figure: Context Length Scaling (if context_scaling runs present)
+    # 4. Figure: Unit Energy Cost per Token (mJ / token)
+    if len(strategies) > 0:
+        fig, ax = plt.subplots(figsize=(9.0, 5.0))
+        x = np.arange(len(strategies))
+        width = 0.38
+
+        pref_mj_list = []
+        dec_mj_list = []
+
+        for s in strategies:
+            s_recs = [r for r in records if r.get("strategy") == s]
+            pe = sum([parse_numeric(r.get("energy_prefill_j")) or 0.0 for r in s_recs])
+            de = sum([parse_numeric(r.get("energy_decode_j")) or 0.0 for r in s_recs])
+            it = sum([parse_numeric(r.get("input_tokens") or r.get("input_token_count")) or 0.0 for r in s_recs])
+            ot = sum([parse_numeric(r.get("output_tokens") or r.get("output_token_count")) or 0.0 for r in s_recs])
+
+            pref_mj_list.append((pe / it * 1000.0) if (pe > 0 and it > 0) else 0.0)
+            dec_mj_list.append((de / ot * 1000.0) if (de > 0 and ot > 0) else 0.0)
+
+        b1 = ax.bar(x - width/2, pref_mj_list, width, label="Prefill (mJ / Input Token)", color="#0072B2", edgecolor="black", linewidth=0.8)
+        b2 = ax.bar(x + width/2, dec_mj_list, width, label="Decode (mJ / Output Token)", color="#D55E00", edgecolor="black", linewidth=0.8)
+
+        for p in b1.patches:
+            h = p.get_height()
+            if h > 0:
+                ax.annotate(f"{h:.1f}", (p.get_x() + p.get_width()/2., h), ha="center", va="bottom", xytext=(0, 2), textcoords="offset points", fontsize=8)
+        for p in b2.patches:
+            h = p.get_height()
+            if h > 0:
+                ax.annotate(f"{h:.1f}", (p.get_x() + p.get_width()/2., h), ha="center", va="bottom", xytext=(0, 2), textcoords="offset points", fontsize=8)
+
+        ax.set_xticks(x)
+        ax.set_xticklabels([s.replace("_", "\n") for s in strategies], fontsize=9.5)
+        ax.set_ylabel("Unit Energy Cost (mJ / token)")
+        ax.set_title("Unit Energy Efficiency: Input Prefill vs. Output Decoding", fontsize=12, fontweight="semibold")
+        ax.legend()
+        ax.grid(True, axis="y", linestyle=":", alpha=0.6)
+        save_plot(fig, plots_dir, "04_unit_energy_per_token")
+
+    # 5. Figure: Context Length Scaling (if context_scaling runs present)
     ctx_recs = [r for r in records if "ctx_" in str(r.get("strategy")) or "context" in str(r.get("experiment_name"))]
     if ctx_recs:
-        fig, ax = plt.subplots(figsize=(8, 5))
+        fig, ax = plt.subplots(figsize=(8.5, 5.0))
         for idx, m in enumerate(models):
             m_ctx = [r for r in ctx_recs if r.get("model") == m]
             lengths = []
             energies = []
             for r in m_ctx:
                 strat = str(r.get("strategy", ""))
-                e_val = parse_numeric(r.get("energy_metrics", {}).get("energy_total_j") if isinstance(r.get("energy_metrics"), dict) else r.get("energy_total_j"))
+                e_val = parse_numeric(r.get("energy_total_j"))
                 if "ctx_" in strat and e_val is not None:
                     try:
                         l = int(strat.replace("ctx_", ""))
@@ -539,10 +682,10 @@ def generate_comparative_figures(records: List[Dict[str, Any]], output_dir: str)
 
         ax.set_xlabel("Context Length (Tokens)")
         ax.set_ylabel("Total Energy (Joules)")
-        ax.set_title("Context-Length vs. Energy Scaling Curves")
+        ax.set_title("Context-Length vs. Energy Scaling Curves", fontsize=12, fontweight="semibold")
         ax.grid(True, linestyle=":", alpha=0.6)
         ax.legend()
-        save_plot(fig, plots_dir, "04_context_scaling_curves")
+        save_plot(fig, plots_dir, "05_context_scaling_curves")
 
 
 # ============================================================

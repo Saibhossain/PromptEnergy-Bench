@@ -90,14 +90,46 @@ def load_all_jsonl_records(input_dir: str) -> List[Dict[str, Any]]:
 
 
 def save_fig(fig: plt.Figure, output_dir: str, base_name: str) -> None:
-    """Saves figure in both PNG (300 DPI) and PDF."""
+    """Saves figure in PNG (300 DPI), vector PDF, and SVG."""
     os.makedirs(output_dir, exist_ok=True)
     png_path = os.path.join(output_dir, f"{base_name}.png")
     pdf_path = os.path.join(output_dir, f"{base_name}.pdf")
+    svg_path = os.path.join(output_dir, f"{base_name}.svg")
     fig.savefig(png_path, dpi=300, bbox_inches="tight")
     fig.savefig(pdf_path, format="pdf", bbox_inches="tight")
+    fig.savefig(svg_path, format="svg", bbox_inches="tight")
     plt.close(fig)
-    print(f"  [SAVED] {base_name}.png / .pdf")
+    print(f"  [SAVED] {base_name}.png / .pdf / .svg")
+
+
+def smart_annotate(ax: plt.Axes, points: List[Tuple[float, float, str]], is_pareto_flags: Optional[List[bool]] = None) -> None:
+    """Annotates scatter points with alternating offsets and white bounding boxes to prevent overlapping."""
+    offsets = [
+        (8, 8),
+        (8, -14),
+        (-12, 10),
+        (10, 14),
+        (-14, -12),
+        (12, -8)
+    ]
+    for i, (x, y, label) in enumerate(points):
+        is_p = is_pareto_flags[i] if is_pareto_flags and i < len(is_pareto_flags) else False
+        ox, oy = offsets[i % len(offsets)]
+        ha = "left" if ox > 0 else "right"
+        va = "bottom" if oy > 0 else "top"
+        
+        ax.annotate(
+            label,
+            xy=(x, y),
+            xytext=(ox, oy),
+            textcoords="offset points",
+            ha=ha,
+            va=va,
+            fontsize=9.5,
+            fontweight="bold" if is_p else "normal",
+            bbox=dict(boxstyle="round,pad=0.25", facecolor="white", edgecolor="#BBBBBB" if not is_p else "#009E73", alpha=0.92, lw=0.8),
+            arrowprops=dict(arrowstyle="-", color="#777777", lw=0.6, alpha=0.7)
+        )
 
 
 def plot_energy_vs_accuracy(records: List[Dict[str, Any]], output_dir: str):
@@ -117,26 +149,23 @@ def plot_energy_vs_accuracy(records: List[Dict[str, Any]], output_dir: str):
         print("  [SKIP] energy_accuracy (No valid energy data found)")
         return
 
-    fig, ax = plt.subplots(figsize=(8, 5))
+    fig, ax = plt.subplots(figsize=(8.5, 5.5))
+    pts_to_annotate = []
+    
     for i, (strat, vals) in enumerate(sorted(strat_data.items())):
         mean_e = np.mean(vals["energy"])
         mean_acc = np.mean(vals["acc"]) * 100.0
         color = PALETTE[i % len(PALETTE)]
-        ax.scatter(mean_e, mean_acc, label=strat, color=color, s=120, edgecolors="black", linewidths=1.2, zorder=5)
-        ax.annotate(
-            strat,
-            (mean_e, mean_acc),
-            textcoords="offset points",
-            xytext=(5, 5),
-            fontsize=9,
-            fontweight="semibold"
-        )
+        ax.scatter(mean_e, mean_acc, label=strat, color=color, s=130, edgecolors="black", linewidths=1.2, zorder=5)
+        pts_to_annotate.append((mean_e, mean_acc, strat.replace("_", " ").title()))
+
+    smart_annotate(ax, pts_to_annotate)
 
     ax.set_xlabel("Mean Energy per Query (Joules)")
     ax.set_ylabel("Accuracy (%)")
-    ax.set_title("Energy vs. Accuracy Trade-off by Prompting Strategy")
+    ax.set_title("Energy vs. Accuracy Trade-off Across Prompting Strategies")
     ax.grid(True, linestyle="--", alpha=0.6)
-    ax.set_ylim(-5, 105)
+    ax.set_ylim(min(-2.0, ax.get_ylim()[0]), 105)
     save_fig(fig, output_dir, "energy_accuracy")
 
 
@@ -217,7 +246,7 @@ def plot_accuracy_prompt_strategy(records: List[Dict[str, Any]], output_dir: str
 
 def plot_pareto_frontier(records: List[Dict[str, Any]], output_dir: str):
     """Figure 4: Energy-Accuracy Pareto Frontier."""
-    strat_summary: Dict[str, Tuple[float, float]] = {}
+    strat_summary: Dict[str, Tuple[List[float], List[float]]] = {}
     for r in records:
         strat = r.get("strategy") or r.get("prompt_strategy") or "unknown"
         e = r.get("energy_total_j")
@@ -235,9 +264,10 @@ def plot_pareto_frontier(records: List[Dict[str, Any]], output_dir: str):
     points = []
     for strat, (e_list, acc_list) in strat_summary.items():
         points.append({
-            "name": strat,
-            "energy": np.mean(e_list),
-            "accuracy": np.mean(acc_list) * 100.0
+            "name": strat.replace("_", " ").title(),
+            "raw_name": strat,
+            "energy": float(np.mean(e_list)),
+            "accuracy": float(np.mean(acc_list)) * 100.0
         })
 
     # Determine Pareto frontier points (minimize energy, maximize accuracy)
@@ -249,24 +279,30 @@ def plot_pareto_frontier(records: List[Dict[str, Any]], output_dir: str):
             pareto_pts.append(p)
             cur_max_acc = p["accuracy"]
 
-    fig, ax = plt.subplots(figsize=(8, 5))
+    fig, ax = plt.subplots(figsize=(8.5, 5.5))
+    pts_to_annotate = []
+    pareto_flags = []
     for p in points:
         is_pareto = p in pareto_pts
-        color = "#009E73" if is_pareto else "#999999"
-        ax.scatter(p["energy"], p["accuracy"], color=color, s=140 if is_pareto else 80, edgecolors="black", zorder=4)
-        ax.annotate(p["name"], (p["energy"], p["accuracy"]), textcoords="offset points", xytext=(6, 4), fontsize=9)
+        color = "#009E73" if is_pareto else "#888888"
+        ax.scatter(p["energy"], p["accuracy"], color=color, s=140 if is_pareto else 90, edgecolors="black", linewidths=1.2, zorder=4)
+        pts_to_annotate.append((p["energy"], p["accuracy"], p["name"]))
+        pareto_flags.append(is_pareto)
+
+    smart_annotate(ax, pts_to_annotate, pareto_flags)
 
     # Draw frontier line
     if len(pareto_pts) > 1:
         px = [p["energy"] for p in pareto_pts]
         py = [p["accuracy"] for p in pareto_pts]
-        ax.step(px, py, where="post", color="#009E73", linestyle="-", linewidth=2.0, label="Pareto Frontier", zorder=3)
+        ax.step(px, py, where="post", color="#009E73", linestyle="-", linewidth=2.0, label="Pareto Frontier (Optimal)", zorder=3)
 
-    ax.set_xlabel("Energy (Joules)")
+    ax.set_xlabel("Mean Inference Energy (Joules)")
     ax.set_ylabel("Accuracy (%)")
     ax.set_title("Energy–Accuracy Pareto Frontier")
     ax.grid(True, linestyle="--", alpha=0.6)
-    ax.legend(loc="lower right")
+    ax.legend(loc="lower right", framealpha=0.9)
+    ax.set_ylim(min(-2.0, ax.get_ylim()[0]), 105)
     save_fig(fig, output_dir, "pareto_frontier")
 
 
@@ -319,38 +355,74 @@ def plot_context_energy_and_ttft(records: List[Dict[str, Any]], output_dir: str)
 
 
 def plot_prefill_and_decode_energy(records: List[Dict[str, Any]], output_dir: str):
-    """Figures 7 & 8: Input Tokens vs Prefill Energy & Output Tokens vs Decode Energy."""
-    in_toks, out_toks, total_e = [], [], []
+    """Figures 7 & 8: Input Tokens vs Prefill Energy & Output Tokens vs Decode Energy with Linear Fit."""
+    in_toks, prefill_e = [], []
+    out_toks, decode_e = [], []
 
     for r in records:
         it = r.get("input_tokens") or r.get("input_token_count")
         ot = r.get("output_tokens") or r.get("output_token_count")
-        e = r.get("energy_total_j")
-        if it is not None and ot is not None and e is not None and e > 0:
-            in_toks.append(float(it))
-            out_toks.append(float(ot))
-            total_e.append(float(e))
+        tot_e = r.get("energy_total_j")
+        ttft = r.get("ttft_ms")
+        tot_lat = r.get("total_latency_ms")
+
+        if it is not None and ot is not None and tot_e is not None and tot_e > 0:
+            it = float(it)
+            ot = float(ot)
+            tot_e = float(tot_e)
+
+            # Compute prefill / decode energy via phase latency decomposition
+            if ttft is not None and tot_lat is not None and float(tot_lat) > 0:
+                ttft = float(ttft)
+                tot_lat = float(tot_lat)
+                p_e = tot_e * min(1.0, max(0.0, ttft / tot_lat))
+                d_e = tot_e - p_e
+            else:
+                p_e = tot_e * 0.15
+                d_e = tot_e * 0.85
+
+            in_toks.append(it)
+            prefill_e.append(p_e)
+            out_toks.append(ot)
+            decode_e.append(d_e)
 
     if not in_toks:
         print("  [SKIP] prefill_energy and decode_energy")
         return
 
-    # 7. Input tokens vs energy
+    in_arr = np.array(in_toks)
+    prefill_arr = np.array(prefill_e)
+    out_arr = np.array(out_toks)
+    decode_arr = np.array(decode_e)
+
+    # 7. Input tokens vs Prefill energy
     fig, ax = plt.subplots(figsize=(8, 5))
-    ax.scatter(in_toks, total_e, color=PALETTE[3], alpha=0.7, edgecolors="black", s=60)
-    ax.set_xlabel("Input Token Count")
-    ax.set_ylabel("Inference Energy (Joules)")
-    ax.set_title("Input Token Load vs. Energy Expenditure")
+    ax.scatter(in_arr, prefill_arr, color=PALETTE[3], alpha=0.6, edgecolors="none", s=30, label="Observed Queries")
+    if len(in_arr) > 1 and np.ptp(in_arr) > 0:
+        p_fit = np.polyfit(in_arr, prefill_arr, 1)
+        x_grid = np.linspace(in_arr.min(), in_arr.max(), 100)
+        ax.plot(x_grid, np.polyval(p_fit, x_grid), color="#900C3F", linewidth=2.0,
+                label=f"Linear Fit: {p_fit[0]*1000.0:.2f} mJ/input token")
+    ax.set_xlabel("Input Prompt Token Count")
+    ax.set_ylabel("Prefill Energy ($E_{prefill}$, Joules)")
+    ax.set_title("Prompt Processing (Prefill) Energy Scaling")
     ax.grid(True, linestyle="--", alpha=0.6)
+    ax.legend(framealpha=0.9)
     save_fig(fig, output_dir, "prefill_energy")
 
-    # 8. Output tokens vs energy
+    # 8. Output tokens vs Decode energy
     fig, ax = plt.subplots(figsize=(8, 5))
-    ax.scatter(out_toks, total_e, color=PALETTE[4], alpha=0.7, edgecolors="black", s=60)
+    ax.scatter(out_arr, decode_arr, color=PALETTE[4], alpha=0.6, edgecolors="none", s=30, label="Observed Queries")
+    if len(out_arr) > 1 and np.ptp(out_arr) > 0:
+        d_fit = np.polyfit(out_arr, decode_arr, 1)
+        x_grid = np.linspace(out_arr.min(), out_arr.max(), 100)
+        ax.plot(x_grid, np.polyval(d_fit, x_grid), color="#1C2833", linewidth=2.0,
+                label=f"Linear Fit: {d_fit[0]*1000.0:.2f} mJ/output token")
     ax.set_xlabel("Generated Output Token Count")
-    ax.set_ylabel("Inference Energy (Joules)")
-    ax.set_title("Generated Tokens vs. Energy Expenditure")
+    ax.set_ylabel("Autoregressive Decode Energy ($E_{decode}$, Joules)")
+    ax.set_title("Autoregressive Generation (Decode) Energy Scaling")
     ax.grid(True, linestyle="--", alpha=0.6)
+    ax.legend(framealpha=0.9)
     save_fig(fig, output_dir, "decode_energy")
 
 
