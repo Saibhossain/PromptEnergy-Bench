@@ -1,0 +1,25 @@
+% Marginal Energy Gain (MEG) across Prompting Strategies
+\begin{table*}[t]
+\centering
+\small
+\begin{tabular}{lrrrrr}
+\toprule
+Model & Baseline & Strategy & Delta Acc (% pts) & Delta Energy (J) & MEG (% / J) \\
+\midrule
+qwen3.5:0.8b-mlx & zero\_shot\_direct & few\_shot\_3 & +0.00\% & +21.021 J & 0.000 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & zero\_shot\_cot & +0.00\% & +55.242 J & 0.000 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & short\_cot & +0.00\% & +52.242 J & 0.000 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & long\_cot & +0.00\% & +110.259 J & 0.000 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & ctx\_0 & +0.00\% & +44.762 J & 0.000 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & ctx\_512 & +0.00\% & +129.861 J & 0.000 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & ctx\_1024 & +0.00\% & +38.307 J & 0.000 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & ctx\_2048 & +0.00\% & +70.212 J & 0.000 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & ctx\_4096 & +0.00\% & +82.505 J & 0.000 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & rag\_top\_1 & +0.00\% & -6.351 J & 0.000 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & rag\_top\_3 & +0.00\% & -3.139 J & 0.000 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & rag\_top\_5 & +0.00\% & -1.944 J & 0.000 \%/J \\
+\bottomrule
+\end{tabular}
+\caption{Marginal Energy Gain (MEG) across Prompting Strategies}
+\label{tab:3_marginal_energy_gain}
+\end{table*}

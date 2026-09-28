@@ -45,12 +45,19 @@ DATASET_DEFAULT_CONFIGS: Dict[str, Dict[str, Any]] = {
     "sst2": {"task_type": TaskType.CLASSIFICATION, "custom_labels": ["positive", "negative", "0", "1"]},
     "ag_news": {"task_type": TaskType.CLASSIFICATION, "custom_labels": ["world", "sports", "business", "sci/tech", "1", "2", "3", "4"]},
     "boolq": {"task_type": TaskType.CLASSIFICATION, "custom_labels": ["true", "false", "yes", "no"]},
-    # Open QA
+    # Open QA & RAG
     "nq": {"task_type": TaskType.OPEN_QA, "answer_format": "text", "multiple_reference_policy": "max"},
+    "natural_questions": {"task_type": TaskType.OPEN_QA, "answer_format": "text", "multiple_reference_policy": "max"},
+    "natural-questions": {"task_type": TaskType.OPEN_QA, "answer_format": "text", "multiple_reference_policy": "max"},
     "squad": {"task_type": TaskType.OPEN_QA, "answer_format": "text", "multiple_reference_policy": "max"},
     "triviaqa": {"task_type": TaskType.OPEN_QA, "answer_format": "text", "multiple_reference_policy": "max"},
+    "contexteval": {"task_type": TaskType.OPEN_QA, "answer_format": "text", "multiple_reference_policy": "max"},
+    "context_eval": {"task_type": TaskType.OPEN_QA, "answer_format": "text", "multiple_reference_policy": "max"},
+    "context-eval": {"task_type": TaskType.OPEN_QA, "answer_format": "text", "multiple_reference_policy": "max"},
     # Generation / Summarization
     "cnn_dailymail": {"task_type": TaskType.GENERATION, "answer_format": "text"},
+    "cnn": {"task_type": TaskType.GENERATION, "answer_format": "text"},
+    "cnn-dailymail": {"task_type": TaskType.GENERATION, "answer_format": "text"},
     "xsum": {"task_type": TaskType.GENERATION, "answer_format": "text"},
     # Code
     "humaneval": {"task_type": TaskType.CODE, "answer_format": "code"},

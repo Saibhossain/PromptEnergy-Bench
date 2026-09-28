@@ -9,7 +9,7 @@ import re
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import List, Dict, Set, Optional
+from typing import List, Dict, Set, Optional, Any
 from src.data.gsm8k import GSM8KRecord, load_gsm8k
 from src.data.context_builder import estimate_tokens
 
@@ -42,7 +42,7 @@ class BaseRetriever(ABC):
 class BM25Retriever(BaseRetriever):
     """Okapi BM25 Retriever implemented in pure Python for zero-dependency portability."""
 
-    def __init__(self, corpus: Optional[List[GSM8KRecord]] = None, k1: float = 1.5, b: float = 0.75):
+    def __init__(self, corpus: Optional[List[Any]] = None, k1: float = 1.5, b: float = 0.75):
         self.k1 = k1
         self.b = b
         if corpus is None:
@@ -50,8 +50,19 @@ class BM25Retriever(BaseRetriever):
         else:
             self.corpus = corpus
 
-        self.doc_ids = [doc.id for doc in self.corpus]
-        self.doc_texts = [f"Question: {doc.question}\nSolution: {doc.solution}\nAnswer: {doc.answer}" for doc in self.corpus]
+        self.doc_ids = [getattr(doc, "id", str(i)) for i, doc in enumerate(self.corpus)]
+        self.doc_texts = []
+        for i, doc in enumerate(self.corpus):
+            q = getattr(doc, "question", getattr(doc, "input_text", ""))
+            sol = getattr(doc, "solution", getattr(doc, "context", ""))
+            ans = getattr(doc, "answer", getattr(doc, "target_text", ""))
+            txt_parts = [f"Question: {q}"]
+            if sol and sol != ans:
+                txt_parts.append(f"Content: {sol}")
+            if ans:
+                txt_parts.append(f"Answer: {ans}")
+            self.doc_texts.append("\n".join(txt_parts))
+
         self.doc_tokens = [self._tokenize(text) for text in self.doc_texts]
         self.doc_lens = [len(tokens) for tokens in self.doc_tokens]
         self.avg_doc_len = sum(self.doc_lens) / max(1, len(self.doc_lens))

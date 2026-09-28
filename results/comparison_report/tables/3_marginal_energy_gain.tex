@@ -1,0 +1,48 @@
+% Marginal Energy Gain (MEG) across Prompting Strategies
+\begin{table*}[t]
+\centering
+\small
+\begin{tabular}{lrrrrr}
+\toprule
+Model & Baseline & Strategy & Delta Acc (% pts) & Delta Energy (J) & MEG (% / J) \\
+\midrule
+qwen3.5:0.8b-mlx & zero\_shot\_direct & ctx\_0 & -0.36\% & -1.227 J & 0.000 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & ctx\_512 & -0.36\% & +3.983 J & -0.091 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & ctx\_1024 & -0.36\% & +57.698 J & -0.006 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & ctx\_2048 & -0.36\% & +47.777 J & -0.008 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & ctx\_4096 & -0.36\% & +51.734 J & -0.007 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & ctx\_8192 & -0.36\% & +111.735 J & -0.003 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & few\_shot\_3 & -0.21\% & -0.781 J & 0.000 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & zero\_shot\_cot & -0.21\% & +35.787 J & -0.006 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & short\_cot & -0.21\% & +39.415 J & -0.005 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & long\_cot & +3.73\% & +88.637 J & 0.042 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & rag\_top\_1 & -0.36\% & -12.626 J & 0.000 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & rag\_top\_3 & -0.36\% & -9.885 J & 0.000 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & rag\_top\_5 & -0.36\% & -5.370 J & 0.000 \%/J \\
+qwen3.5:0.8b & zero\_shot\_direct & ctx\_0 & +0.00\% & +1720.845 J & 0.000 \%/J \\
+qwen3.5:0.8b & zero\_shot\_direct & ctx\_512 & +0.00\% & +3495.561 J & 0.000 \%/J \\
+qwen3.5:0.8b & zero\_shot\_direct & ctx\_1024 & +0.00\% & +4950.836 J & 0.000 \%/J \\
+qwen3.5:0.8b & zero\_shot\_direct & ctx\_2048 & +0.00\% & +6185.020 J & 0.000 \%/J \\
+qwen3.5:0.8b & zero\_shot\_direct & ctx\_4096 & +0.00\% & +6904.819 J & 0.000 \%/J \\
+qwen3.5:0.8b & zero\_shot\_direct & ctx\_8192 & +0.00\% & +6762.985 J & 0.000 \%/J \\
+qwen3.5:0.8b & zero\_shot\_direct & few\_shot\_3 & +0.00\% & +415.519 J & 0.000 \%/J \\
+qwen3.5:0.8b & zero\_shot\_direct & zero\_shot\_cot & +0.00\% & +2806.238 J & 0.000 \%/J \\
+qwen3.5:0.8b & zero\_shot\_direct & short\_cot & +0.00\% & +2855.251 J & 0.000 \%/J \\
+qwen3.5:0.8b & zero\_shot\_direct & long\_cot & +0.00\% & +871.124 J & 0.000 \%/J \\
+qwen3.5:0.8b & zero\_shot\_direct & rag\_top\_1 & +0.00\% & +329.123 J & 0.000 \%/J \\
+qwen3.5:0.8b & zero\_shot\_direct & rag\_top\_3 & +0.00\% & +1514.423 J & 0.000 \%/J \\
+qwen3.5:0.8b & zero\_shot\_direct & rag\_top\_5 & +0.00\% & +1930.127 J & 0.000 \%/J \\
+gemma3:4b & zero\_shot\_direct & ctx\_0 & +72.85\% & +6914.528 J & 0.011 \%/J \\
+gemma3:4b & zero\_shot\_direct & ctx\_512 & +66.00\% & +9072.138 J & 0.007 \%/J \\
+gemma3:4b & zero\_shot\_direct & ctx\_1024 & +74.00\% & +11097.384 J & 0.007 \%/J \\
+gemma3:4b & zero\_shot\_direct & ctx\_2048 & +68.00\% & +17883.298 J & 0.004 \%/J \\
+gemma3:4b & zero\_shot\_direct & ctx\_4096 & +68.00\% & +16730.140 J & 0.004 \%/J \\
+gemma3:4b & zero\_shot\_direct & few\_shot\_3 & +10.00\% & +491.714 J & 0.020 \%/J \\
+gemma3:4b & zero\_shot\_direct & zero\_shot\_cot & +72.00\% & +2545.398 J & 0.028 \%/J \\
+gemma3:4b & zero\_shot\_direct & short\_cot & +68.00\% & +1073.465 J & 0.063 \%/J \\
+gemma3:4b & zero\_shot\_direct & long\_cot & +78.00\% & +3585.816 J & 0.022 \%/J \\
+\bottomrule
+\end{tabular}
+\caption{Marginal Energy Gain (MEG) across Prompting Strategies}
+\label{tab:3_marginal_energy_gain}
+\end{table*}

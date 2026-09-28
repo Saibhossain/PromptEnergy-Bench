@@ -1,16 +1,17 @@
 """Publication-Grade Visualization Suite for PromptEnergy-Bench.
 
-Generates 13 publication figures (PNG @ 300 DPI, vector PDF, and SVG)
-plus a validation diagnostic dashboard:
+Generates 14+ publication figures (PNG @ 300 DPI, vector PDF, and SVG)
+plus a diagnostic overview dashboard:
   01_accuracy_by_strategy.*
   02_energy_by_strategy.*
+  02b_prefill_vs_decode_energy_stacked.*
   03_latency_by_strategy.*
   04_token_composition_by_strategy.*
   05_accuracy_energy_pareto.*
   06_accuracy_latency.*
-  07_energy_vs_output_tokens.*
-  08_thinking_tokens_vs_energy.*
-  09_thinking_tokens_vs_accuracy.*
+  07_prefill_energy_vs_input_tokens.*
+  08_decode_energy_vs_output_tokens.*
+  09_token_energy_efficiency.*
   10_efficiency_by_strategy.*
   11_energy_distribution.*
   12_latency_distribution.*
@@ -70,7 +71,7 @@ plt.rcParams.update({
     "ytick.labelsize": 10,
     "legend.fontsize": 10,
     "legend.frameon": True,
-    "legend.framealpha": 0.9,
+    "legend.framealpha": 0.92,
     "figure.autolayout": False
 })
 
@@ -139,6 +140,76 @@ def save_publication_figure(fig: plt.Figure, output_dir: str, stem: str) -> List
     return saved
 
 
+def smart_annotate_scatter(
+    ax: plt.Axes,
+    points: List[Tuple[float, float, str, bool]],
+    x_range_pad: float = 0.05,
+    y_range_pad: float = 0.05
+) -> None:
+    """Smart collision-avoiding annotation for 2D scatter plots.
+    
+    Args:
+        points: List of (x, y, label, is_highlighted)
+    """
+    if not points:
+        return
+
+    # Coordinate sorting and clustering
+    sorted_pts = sorted(points, key=lambda p: (p[1], p[0]))
+    
+    # Pre-defined radial offset positions
+    offset_cycle = [
+        (10, 8),     # Top-Right
+        (-12, 14),   # Top-Left
+        (12, -14),   # Bottom-Right
+        (-14, -14),  # Bottom-Left
+        (0, 18),     # High Above
+        (0, -22),    # Low Below
+        (18, 0),     # Far Right
+        (-20, 0)     # Far Left
+    ]
+
+    used_boxes = []
+
+    for idx, (x, y, label, is_high) in enumerate(sorted_pts):
+        offset = offset_cycle[idx % len(offset_cycle)]
+        
+        # Adjust if point is near zero accuracy
+        if y < 1.0:
+            # Alternating vertical offsets above zero line
+            alt_y = 10 + ((idx % 3) * 14)
+            offset = (offset[0], alt_y)
+
+        fontweight = "bold" if is_high else "normal"
+        fontsize = 9.0 if is_high else 8.5
+        edgecolor = "#E64B35" if is_high else "#CCCCCC"
+        linewidth = 1.0 if is_high else 0.6
+        bg_alpha = 0.95 if is_high else 0.88
+
+        ax.annotate(
+            label,
+            (x, y),
+            xytext=offset,
+            textcoords="offset points",
+            fontsize=fontsize,
+            fontweight=fontweight,
+            bbox=dict(
+                boxstyle="round,pad=0.25",
+                facecolor="white",
+                alpha=bg_alpha,
+                edgecolor=edgecolor,
+                linewidth=linewidth
+            ),
+            arrowprops=dict(
+                arrowstyle="-",
+                color="#888888",
+                linewidth=0.6,
+                alpha=0.6
+            ) if abs(offset[0]) > 14 or abs(offset[1]) > 14 else None,
+            zorder=6
+        )
+
+
 def load_and_filter_results(
     results_path: str,
     model_filter: Optional[str] = None,
@@ -151,7 +222,10 @@ def load_and_filter_results(
         for line in f:
             line = line.strip()
             if line:
-                records.append(json.loads(line))
+                try:
+                    records.append(json.loads(line))
+                except json.JSONDecodeError:
+                    pass
 
     df_all = pd.DataFrame(records)
     if df_all.empty:
@@ -164,6 +238,26 @@ def load_and_filter_results(
         df_all = df_all[df_all["device"] == device_filter].copy()
     if run_id_filter and "run_id" in df_all.columns:
         df_all = df_all[df_all["run_id"] == run_id_filter].copy()
+
+    # Calculate Prefill & Decode Energy if not explicitly present
+    if "total_latency_ms" in df_all.columns and "energy_total_j" in df_all.columns:
+        valid_mask = (df_all["total_latency_ms"] > 0) & (df_all["energy_total_j"] > 0)
+        ttft_col = df_all["ttft_ms"] if "ttft_ms" in df_all.columns else 0.0
+        
+        if "energy_prefill_j" not in df_all.columns or df_all["energy_prefill_j"].isna().all():
+            df_all["energy_prefill_j"] = np.where(
+                valid_mask,
+                df_all["energy_total_j"] * (ttft_col / df_all["total_latency_ms"]),
+                np.nan
+            )
+
+        if "energy_decode_j" not in df_all.columns or df_all["energy_decode_j"].isna().all():
+            gen_col = df_all["generation_latency_ms"] if "generation_latency_ms" in df_all.columns else (df_all["total_latency_ms"] - ttft_col)
+            df_all["energy_decode_j"] = np.where(
+                valid_mask,
+                df_all["energy_total_j"] * (gen_col / df_all["total_latency_ms"]),
+                np.nan
+            )
 
     # Map strategy display names and categories
     if "strategy" in df_all.columns:
@@ -180,12 +274,12 @@ def load_and_filter_results(
 
 
 # ==============================================================================
-# 13 RESEARCH-PAPER FIGURES
+# RESEARCH-GRADE PUBLICATION FIGURES
 # ==============================================================================
 
 def plot_01_accuracy_by_strategy(df_all: pd.DataFrame, reps: int, out_dir: str) -> List[str]:
     """Figure 1: Accuracy (%) by Prompt Strategy."""
-    fig, ax = plt.subplots(figsize=(7.5, 4.5))
+    fig, ax = plt.subplots(figsize=(8.0, 4.8))
     acc_df = df_all.groupby(["strategy", "strategy_display"], as_index=False, observed=True)["answer_correct"].mean()
     acc_df["accuracy_pct"] = acc_df["answer_correct"] * 100.0
 
@@ -207,11 +301,11 @@ def plot_01_accuracy_by_strategy(df_all: pd.DataFrame, reps: int, out_dir: str) 
         height = p.get_height()
         if not np.isnan(height):
             ax.annotate(f"{height:.1f}%", (p.get_x() + p.get_width() / 2., height),
-                        ha="center", va="bottom", xytext=(0, 3), textcoords="offset points", fontsize=9)
+                        ha="center", va="bottom", xytext=(0, 4), textcoords="offset points", fontsize=9.5, fontweight="semibold")
 
     ax.set_ylabel("Accuracy (%)")
     ax.set_xlabel("Prompting Strategy")
-    ax.set_ylim(0, max(100, (acc_df["accuracy_pct"].max() + 15) if not acc_df.empty else 100))
+    ax.set_ylim(0, max(100, (acc_df["accuracy_pct"].max() + 18) if not acc_df.empty else 100))
     plt.xticks(rotation=15, ha="right")
     return save_publication_figure(fig, out_dir, "01_accuracy_by_strategy")
 
@@ -221,9 +315,7 @@ def plot_02_energy_by_strategy(df_success: pd.DataFrame, reps: int, out_dir: str
     if "energy_total_j" not in df_success.columns or df_success["energy_total_j"].isna().all():
         return []
 
-    fig, ax = plt.subplots(figsize=(7.5, 4.5))
-
-    # If reps > 1 show 95% CI, if reps == 1 show mean without fake CI
+    fig, ax = plt.subplots(figsize=(8.0, 4.8))
     errorbar = ("ci", 95) if reps > 1 else None
     palette = get_palette_for_items(df_success["strategy_display"])
     bars = sns.barplot(
@@ -239,17 +331,61 @@ def plot_02_energy_by_strategy(df_success: pd.DataFrame, reps: int, out_dir: str
         ax=ax
     )
 
-    # Annotate mean energy
     for p in bars.patches:
         height = p.get_height()
         if not np.isnan(height) and height > 0:
             ax.annotate(f"{height:.2f} J", (p.get_x() + p.get_width() / 2., height),
-                        ha="center", va="bottom", xytext=(0, 3), textcoords="offset points", fontsize=9)
+                        ha="center", va="bottom", xytext=(0, 4), textcoords="offset points", fontsize=9.5, fontweight="semibold")
 
-    ax.set_ylabel("Mean Energy per Inference (J)")
+    ax.set_ylabel("Mean Total Energy per Query (Joules)")
     ax.set_xlabel("Prompting Strategy")
     plt.xticks(rotation=15, ha="right")
     return save_publication_figure(fig, out_dir, "02_energy_by_strategy")
+
+
+def plot_02b_prefill_vs_decode_stacked(df_success: pd.DataFrame, reps: int, out_dir: str) -> List[str]:
+    """Figure 2B: Prompt Processing (Prefill) vs. Autoregressive (Decode) Energy Breakdown."""
+    needed = ["strategy", "strategy_display", "energy_prefill_j", "energy_decode_j"]
+    if not all(c in df_success.columns for c in needed) or df_success["energy_prefill_j"].isna().all():
+        return []
+
+    agg = df_success.groupby(["strategy", "strategy_display"], as_index=False, observed=True).agg({
+        "energy_prefill_j": "mean",
+        "energy_decode_j": "mean",
+        "energy_total_j": "mean"
+    })
+
+    fig, ax = plt.subplots(figsize=(8.5, 5.2))
+    x_indices = np.arange(len(agg))
+    width = 0.52
+
+    prefill_vals = agg["energy_prefill_j"].values
+    decode_vals = agg["energy_decode_j"].values
+    total_vals = agg["energy_total_j"].values
+
+    p1 = ax.bar(x_indices, prefill_vals, width, label="Prompt Processing (Prefill)", color="#0072B2", edgecolor="#333333", linewidth=0.8)
+    p2 = ax.bar(x_indices, decode_vals, width, bottom=prefill_vals, label="Generation (Decode)", color="#D55E00", edgecolor="#333333", linewidth=0.8)
+
+    # Annotations
+    for i, (tot, pref, dec) in enumerate(zip(total_vals, prefill_vals, decode_vals)):
+        pref_pct = (pref / tot) * 100.0 if tot > 0 else 0.0
+        dec_pct = (dec / tot) * 100.0 if tot > 0 else 0.0
+
+        # Total on top
+        ax.annotate(f"{tot:.2f} J", (i, tot), ha="center", va="bottom", xytext=(0, 4), textcoords="offset points", fontsize=9.5, fontweight="bold")
+        # Percent share inside bars if space allows
+        if pref > 1.5:
+            ax.annotate(f"{pref:.1f}J ({pref_pct:.0f}%)", (i, pref / 2.0), ha="center", va="center", color="white", fontsize=8.5, fontweight="semibold")
+        if dec > 5.0:
+            ax.annotate(f"{dec:.1f}J ({dec_pct:.0f}%)", (i, pref + (dec / 2.0)), ha="center", va="center", color="white", fontsize=8.5, fontweight="semibold")
+
+    ax.set_xticks(x_indices)
+    ax.set_xticklabels(agg["strategy_display"], rotation=15, ha="right")
+    ax.set_ylabel("Inference Energy (Joules)")
+    ax.set_xlabel("Prompting Strategy")
+    ax.set_title("Inference Energy Decomposition: Prefill vs. Decode", fontsize=12, fontweight="semibold")
+    ax.legend(loc="upper left")
+    return save_publication_figure(fig, out_dir, "02b_prefill_vs_decode_energy_stacked")
 
 
 def plot_03_latency_by_strategy(df_success: pd.DataFrame, reps: int, out_dir: str) -> List[str]:
@@ -259,14 +395,12 @@ def plot_03_latency_by_strategy(df_success: pd.DataFrame, reps: int, out_dir: st
         return []
 
     fig, ax = plt.subplots(figsize=(8.5, 5.0))
-    # Aggregate latencies per strategy
     agg = df_success.groupby(["strategy", "strategy_display"], as_index=False, observed=True).agg({
         "ttft_ms": "mean",
         "generation_latency_ms": "mean",
         "total_latency_ms": "mean"
     })
 
-    # Reshape for grouped bar plot
     melted = pd.melt(
         agg,
         id_vars=["strategy_display"],
@@ -275,9 +409,9 @@ def plot_03_latency_by_strategy(df_success: pd.DataFrame, reps: int, out_dir: st
         value_name="latency_ms"
     )
     phase_labels = {
-        "ttft_ms": "Time to First Token (TTFT)",
-        "generation_latency_ms": "Generation Latency",
-        "total_latency_ms": "Total Latency"
+        "ttft_ms": "Time to First Token (TTFT, ms)",
+        "generation_latency_ms": "Generation Latency (ms)",
+        "total_latency_ms": "Total Latency (ms)"
     }
     melted["phase_display"] = melted["latency_phase"].map(phase_labels)
 
@@ -286,7 +420,7 @@ def plot_03_latency_by_strategy(df_success: pd.DataFrame, reps: int, out_dir: st
         x="strategy_display",
         y="latency_ms",
         hue="phase_display",
-        palette="Blues_d",
+        palette=["#56B4E9", "#E69F00", "#009E73"],
         edgecolor="#333333",
         linewidth=0.8,
         ax=ax
@@ -294,7 +428,7 @@ def plot_03_latency_by_strategy(df_success: pd.DataFrame, reps: int, out_dir: st
 
     ax.set_ylabel("Latency (ms)")
     ax.set_xlabel("Prompting Strategy")
-    ax.legend(title="Latency Component", loc="upper left")
+    ax.legend(title="Component", loc="upper left")
     plt.xticks(rotation=15, ha="right")
     return save_publication_figure(fig, out_dir, "03_latency_by_strategy")
 
@@ -312,29 +446,28 @@ def plot_04_token_composition_by_strategy(df_success: pd.DataFrame, reps: int, o
 
     fig, ax = plt.subplots(figsize=(8.0, 4.8))
     x_indices = np.arange(len(agg))
-    width = 0.55
+    width = 0.52
 
     th_vals = agg["thinking_tokens"].values
     vis_vals = agg["visible_output_tokens"].values
 
-    p1 = ax.bar(x_indices, th_vals, width, label="Thinking Tokens", color="#9467BD", edgecolor="#333333", linewidth=0.8)
-    p2 = ax.bar(x_indices, vis_vals, width, bottom=th_vals, label="Visible Output Tokens", color="#1F77B4", edgecolor="#333333", linewidth=0.8)
+    p1 = ax.bar(x_indices, th_vals, width, label="Thinking Tokens", color="#CC79A7", edgecolor="#333333", linewidth=0.8)
+    p2 = ax.bar(x_indices, vis_vals, width, bottom=th_vals, label="Visible Output Tokens", color="#0072B2", edgecolor="#333333", linewidth=0.8)
 
-    # Annotate total tokens above each bar
     for i, (tot, th, vis) in enumerate(zip(agg["output_tokens"], th_vals, vis_vals)):
         height = th + vis
-        ax.annotate(f"{tot:.0f}", (i, height), ha="center", va="bottom", xytext=(0, 3), textcoords="offset points", fontsize=9)
+        ax.annotate(f"{tot:.0f}", (i, height), ha="center", va="bottom", xytext=(0, 3), textcoords="offset points", fontsize=9.5, fontweight="semibold")
 
     ax.set_xticks(x_indices)
     ax.set_xticklabels(agg["strategy_display"], rotation=15, ha="right")
-    ax.set_ylabel("Mean Token Count")
+    ax.set_ylabel("Mean Output Token Count")
     ax.set_xlabel("Prompting Strategy")
     ax.legend(loc="upper left")
     return save_publication_figure(fig, out_dir, "04_token_composition_by_strategy")
 
 
 def plot_05_accuracy_energy_pareto(df_all: pd.DataFrame, reps: int, out_dir: str) -> List[str]:
-    """Figure 5: Accuracy–Energy Pareto Frontier."""
+    """Figure 5: Accuracy–Energy Pareto Frontier with Collision-Free Annotations."""
     if "energy_total_j" not in df_all.columns or df_all["energy_total_j"].isna().all():
         return []
 
@@ -354,7 +487,7 @@ def plot_05_accuracy_energy_pareto(df_all: pd.DataFrame, reps: int, out_dir: str
     pareto_pts = compute_pareto_frontier(candidates)
     pareto_strats = {p["strategy"] for p in pareto_pts}
 
-    fig, ax = plt.subplots(figsize=(8.0, 5.5))
+    fig, ax = plt.subplots(figsize=(8.5, 5.5))
     palette = get_palette_for_items(agg["strategy"])
 
     # Scatter of all strategies
@@ -364,34 +497,33 @@ def plot_05_accuracy_energy_pareto(df_all: pd.DataFrame, reps: int, out_dir: str
         y="accuracy_pct",
         hue="strategy",
         palette=palette,
-        s=160,
+        s=180,
         legend=False,
         edgecolor="#333333",
         linewidth=1.2,
+        zorder=5,
         ax=ax
     )
 
     # Draw dashed Pareto line
     if len(pareto_pts) > 1:
         p_df = pd.DataFrame(pareto_pts).sort_values("energy_j")
-        ax.plot(p_df["energy_j"], p_df["accuracy"], linestyle="--", color="#D62728", linewidth=1.8, label="Pareto Frontier")
+        ax.plot(p_df["energy_j"], p_df["accuracy"], linestyle="--", color="#D55E00", linewidth=2.0, label="Pareto Frontier", zorder=4)
 
-    # Annotate strategies
+    # Smart non-overlapping annotations
+    annot_points = []
     for _, row in agg.iterrows():
         strat = row["strategy"]
         is_p = strat in pareto_strats
-        label = f"{get_strategy_label(strat)}{' (Pareto)' if is_p else ''}"
-        ax.annotate(
-            label,
-            (row["energy_total_j"], row["accuracy_pct"]),
-            xytext=(7, 5),
-            textcoords="offset points",
-            fontsize=9.5,
-            fontweight="bold" if is_p else "normal"
-        )
+        label = f"{get_strategy_label(strat)}{' [Pareto]' if is_p else ''}"
+        annot_points.append((row["energy_total_j"], row["accuracy_pct"], label, is_p))
 
-    ax.set_xlabel("Mean Energy per Inference (J)")
+    smart_annotate_scatter(ax, annot_points)
+
+    ax.set_xlabel("Mean Total Energy per Inference (Joules)")
     ax.set_ylabel("Accuracy (%)")
+    ax.set_title("Accuracy vs. Energy Expenditure (Pareto Frontier)", fontsize=12, fontweight="semibold")
+    ax.set_ylim(-3, max(100, agg["accuracy_pct"].max() + 15))
     if len(pareto_pts) > 1:
         ax.legend(loc="lower right")
     return save_publication_figure(fig, out_dir, "05_accuracy_energy_pareto")
@@ -408,7 +540,7 @@ def plot_06_accuracy_latency(df_all: pd.DataFrame, reps: int, out_dir: str) -> L
     })
     agg["accuracy_pct"] = agg["answer_correct"] * 100.0
 
-    fig, ax = plt.subplots(figsize=(7.5, 5.0))
+    fig, ax = plt.subplots(figsize=(8.0, 5.2))
     palette = get_palette_for_items(agg["strategy"])
     sns.scatterplot(
         data=agg,
@@ -416,124 +548,151 @@ def plot_06_accuracy_latency(df_all: pd.DataFrame, reps: int, out_dir: str) -> L
         y="accuracy_pct",
         hue="strategy",
         palette=palette,
-        s=150,
-        legend=False,
-        edgecolor="#333333",
-        linewidth=1.2,
-        ax=ax
-    )
-
-    for _, row in agg.iterrows():
-        ax.annotate(
-            get_strategy_label(row["strategy"]),
-            (row["total_latency_ms"], row["accuracy_pct"]),
-            xytext=(6, 5),
-            textcoords="offset points",
-            fontsize=9.5
-        )
-
-    ax.set_xlabel("Mean Total Latency (ms)")
-    ax.set_ylabel("Accuracy (%)")
-    return save_publication_figure(fig, out_dir, "06_accuracy_latency")
-
-
-def plot_07_energy_vs_output_tokens(df_success: pd.DataFrame, reps: int, out_dir: str) -> List[str]:
-    """Figure 7: Energy vs Total Output Tokens."""
-    if "energy_total_j" not in df_success.columns or "output_tokens" not in df_success.columns:
-        return []
-
-    fig, ax = plt.subplots(figsize=(8.0, 5.2))
-    palette = get_palette_for_items(df_success["strategy"])
-    sns.scatterplot(
-        data=df_success,
-        x="output_tokens",
-        y="energy_total_j",
-        hue="strategy",
-        palette=palette,
-        alpha=0.75,
-        s=45,
-        ax=ax
-    )
-
-    ax.set_xlabel("Total Output Tokens (Inference-Level)")
-    ax.set_ylabel("Estimated System Energy (J)")
-    ax.legend(title="Strategy", bbox_to_anchor=(1.02, 1), loc="upper left")
-    return save_publication_figure(fig, out_dir, "07_energy_vs_output_tokens")
-
-
-def plot_08_thinking_tokens_vs_energy(df_success: pd.DataFrame, reps: int, out_dir: str) -> List[str]:
-    """Figure 8: Observed Thinking Tokens vs Energy."""
-    th_df = df_success[df_success["thinking_tokens"].notna() & (df_success["thinking_tokens"] > 0)].copy()
-    if th_df.empty or "energy_total_j" not in th_df.columns:
-        return []
-
-    fig, ax = plt.subplots(figsize=(8.0, 5.2))
-    palette = get_palette_for_items(th_df["strategy"])
-    sns.scatterplot(
-        data=th_df,
-        x="thinking_tokens",
-        y="energy_total_j",
-        hue="strategy",
-        palette=palette,
-        alpha=0.8,
-        s=50,
-        ax=ax
-    )
-
-    # Optional regression line if statistically informative
-    if len(th_df) > 10:
-        sns.regplot(
-            data=th_df,
-            x="thinking_tokens",
-            y="energy_total_j",
-            scatter=False,
-            color="#555555",
-            line_kws={"linestyle": "--", "linewidth": 1.5},
-            ax=ax
-        )
-
-    ax.set_xlabel("Observed Thinking Tokens")
-    ax.set_ylabel("Estimated System Energy (J)")
-    ax.set_title("Association between observed thinking-token count and estimated system energy", fontsize=10, style="italic")
-    ax.legend(title="Strategy", bbox_to_anchor=(1.02, 1), loc="upper left")
-    return save_publication_figure(fig, out_dir, "08_thinking_tokens_vs_energy")
-
-
-def plot_09_thinking_tokens_vs_accuracy(df_all: pd.DataFrame, reps: int, out_dir: str) -> List[str]:
-    """Figure 9: Thinking Tokens vs Accuracy / Correctness."""
-    agg = df_all.groupby(["strategy", "strategy_display"], as_index=False, observed=True).agg({
-        "thinking_tokens": lambda x: x.dropna().mean() if not x.dropna().empty else 0.0,
-        "answer_correct": "mean"
-    })
-    agg["accuracy_pct"] = agg["answer_correct"] * 100.0
-
-    fig, ax = plt.subplots(figsize=(7.5, 4.8))
-    palette = get_palette_for_items(agg["strategy"])
-    sns.scatterplot(
-        data=agg,
-        x="thinking_tokens",
-        y="accuracy_pct",
-        hue="strategy",
-        palette=palette,
         s=160,
         legend=False,
         edgecolor="#333333",
         linewidth=1.2,
+        zorder=5,
         ax=ax
     )
 
-    for _, row in agg.iterrows():
-        ax.annotate(
-            get_strategy_label(row["strategy"]),
-            (row["thinking_tokens"], row["accuracy_pct"]),
-            xytext=(6, 5),
-            textcoords="offset points",
-            fontsize=9.5
-        )
+    annot_points = [(row["total_latency_ms"], row["accuracy_pct"], get_strategy_label(row["strategy"]), False) for _, row in agg.iterrows()]
+    smart_annotate_scatter(ax, annot_points)
 
-    ax.set_xlabel("Mean Thinking Tokens")
+    ax.set_xlabel("Mean Total Latency (ms)")
     ax.set_ylabel("Accuracy (%)")
-    return save_publication_figure(fig, out_dir, "09_thinking_tokens_vs_accuracy")
+    ax.set_title("Accuracy vs. Latency Trade-off", fontsize=12, fontweight="semibold")
+    return save_publication_figure(fig, out_dir, "06_accuracy_latency")
+
+
+def plot_07_prefill_energy_vs_input_tokens(df_success: pd.DataFrame, reps: int, out_dir: str) -> List[str]:
+    """Figure 7: Prompt Processing (Prefill) Energy vs. Input Token Load."""
+    needed = ["input_tokens", "energy_prefill_j"]
+    if not all(c in df_success.columns for c in needed) or df_success["energy_prefill_j"].isna().all():
+        return []
+
+    fig, ax = plt.subplots(figsize=(8.0, 5.2))
+    palette = get_palette_for_items(df_success["strategy"])
+
+    sns.scatterplot(
+        data=df_success,
+        x="input_tokens",
+        y="energy_prefill_j",
+        hue="strategy",
+        palette=palette,
+        alpha=0.65,
+        s=40,
+        ax=ax
+    )
+
+    # Linear trendline fit
+    valid = df_success.dropna(subset=["input_tokens", "energy_prefill_j"])
+    if len(valid) > 10:
+        x_vals = valid["input_tokens"].values
+        y_vals = valid["energy_prefill_j"].values
+        slope, intercept = np.polyfit(x_vals, y_vals, 1)
+        x_fit = np.linspace(x_vals.min(), x_vals.max(), 100)
+        y_fit = slope * x_fit + intercept
+        ax.plot(x_fit, y_fit, color="#333333", linestyle="--", linewidth=1.5,
+                label=f"Fit: {slope*1000:.2f} mJ/input-token (R²={np.corrcoef(x_vals, y_vals)[0,1]**2:.2f})")
+
+    ax.set_xlabel("Input Prompt Tokens ($L_{\\mathrm{prompt}}$)")
+    ax.set_ylabel("Prefill Energy ($E_{\\mathrm{prefill}}$, Joules)")
+    ax.set_title("Prompt Processing (Prefill) Energy Scaling", fontsize=12, fontweight="semibold")
+    ax.legend(title="Strategy", bbox_to_anchor=(1.02, 1), loc="upper left")
+    return save_publication_figure(fig, out_dir, "07_prefill_energy_vs_input_tokens")
+
+
+def plot_08_decode_energy_vs_output_tokens(df_success: pd.DataFrame, reps: int, out_dir: str) -> List[str]:
+    """Figure 8: Generation (Decode) Energy vs. Generated Output Tokens."""
+    needed = ["output_tokens", "energy_decode_j"]
+    if not all(c in df_success.columns for c in needed) or df_success["energy_decode_j"].isna().all():
+        return []
+
+    fig, ax = plt.subplots(figsize=(8.0, 5.2))
+    palette = get_palette_for_items(df_success["strategy"])
+
+    sns.scatterplot(
+        data=df_success,
+        x="output_tokens",
+        y="energy_decode_j",
+        hue="strategy",
+        palette=palette,
+        alpha=0.65,
+        s=40,
+        ax=ax
+    )
+
+    valid = df_success.dropna(subset=["output_tokens", "energy_decode_j"])
+    if len(valid) > 10:
+        x_vals = valid["output_tokens"].values
+        y_vals = valid["energy_decode_j"].values
+        slope, intercept = np.polyfit(x_vals, y_vals, 1)
+        x_fit = np.linspace(x_vals.min(), x_vals.max(), 100)
+        y_fit = slope * x_fit + intercept
+        ax.plot(x_fit, y_fit, color="#D55E00", linestyle="--", linewidth=1.5,
+                label=f"Fit: {slope*1000:.2f} mJ/decode-token (R²={np.corrcoef(x_vals, y_vals)[0,1]**2:.2f})")
+
+    ax.set_xlabel("Generated Output Tokens ($L_{\\mathrm{gen}}$)")
+    ax.set_ylabel("Decode Energy ($E_{\\mathrm{decode}}$, Joules)")
+    ax.set_title("Autoregressive Generation (Decode) Energy Scaling", fontsize=12, fontweight="semibold")
+    ax.legend(title="Strategy", bbox_to_anchor=(1.02, 1), loc="upper left")
+    return save_publication_figure(fig, out_dir, "08_decode_energy_vs_output_tokens")
+
+
+def plot_09_token_energy_efficiency(df_success: pd.DataFrame, reps: int, out_dir: str) -> List[str]:
+    """Figure 9: Unit Energy Cost Comparison (Prefill mJ/token vs. Decode mJ/token)."""
+    needed = ["strategy", "strategy_display", "input_tokens", "output_tokens", "energy_prefill_j", "energy_decode_j"]
+    if not all(c in df_success.columns for c in needed):
+        return []
+
+    agg = df_success.groupby(["strategy", "strategy_display"], as_index=False, observed=True).agg({
+        "input_tokens": "sum",
+        "output_tokens": "sum",
+        "energy_prefill_j": "sum",
+        "energy_decode_j": "sum"
+    })
+
+    agg["prefill_mj_per_tok"] = (agg["energy_prefill_j"] / agg["input_tokens"]) * 1000.0
+    agg["decode_mj_per_tok"] = (agg["energy_decode_j"] / agg["output_tokens"]) * 1000.0
+
+    melted = pd.melt(
+        agg,
+        id_vars=["strategy_display"],
+        value_vars=["prefill_mj_per_tok", "decode_mj_per_tok"],
+        var_name="token_phase",
+        value_name="mj_per_token"
+    )
+    phase_map = {
+        "prefill_mj_per_tok": "Prefill (mJ / Input Token)",
+        "decode_mj_per_tok": "Decode (mJ / Output Token)"
+    }
+    melted["phase_label"] = melted["token_phase"].map(phase_map)
+
+    fig, ax = plt.subplots(figsize=(8.5, 5.0))
+    bars = sns.barplot(
+        data=melted,
+        x="strategy_display",
+        y="mj_per_token",
+        hue="phase_label",
+        palette=["#0072B2", "#D55E00"],
+        edgecolor="#333333",
+        linewidth=0.8,
+        ax=ax
+    )
+
+    for p in bars.patches:
+        h = p.get_height()
+        if not np.isnan(h) and h > 0:
+            ax.annotate(f"{h:.1f}", (p.get_x() + p.get_width() / 2., h),
+                        ha="center", va="bottom", xytext=(0, 3), textcoords="offset points", fontsize=8.5)
+
+    ax.set_ylabel("Energy Cost per Token (mJ / token)")
+    ax.set_xlabel("Prompting Strategy")
+    ax.set_title("Unit Energy Efficiency: Input Prefill vs. Output Decoding", fontsize=12, fontweight="semibold")
+    ax.legend(title="Phase", loc="upper left")
+    plt.xticks(rotation=15, ha="right")
+    return save_publication_figure(fig, out_dir, "09_token_energy_efficiency")
 
 
 def plot_10_efficiency_by_strategy(df_all: pd.DataFrame, reps: int, out_dir: str) -> List[str]:
@@ -550,7 +709,7 @@ def plot_10_efficiency_by_strategy(df_all: pd.DataFrame, reps: int, out_dir: str
         axis=1
     )
 
-    fig, ax = plt.subplots(figsize=(7.5, 4.5))
+    fig, ax = plt.subplots(figsize=(8.0, 4.8))
     palette = get_palette_for_items(agg["strategy_display"])
     bars = sns.barplot(
         data=agg,
@@ -572,12 +731,13 @@ def plot_10_efficiency_by_strategy(df_all: pd.DataFrame, reps: int, out_dir: str
 
     ax.set_ylabel("Efficiency (Accuracy / Joule)")
     ax.set_xlabel("Prompting Strategy")
+    ax.set_title("Accuracy per Joule ($APJ$) Across Prompting Strategies", fontsize=12, fontweight="semibold")
     plt.xticks(rotation=15, ha="right")
     return save_publication_figure(fig, out_dir, "10_efficiency_by_strategy")
 
 
 def plot_11_energy_distribution(df_success: pd.DataFrame, reps: int, out_dir: str) -> List[str]:
-    """Figure 11: Distribution of Energy (Stripplot for n=1, Boxplot for repeated)."""
+    """Figure 11: Distribution of Energy."""
     if "energy_total_j" not in df_success.columns or df_success["energy_total_j"].isna().all():
         return []
 
@@ -588,9 +748,9 @@ def plot_11_energy_distribution(df_success: pd.DataFrame, reps: int, out_dir: st
         sns.boxplot(data=df_success, x="strategy_display", y="energy_total_j", hue="strategy_display", palette=palette, legend=False, ax=ax, width=0.4, fliersize=2)
         sns.stripplot(data=df_success, x="strategy_display", y="energy_total_j", color="#222222", alpha=0.3, size=3, jitter=0.2, ax=ax)
     else:
-        sns.stripplot(data=df_success, x="strategy_display", y="energy_total_j", hue="strategy_display", palette=palette, legend=False, size=5, jitter=0.25, alpha=0.7, ax=ax)
+        sns.stripplot(data=df_success, x="strategy_display", y="energy_total_j", hue="strategy_display", palette=palette, legend=False, size=4, jitter=0.25, alpha=0.6, ax=ax)
 
-    ax.set_ylabel("Energy (J)")
+    ax.set_ylabel("Inference Energy (Joules)")
     ax.set_xlabel("Prompting Strategy")
     plt.xticks(rotation=15, ha="right")
     return save_publication_figure(fig, out_dir, "11_energy_distribution")
@@ -608,7 +768,7 @@ def plot_12_latency_distribution(df_success: pd.DataFrame, reps: int, out_dir: s
         sns.boxplot(data=df_success, x="strategy_display", y="total_latency_ms", hue="strategy_display", palette=palette, legend=False, ax=ax, width=0.4, fliersize=2)
         sns.stripplot(data=df_success, x="strategy_display", y="total_latency_ms", color="#222222", alpha=0.3, size=3, jitter=0.2, ax=ax)
     else:
-        sns.stripplot(data=df_success, x="strategy_display", y="total_latency_ms", hue="strategy_display", palette=palette, legend=False, size=5, jitter=0.25, alpha=0.7, ax=ax)
+        sns.stripplot(data=df_success, x="strategy_display", y="total_latency_ms", hue="strategy_display", palette=palette, legend=False, size=4, jitter=0.25, alpha=0.6, ax=ax)
 
     ax.set_ylabel("Total Latency (ms)")
     ax.set_xlabel("Prompting Strategy")
@@ -618,7 +778,7 @@ def plot_12_latency_distribution(df_success: pd.DataFrame, reps: int, out_dir: s
 
 def plot_13_truncation_rate(df_all: pd.DataFrame, reps: int, out_dir: str) -> List[str]:
     """Figure 13: Generation Truncation Rate (%) by Strategy."""
-    fig, ax = plt.subplots(figsize=(7.5, 4.5))
+    fig, ax = plt.subplots(figsize=(8.0, 4.8))
     trunc_df = df_all.groupby(["strategy", "strategy_display"], as_index=False, observed=True).agg({
         "generation_truncated": lambda x: (sum(1 for v in x if v is True) / len(x)) * 100.0 if len(x) > 0 else 0.0
     })
@@ -639,25 +799,25 @@ def plot_13_truncation_rate(df_all: pd.DataFrame, reps: int, out_dir: str) -> Li
     for p in bars.patches:
         height = p.get_height()
         ax.annotate(f"{height:.1f}%", (p.get_x() + p.get_width() / 2., max(0.5, height)),
-                    ha="center", va="bottom", xytext=(0, 3), textcoords="offset points", fontsize=9)
+                    ha="center", va="bottom", xytext=(0, 4), textcoords="offset points", fontsize=9.5, fontweight="semibold")
 
     ax.set_ylabel("Truncation Rate (%)")
     ax.set_xlabel("Prompting Strategy")
-    ax.set_ylim(0, max(10, trunc_df["generation_truncated"].max() + 10))
+    ax.set_ylim(0, max(10, trunc_df["generation_truncated"].max() + 15))
     plt.xticks(rotation=15, ha="right")
     return save_publication_figure(fig, out_dir, "13_truncation_rate")
 
 
 def plot_validation_overview(df_all: pd.DataFrame, summary: Dict[str, Any], out_dir: str) -> str:
     """Creates a concise, publication-style multi-panel validation diagnostic dashboard."""
-    fig, axes = plt.subplots(2, 3, figsize=(13.5, 7.5))
-    fig.suptitle("Pipeline Validation Diagnostic Overview", fontsize=14, fontweight="bold", y=0.98)
+    fig, axes = plt.subplots(2, 3, figsize=(14.0, 7.8))
+    fig.suptitle("PromptEnergy-Bench Experiment Validation Dashboard", fontsize=14, fontweight="bold", y=0.98)
 
     # 1. Accuracy Panel
     acc_df = df_all.groupby("strategy_display", observed=True)["answer_correct"].mean().reset_index()
     acc_df["acc_pct"] = acc_df["answer_correct"] * 100.0
     sns.barplot(data=acc_df, x="strategy_display", y="acc_pct", hue="strategy_display", legend=False, ax=axes[0, 0], palette="crest")
-    axes[0, 0].set_title("Accuracy (%)", fontsize=11)
+    axes[0, 0].set_title("Accuracy (%)", fontsize=11, fontweight="semibold")
     axes[0, 0].set_ylabel("Accuracy (%)")
     axes[0, 0].set_xlabel("")
     axes[0, 0].tick_params(axis="x", rotation=25)
@@ -667,7 +827,7 @@ def plot_validation_overview(df_all: pd.DataFrame, summary: Dict[str, Any], out_
         lambda s: (sum(1 for v in s if v is True) / len(s)) * 100.0 if len(s) > 0 else 0.0
     ).reset_index()
     sns.barplot(data=trunc_df, x="strategy_display", y="generation_truncated", hue="strategy_display", legend=False, ax=axes[0, 1], palette="Reds_r")
-    axes[0, 1].set_title("Truncation Rate (%)", fontsize=11)
+    axes[0, 1].set_title("Truncation Rate (%)", fontsize=11, fontweight="semibold")
     axes[0, 1].set_ylabel("Truncated (%)")
     axes[0, 1].set_xlabel("")
     axes[0, 1].tick_params(axis="x", rotation=25)
@@ -676,7 +836,7 @@ def plot_validation_overview(df_all: pd.DataFrame, summary: Dict[str, Any], out_
     if "energy_total_j" in df_all.columns:
         e_df = df_all[df_all["status"] == "success"]
         sns.barplot(data=e_df, x="strategy_display", y="energy_total_j", hue="strategy_display", legend=False, ax=axes[0, 2], palette="viridis")
-        axes[0, 2].set_title("Mean Energy (J)", fontsize=11)
+        axes[0, 2].set_title("Mean Total Energy (J)", fontsize=11, fontweight="semibold")
         axes[0, 2].set_ylabel("Energy (Joules)")
         axes[0, 2].set_xlabel("")
         axes[0, 2].tick_params(axis="x", rotation=25)
@@ -685,7 +845,7 @@ def plot_validation_overview(df_all: pd.DataFrame, summary: Dict[str, Any], out_
     if "total_latency_ms" in df_all.columns:
         l_df = df_all[df_all["status"] == "success"]
         sns.barplot(data=l_df, x="strategy_display", y="total_latency_ms", hue="strategy_display", legend=False, ax=axes[1, 0], palette="mako")
-        axes[1, 0].set_title("Mean Latency (ms)", fontsize=11)
+        axes[1, 0].set_title("Mean Latency (ms)", fontsize=11, fontweight="semibold")
         axes[1, 0].set_ylabel("Total Latency (ms)")
         axes[1, 0].set_xlabel("")
         axes[1, 0].tick_params(axis="x", rotation=25)
@@ -694,7 +854,7 @@ def plot_validation_overview(df_all: pd.DataFrame, summary: Dict[str, Any], out_
     if "output_tokens" in df_all.columns:
         tok_df = df_all[df_all["status"] == "success"]
         sns.barplot(data=tok_df, x="strategy_display", y="output_tokens", hue="strategy_display", legend=False, ax=axes[1, 1], palette="flare")
-        axes[1, 1].set_title("Mean Output Tokens", fontsize=11)
+        axes[1, 1].set_title("Mean Generated Tokens", fontsize=11, fontweight="semibold")
         axes[1, 1].set_ylabel("Tokens")
         axes[1, 1].set_xlabel("")
         axes[1, 1].tick_params(axis="x", rotation=25)
@@ -709,15 +869,16 @@ def plot_validation_overview(df_all: pd.DataFrame, summary: Dict[str, Any], out_
         f" • Successful Runs: {metrics.get('successful_inference_runs', len(df_all))}\n\n"
         f"Overall Outcome:\n"
         f" • Accuracy: {metrics.get('accuracy', 0.0) * 100.0:.2f}%\n"
-        f" • Truncated Generations: {metrics.get('truncated_generations', 0)}\n"
         f" • Truncation Rate: {metrics.get('truncation_rate', 0.0) * 100.0:.2f}%\n"
-        f" • Mean Energy: {metrics.get('mean_energy_j', 'N/A')} J\n"
-        f" • Mean Latency: {metrics.get('mean_latency_ms', 'N/A')} ms"
+        f" • Mean Prefill Energy: {metrics.get('mean_prefill_energy_j', 'N/A')} J\n"
+        f" • Mean Decode Energy: {metrics.get('mean_decode_energy_j', 'N/A')} J\n"
+        f" • Mean Total Energy: {metrics.get('mean_energy_j', 'N/A')} J\n"
+        f" • Mean Latency: {metrics.get('mean_total_latency_ms', 'N/A')} ms"
     )
     axes[1, 2].axis("off")
     axes[1, 2].text(0.05, 0.95, diag_text, transform=axes[1, 2].transAxes,
-                    fontsize=10.5, verticalalignment="top", fontfamily="monospace",
-                    bbox=dict(boxstyle="round,pad=0.8", facecolor="#F8F9FA", edgecolor="#CCCCCC"))
+                    fontsize=10.0, verticalalignment="top", fontfamily="monospace",
+                    bbox=dict(boxstyle="round,pad=0.7", facecolor="#F8F9FA", edgecolor="#CCCCCC"))
 
     plt.tight_layout(rect=[0, 0.03, 1, 0.95])
     out_file = os.path.join(out_dir, "validation_overview.png")
@@ -759,7 +920,7 @@ def generate_all_plots_for_run(
     device_filter: Optional[str] = None,
     run_id_filter: Optional[str] = None
 ) -> List[str]:
-    """Generates all 13 research figures + diagnostic overview and metadata for a run."""
+    """Generates all research figures + diagnostic overview and metadata for a run."""
     if not results_file:
         results_file = os.path.join(target_dir, "results.jsonl")
 
@@ -803,13 +964,14 @@ def generate_all_plots_for_run(
 
     generated.extend(plot_01_accuracy_by_strategy(df_all, reps, out_dir))
     generated.extend(plot_02_energy_by_strategy(df_success, reps, out_dir))
+    generated.extend(plot_02b_prefill_vs_decode_stacked(df_success, reps, out_dir))
     generated.extend(plot_03_latency_by_strategy(df_success, reps, out_dir))
     generated.extend(plot_04_token_composition_by_strategy(df_success, reps, out_dir))
     generated.extend(plot_05_accuracy_energy_pareto(df_all, reps, out_dir))
     generated.extend(plot_06_accuracy_latency(df_all, reps, out_dir))
-    generated.extend(plot_07_energy_vs_output_tokens(df_success, reps, out_dir))
-    generated.extend(plot_08_thinking_tokens_vs_energy(df_success, reps, out_dir))
-    generated.extend(plot_09_thinking_tokens_vs_accuracy(df_all, reps, out_dir))
+    generated.extend(plot_07_prefill_energy_vs_input_tokens(df_success, reps, out_dir))
+    generated.extend(plot_08_decode_energy_vs_output_tokens(df_success, reps, out_dir))
+    generated.extend(plot_09_token_energy_efficiency(df_success, reps, out_dir))
     generated.extend(plot_10_efficiency_by_strategy(df_all, reps, out_dir))
     generated.extend(plot_11_energy_distribution(df_success, reps, out_dir))
     generated.extend(plot_12_latency_distribution(df_success, reps, out_dir))

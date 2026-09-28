@@ -35,6 +35,14 @@ class BenchmarkRecord:
     def answer(self) -> str:
         return self.target_text or ""
 
+    @property
+    def solution(self) -> str:
+        if self.metadata and isinstance(self.metadata, dict) and "solution" in self.metadata:
+            return str(self.metadata["solution"])
+        if self.context:
+            return self.context
+        return self.target_text or ""
+
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
 

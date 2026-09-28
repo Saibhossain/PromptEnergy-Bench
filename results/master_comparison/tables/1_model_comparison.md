@@ -1,0 +1,5 @@
+# Cross-Model Comparative Performance and Energy Decomposition Summary
+
+| Model | Hardware | Samples | Accuracy (%) | Total Energy (J) | Prefill Energy (J) | Decode Energy (J) | Prefill (mJ/tok) | Decode (mJ/tok) | Decode TPS (tok/s) | Mean TTFT (ms) | Mean Latency (ms) |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| qwen3.5:0.8b-mlx | macbook_air_m1 | 140 | 0.00% | 67.090 | 12.117 | 54.974 | 12.55 | 117.56 | 36.82 | 3293.0 | 16450.4 |

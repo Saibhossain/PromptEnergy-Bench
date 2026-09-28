@@ -42,7 +42,7 @@ class ContextBuilder:
         
         # Precompute keywords for each training record for relevance scoring
         self.doc_keywords: List[Set[str]] = [
-            self._extract_keywords(rec.question) for rec in self.train_records
+            self._extract_keywords(getattr(rec, "question", getattr(rec, "input_text", ""))) for rec in self.train_records
         ]
 
     @staticmethod
@@ -141,8 +141,15 @@ class ContextBuilder:
 
         for idx in indices:
             rec = self.train_records[idx]
-            # Format reference example
-            item = f"[Reference Problem {rec.id}]:\nProblem: {rec.question}\nSolution & Reasoning: {rec.solution}\nResult: {rec.answer}\n\n"
+            q = getattr(rec, "question", getattr(rec, "input_text", ""))
+            sol = getattr(rec, "solution", getattr(rec, "context", ""))
+            ans = getattr(rec, "answer", getattr(rec, "target_text", ""))
+            r_id = getattr(rec, "id", str(idx))
+            
+            if sol and sol != ans:
+                item = f"[Reference Item {r_id}]:\nInput: {q}\nContent/Reasoning: {sol}\nTarget: {ans}\n\n"
+            else:
+                item = f"[Reference Item {r_id}]:\nInput: {q}\nTarget: {ans}\n\n"
             item_tokens = estimate_tokens(item)
 
             if current_tokens + item_tokens > target_tokens and len(selected_ids) > 0:

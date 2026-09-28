@@ -20,6 +20,7 @@ Usage:
 """
 
 import argparse
+import csv
 import glob
 import json
 import math

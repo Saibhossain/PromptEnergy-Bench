@@ -1,8 +1,0 @@
-# Marginal Energy Gain (MEG) Relative to Baseline
-
-| Baseline Strategy   | Comparison Strategy   | Accuracy Change   | Energy Change   | Marginal Energy Gain (% / J)   | Latency Change   |
-|:--------------------|:----------------------|:------------------|:----------------|:-------------------------------|:-----------------|
-| Zero-shot Direct    | Few-shot (3)          | +0.00 pp          | -18.5069 J      | -0.0000 %/J                    | -2315.7 ms       |
-| Zero-shot Direct    | Zero-shot CoT         | +0.00 pp          | +68.2062 J      | 0.0000 %/J                     | +8539.5 ms       |
-| Zero-shot Direct    | Short CoT             | +0.00 pp          | +86.7584 J      | 0.0000 %/J                     | +10859.1 ms      |
-| Zero-shot Direct    | Long CoT              | +0.00 pp          | +254.7550 J     | 0.0000 %/J                     | +31912.6 ms      |
