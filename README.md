@@ -10,9 +10,13 @@ While prompt engineering techniques such as Few-Shot prompting and Chain-of-Thou
 
 **PromptEnergy-Bench** quantifies the marginal energy cost of reasoning:
 * **Marginal Energy Gain (MEG)**:
-  $$\text{MEG}(S_1, S_2) = \frac{\text{Energy}(S_2) - \text{Energy}(S_1)}{\text{Accuracy}(S_2) - \text{Accuracy}(S_1)} \quad \left( \frac{\text{Joules}}{\Delta\text{Accuracy \%}} \right)$$
-* **Accuracy per Joule ($APJ$)**: Normalized task accuracy achieved per unit of electrical energy consumed.
-* **Energy per Correct Answer**: Total energy consumed divided by the number of correct responses.
+  $$\text{MEG}(S_1, S_2) = \frac{\text{Accuracy}(S_2) - \text{Accuracy}(S_1)}{\text{Energy}(S_2) - \text{Energy}(S_1)} \quad \left( \frac{\Delta\text{Accuracy \%}}{\text{Joules}} \right)$$
+* **Prompt Processing (Prefill) Energy ($E_{\text{prefill}}$)**: Energy consumed during prompt ingestion and initial KV-cache construction:
+  $$E_{\text{prefill}} = E_{\text{total}} \times \left( \frac{\text{TTFT}}{\text{Total Latency}} \right)$$
+* **Autoregressive Generation (Decode) Energy ($E_{\text{decode}}$)**: Energy consumed sequentially generating output tokens:
+  $$E_{\text{decode}} = E_{\text{total}} \times \left( \frac{\text{Generation Latency}}{\text{Total Latency}} \right)$$
+* **Unit Token Energy ($m\text{J/token}$)**: Input prompt processing cost vs. output generation cost.
+* **Accuracy per Joule ($APJ$)**: Task accuracy achieved per unit of electrical energy consumed.
 * **Pareto Frontier Efficiency**: Identifying configurations that optimize the tripartite trade-off between Accuracy, Energy (Joules), and Latency (ms).
 
 ---
@@ -24,9 +28,9 @@ The benchmark provides a universal dataset loader supporting 4 core benchmark da
 ```text
 datasets/
 ├── gsm8k/               <-- Grade School Math Reasoning (Test: 1,319 | Train: 7,473)
-├── natural_questions/   <-- Factoid Open QA (Train/Test: 100k+ questions & Wikipedia corpus)
+├── natural_questions/   <-- Factoid Open QA & RAG (Test: 10,000+ | Wikipedia corpus)
 ├── contexteval/         <-- Long-Context Grounded QA (Test: 3,580 questions)
-└── cnn_dailymail/       <-- Multi-Document Summarization (Test: 11,490 | Validation: 13,368)
+└── cnn_dailymail/       <-- Multi-Sentence Summarization (Test: 11,490 | Train: 287,113)
 ```
 
 ### Strict Train/Test Separation Rules
@@ -34,6 +38,8 @@ datasets/
 * Training splits provide in-context exemplars, context-scaling distractors, and BM25 retrieval corpora.
 * A test question is never evaluated against its own answer or used as retrieved context (`exclude_id` enforcement).
 * Selecting `--eval-size full` evaluates the entire test split without downsampling.
+
+For verbatim prompt templates and strategy definitions across all 4 datasets, see [prompts.md](file:///Users/mdsaibhossain/code/Research_paper/PromptEnergy-Bench/prompts.md).
 
 ---
 
@@ -48,194 +54,205 @@ datasets/
 
 ---
 
-## 4. Cross-Device Execution Guide
+## 4. How to Run Experiments
 
-### A. macOS (Apple Silicon M1/M2/M3 — 8GB / 16GB / 24GB RAM)
-
-Apple Silicon leverages hardware register counters via `powermetrics` and optimized Apple Metal MLX inference.
-
-1. **Setup Passwordless Telemetry** (allows `powermetrics` to read energy counters without prompting for password):
-   ```bash
-   sudo visudo
-   # Add the following line at the bottom:
-   <your_mac_username> ALL=(ALL) NOPASSWD: /usr/bin/powermetrics
-   ```
-
-2. **Run Full Benchmark Suite (Master Runner)**:
-   ```bash
-   ./.venv/bin/python scripts/run_all_experiments.py \
-       --hardware macbook_air_m1 \
-       --models "qwen3.5:0.8b-mlx,qwen3.5:2b-mlx" \
-       --dataset all \
-       --eval-size 50 \
-       --runs-per-condition 3 \
-       --skip-existing
-   ```
+The primary execution entry point is `scripts/run_all_experiments.py`, which orchestrates all 3 benchmark experiment modules:
+1. **Experiment 1: Prompting Strategies** (`zero_shot_direct`, `few_shot_3`, `zero_shot_cot`, `short_cot`, `long_cot`)
+2. **Experiment 2: Context Scaling** (`ctx_0`, `ctx_512`, `ctx_1024`, `ctx_2048`, `ctx_4096`, `ctx_8192`)
+3. **Experiment 3: Retrieval-Augmented Generation** (`rag_top_1`, `rag_top_3`, `rag_top_5`)
 
 ---
 
-### B. Windows with NVIDIA GPU (e.g., RTX 3060, 3080, 4070, 4090)
-
-Uses NVML high-frequency GPU telemetry ($10\text{ms}$ sampling) integrated over inference execution time.
-
-1. **Prerequisites**: Ensure CUDA drivers and Ollama are running.
-   ```powershell
-   ollama pull qwen3.5:0.8b
-   ollama pull gemma3:4b
-   ollama pull mistral:7b
-   ollama pull llama3.2:3b
-   ```
-
-2. **Run Full Benchmark Suite (PowerShell)**:
-   ```powershell
-   python scripts/run_all_experiments.py `
-       --hardware windows_cuda_pc `
-       --models "qwen3.5:0.8b,gemma3:4b,llama3.2:3b" `
-       --dataset all `
-       --eval-size 50 `
-       --runs-per-condition 3 `
-       --skip-existing
-   ```
-
----
-
-### C. Windows without Dedicated GPU (CPU-Only / Intel & AMD)
-
-Profiles CPU power draw and memory bandwidth via RAPL estimation and continuous `psutil` sampling.
-
-1. **Prerequisites**: Pull lightweight models optimized for CPU inference:
-   ```powershell
-   ollama pull qwen3.5:0.8b
-   ollama pull qwen2.5:0.5b
-   ollama pull gemma3:1b
-   ```
-
-2. **Run Full Benchmark Suite (PowerShell)**:
-   ```powershell
-   python scripts/run_all_experiments.py `
-       --hardware windows_10core_pc `
-       --models "qwen3.5:0.8b,gemma3:1b" `
-       --dataset gsm8k `
-       --eval-size 50 `
-       --runs-per-condition 1 `
-       --skip-existing
-   ```
-
----
-
-### D. Linux Server (Ubuntu/Debian + NVIDIA GPU Cluster)
-
-Profiles dual CPU package (RAPL) and GPU (NVML) power simultaneously.
-
-1. **Run Full Benchmark Suite (Bash)**:
-   ```bash
-   python scripts/run_all_experiments.py \
-       --hardware generic_cuda_server \
-       --models "qwen3.5:0.8b,gemma3:4b,mistral:7b" \
-       --dataset all \
-       --eval-size 100 \
-       --runs-per-condition 3 \
-       --skip-existing
-   ```
-
----
-
-## 5. Comparing Results Across All Devices
-
-All benchmark runs produce standardized `results.jsonl` files stored under `results/{experiment_name}_{dataset}/{hardware_name}/{timestamp}/`.
-
-To compare across devices (e.g., MacBook Air M1 vs. Windows GPU vs. Windows CPU vs. Linux Server):
-
-```text
-results/
-├── primary_exp_gsm8k/
-│   ├── macbook_air_m1/       <-- MacBook Air M1 runs
-│   ├── windows_cuda_pc/      <-- Windows NVIDIA GPU runs
-│   └── windows_10core_pc/    <-- Windows CPU-only runs
-└── context_scaling_gsm8k/
-    ├── macbook_air_m1/
-    └── windows_cuda_pc/
-```
-
-### Option 1: Interactive Comparison Mode (Terminal Selection Menu)
-Run the comparison tool without arguments to automatically discover all runs across all devices and select which runs to compare via interactive checkboxes:
+### Step 1: Environment Setup
 
 ```bash
-python scripts/compare_results.py
+# 1. Create and activate Python virtual environment
+python3 -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\Activate.ps1
+
+# 2. Install dependencies
+pip install -r requirements.txt
+
+# 3. Pull target models via Ollama
+ollama pull qwen3.5:0.8b
+ollama pull qwen3.5:2b
 ```
 
-### Option 2: Command-Line Multi-Device Comparison
-Pass all device folders or specific run paths to generate a unified cross-device report:
+#### macOS Passwordless Telemetry Setup
+On macOS (Apple Silicon), enable non-interactive energy sampling via `powermetrics`:
+```bash
+sudo visudo
+# Add this line at the bottom of the file (replace <your_username> with your macOS username):
+<your_username> ALL=(ALL) NOPASSWD: /usr/bin/powermetrics
+```
+
+---
+
+### Step 2: Quick Smoke Test (Verify Pipeline)
+
+Run a fast validation on **10 samples per dataset** across all 4 benchmark datasets:
 
 ```bash
-python scripts/compare_results.py \
+./.venv/bin/python scripts/run_all_experiments.py \
+    --hardware macbook_air_m1 \
+    --models "qwen3.5:0.8b-mlx" \
+    --dataset all \
+    --eval-size 10
+```
+
+---
+
+### Step 3: Run Full Benchmark Suite
+
+#### A. Full Run on macOS (Apple Silicon M1/M2/M3)
+```bash
+./.venv/bin/python scripts/run_all_experiments.py \
+    --hardware macbook_air_m1 \
+    --models "qwen3.5:0.8b-mlx,qwen3.5:2b-mlx" \
+    --dataset all \
+    --eval-size full \
+    --runs-per-condition 1 \
+    --skip-existing
+```
+
+> **Note on `--skip-existing`**: If your run is interrupted, re-running with `--skip-existing` will automatically resume where it left off, skipping completed conditions.
+
+#### B. Full Run on Windows with NVIDIA GPU (PowerShell)
+```powershell
+python scripts/run_all_experiments.py `
+    --hardware windows_cuda_pc `
+    --models "qwen3.5:0.8b,qwen3.5:2b" `
+    --dataset all `
+    --eval-size full `
+    --runs-per-condition 1 `
+    --skip-existing
+```
+
+#### C. Full Run on Windows CPU-Only (PowerShell)
+```powershell
+python scripts/run_all_experiments.py `
+    --hardware windows_10core_pc `
+    --models "qwen3.5:0.8b" `
+    --dataset all `
+    --eval-size full `
+    --runs-per-condition 1 `
+    --skip-existing
+```
+
+#### D. Full Run on Linux Server (Ubuntu/Debian + NVIDIA GPU)
+```bash
+python scripts/run_all_experiments.py \
+    --hardware generic_cuda_server \
+    --models "qwen3.5:0.8b,qwen3.5:2b" \
+    --dataset all \
+    --eval-size full \
+    --runs-per-condition 1 \
+    --skip-existing
+```
+
+---
+
+### Step 4: Run Targeted Experiments or Datasets Individually
+
+You can customize the runner using CLI flags:
+
+#### Run Only a Specific Experiment
+```bash
+# Run only Experiment 1 (Prompting Strategies)
+./.venv/bin/python scripts/run_all_experiments.py --experiment primary --dataset gsm8k --eval-size 50
+
+# Run only Experiment 2 (Context Scaling)
+./.venv/bin/python scripts/run_all_experiments.py --experiment context --dataset contexteval --eval-size 50
+
+# Run only Experiment 3 (BM25 RAG)
+./.venv/bin/python scripts/run_all_experiments.py --experiment rag --dataset natural_questions --eval-size 50
+```
+
+#### Run a Single Dataset
+```bash
+# GSM8K (Math)
+./.venv/bin/python scripts/run_all_experiments.py --dataset gsm8k --eval-size full --skip-existing
+
+# Natural Questions (Open QA)
+./.venv/bin/python scripts/run_all_experiments.py --dataset natural_questions --eval-size full --skip-existing
+
+# ContextEval (Long-Context QA)
+./.venv/bin/python scripts/run_all_experiments.py --dataset contexteval --eval-size full --skip-existing
+
+# CNN/DailyMail (Summarization)
+./.venv/bin/python scripts/run_all_experiments.py --dataset cnn_dailymail --eval-size full --skip-existing
+```
+
+---
+
+### CLI Reference Flags (`scripts/run_all_experiments.py`)
+
+| Flag | Description | Default |
+| :--- | :--- | :--- |
+| `--hardware` | Hardware preset name (`macbook_air_m1`, `windows_cuda_pc`, `windows_10core_pc`, `generic_cuda_server`) | Auto-detected |
+| `--models` | Comma-separated list of model names (`"qwen3.5:0.8b-mlx,qwen3.5:2b-mlx"`) | `"qwen3.5:0.8b-mlx"` |
+| `--dataset` | Target dataset(s): `all`, `gsm8k`, `natural_questions`, `contexteval`, `cnn_dailymail` | `all` |
+| `--experiment` | Target experiment(s): `all`, `primary`, `context`, `rag` | `all` |
+| `--eval-size` | Number of test samples to evaluate (`10`, `50`, `100`, or `full`) | `10` |
+| `--runs-per-condition` | Number of repeated runs per experimental condition for statistical power | `1` |
+| `--warmups` | Number of unmeasured warmup queries before evaluation | `1` |
+| `--skip-existing` | Skip previously completed runs to enable fast resumability | `False` |
+| `--no-compare` | Disable automatic post-run comparison generation | `False` |
+
+---
+
+## 5. Result Comparison & Publication Deliverables
+
+All runs produce standardized raw telemetry in `results/{experiment}_{dataset}/{hardware}/{timestamp}/results.jsonl`.
+
+### Option 1: Interactive Comparison Menu
+Run without arguments to select runs across devices and models interactively:
+```bash
+./.venv/bin/python scripts/compare_results.py
+```
+
+### Option 2: Automated Multi-Run Comparison Report
+```bash
+./.venv/bin/python scripts/compare_results.py \
     --inputs results/*/*/* \
-    --output-dir results/cross_device_comparison
+    --output-dir results/master_comparison
 ```
 
-### Option 3: Compare Specific Hardware Platforms Directly
+### Option 3: Generate Global Publication Figures
+Generates 12 camera-ready publication figures (PNG @ 300 DPI, vector PDF, and SVG):
 ```bash
-python scripts/compare_hardware_results.py \
-    --input-dirs results/primary_exp_gsm8k/macbook_air_m1 results/primary_exp_gsm8k/windows_cuda_pc \
-    --output-dir results/hardware_comparison/
+./.venv/bin/python scripts/generate_publication_figures.py \
+    --input-dir results/ \
+    --output-dir results/figures/
 ```
 
----
+### Generated Deliverables
 
-## 6. Generated Comparison Deliverables
+#### Publication Tables (`.csv`, `.md`, `.tex` Booktabs):
+1. **`1_model_comparison.*`**: Model parameter size, total energy (J), prefill energy (J), decode energy (J), prefill/decode cost ($m\text{J/token}$), throughput (tok/s), TTFT (ms), and total latency (ms).
+2. **`2_strategy_comparison.*`**: Prompt strategy breakdown across Zero-Shot Direct, Few-Shot (3), Zero-Shot CoT, Short CoT, Long CoT, and RAG.
+3. **`3_pareto_frontier.*`**: Multi-objective Pareto-optimal prompting configurations.
+4. **`4_marginal_energy_gain.*`**: Marginal Energy Gain ($\text{MEG}$) quantifying Joules required per 1% accuracy improvement.
 
-Every comparison execution outputs camera-ready publication artifacts:
-
-### Publication Tables (`.csv`, `.md`, `.tex` Booktabs):
-1. **`table_model_comparison.*`**: Accuracy, Total Energy (J), Prefill Energy (J), Decode Energy (J), TTFT (ms), Throughput (tok/s) across devices and models.
-2. **`table_strategy_comparison.*`**: Fine-grained metrics for Zero-Shot, Few-Shot-3/5, Chain-of-Thought (CoT), Role-Play, and System Prompts.
-3. **`table_marginal_energy_gain.*`**: Marginal Energy Gain ($\text{MEG}$) quantifying the Joules required per 1% accuracy improvement.
-4. **`cross_hardware_energy_ratios.*`**: Energy consumption ratios ($E_{\text{device\_A}} / E_{\text{device\_B}}$) and throughput speedups.
-
-### High-Resolution Figures (PNG @ 300 DPI, Vector PDF, SVG):
-1. **`fig_energy_accuracy_pareto.*`**: Multi-objective Energy vs. Accuracy Pareto Frontiers by device and model.
-2. **`fig_strategy_energy_breakdown.*`**: Stacked Prefill vs. Decode energy charts.
-3. **`fig_latency_breakdown.*`**: Time-to-First-Token (TTFT) and decode latency distributions.
-4. **`fig_context_scaling_curve.*`**: Energy growth vs Context Length ($0 \dots 8192$ tokens) scaling curves.
+#### Publication Figures (PNG @ 300 DPI, Vector PDF, SVG):
+1. **`01_energy_vs_accuracy_pareto.*`**: Multi-objective Energy vs. Accuracy Pareto Frontier with collision-free callouts.
+2. **`02_strategy_energy_breakdown.*`**: Stacked Prefill vs. Decode energy distribution.
+3. **`03_latency_ttft_breakdown.*`**: TTFT and decode latency phase breakdown.
+4. **`04_unit_energy_per_token.*`**: Input token prefill cost vs. output token generation cost ($m\text{J/token}$).
 
 ---
 
-## 7. Running Unit Tests & Quality Verification
+## 6. Running Unit Tests
 
-Execute the complete automated test suite (77 tests across data loading, evaluators, telemetry, and analysis):
+Execute the complete automated test suite (77 unit tests covering prompt formatting, metrics, telemetry, evaluators, and Pareto analysis):
 
 ```bash
-PYTHONPATH=. python -m unittest discover -s test -p "test_*.py"
+PYTHONPATH=. ./.venv/bin/python -m unittest discover -s test -p "test_*.py"
 ```
 
 ---
 
-## 8. Requirements & Setup
-
-1. **Python Virtual Environment**:
-   ```bash
-   python3 -m venv .venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\Activate.ps1
-   pip install -r requirements.txt
-   ```
-
-2. **Ollama Setup**:
-   Ensure Ollama is running locally:
-   ```bash
-   ollama pull qwen3.5:0.8b
-   ollama pull gemma3:4b
-   ollama pull mistral:7b
-   ollama pull llama3.2:3b
-   ```
-
-3. **OpenAI Cloud API (Optional for API Baselines)**:
-   ```bash
-   export OPENAI_API_KEY="your_api_key_here"
-   ```
-
----
-
-## 9. Methodological & Rigor Standards
+## 7. Methodological & Rigor Standards
 
 * **Zero-Coercion Policy**: Failed or unparseable queries preserve strict `null` values (rendered as `"N/A"` in tables/plots) and are never coerced to `0.0` or synthetic defaults.
 * **Denominator Integrity**: Explicitly reports $N_{\text{requested}}$, $N_{\text{completed}}$, $N_{\text{valid}}$, and $N_{\text{correct}}$ to eliminate reporting bias.
