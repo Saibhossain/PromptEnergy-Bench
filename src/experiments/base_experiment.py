@@ -225,7 +225,17 @@ class BaseExperiment(ABC):
         self.logger.info(f"Evaluation Size: {self.eval_size} (Evaluation Split: TEST)")
 
         # Instantiate backend and energy/resource monitors
-        self.backend: ModelBackend = get_backend(operator=self.operator, model_name=self.model_name)
+        backend_kwargs: Dict[str, Any] = {}
+        if "think" in self.cli_args:
+            backend_kwargs["think"] = self.cli_args["think"]
+        elif "thinking" in self.cli_args:
+            backend_kwargs["think"] = self.cli_args["thinking"]
+
+        self.backend: ModelBackend = get_backend(
+            operator=self.operator,
+            model_name=self.model_name,
+            **backend_kwargs
+        )
         self.energy_monitor: EnergyMonitor = get_energy_monitor(mode=self.energy_mode)
         self.resource_monitor: BackgroundResourceMonitor = BackgroundResourceMonitor(poll_interval_ms=50)
 

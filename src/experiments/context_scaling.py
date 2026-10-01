@@ -15,9 +15,16 @@ from src.infrastructure.checkpoint import compute_condition_key
 class ContextScalingExperiment(BaseExperiment):
     """Orchestrates Experiment 2: Controlled Context Scaling."""
 
-    def __init__(self, cli_args: Optional[Dict[str, Any]] = None, interactive: bool = False):
+    def __init__(
+        self,
+        experiment_name: Optional[str] = None,
+        cli_args: Optional[Dict[str, Any]] = None,
+        interactive: bool = False
+    ):
+        target_ds = (cli_args or {}).get("dataset") or (cli_args or {}).get("dataset_name") or "gsm8k"
+        exp_name = experiment_name or f"context_scaling_{str(target_ds).lower()}"
         super().__init__(
-            experiment_name="context_scaling_gsm8k",
+            experiment_name=exp_name,
             cli_args=cli_args,
             interactive=interactive
         )
@@ -33,12 +40,13 @@ class ContextScalingExperiment(BaseExperiment):
         if self.context_type not in ["relevant", "distractor"]:
             self.context_type = "relevant"
 
+        dataset_name = self.config.get("dataset", {}).get("name", str(target_ds).lower())
         self.strategy = PromptStrategy.ZERO_SHOT_COT
         self.config["context_lengths"] = self.context_lengths
         self.config["context_type"] = self.context_type
         self.config["strategy"] = self.strategy.value
         self.config["strategies"] = [f"ctx_{c}" for c in self.context_lengths]
-        self.evaluator = get_evaluator(self.config.get("dataset", {}).get("name", "gsm8k"))
+        self.evaluator = get_evaluator(dataset_name)
 
     def run(self) -> Dict[str, Any]:
         dataset_name = self.config.get("dataset", {}).get("name", "gsm8k")

@@ -175,8 +175,11 @@ def collect_device_info(interactive: bool = False, cli_args: Optional[Dict[str, 
     # 9. Model name
     model_name = get_val("model", "qwen3.5:0.8b-mlx", "9. Model name")
 
-    # 10. Dataset evaluation size
-    eval_size_raw = str(get_val("eval_size", "50", "10. Dataset evaluation size ('50' or 'full')")).lower()
+    # 10. Benchmark dataset name
+    dataset_name = str(get_val("dataset", get_val("dataset_name", "gsm8k", "10. Benchmark dataset name (gsm8k, natural_questions, contexteval, cnn_dailymail)"))).lower()
+
+    # 11. Dataset evaluation size
+    eval_size_raw = str(get_val("eval_size", "50", "11. Dataset evaluation size ('50' or 'full')")).lower()
     if eval_size_raw == "full":
         eval_size = "full"
     else:
@@ -185,15 +188,15 @@ def collect_device_info(interactive: bool = False, cli_args: Optional[Dict[str, 
         except ValueError:
             eval_size = 50
 
-    # 11. Energy measurement mode
+    # 12. Energy measurement mode
     energy_mode_def = "apple_estimated" if os_name == "macOS" else ("nvidia_nvml" if gpu_available and "NVIDIA" in str(gpu_name) else "codecarbon_estimated")
-    energy_mode = get_val("energy_mode", energy_mode_def, "11. Energy mode (physical_meter, software_estimate, automatic, unavailable)")
+    energy_mode = get_val("energy_mode", energy_mode_def, "12. Energy mode (physical_meter, software_estimate, automatic, unavailable)")
 
-    # 12. Warm-ups
-    warmups = int(get_val("warmups", 3, "12. Warm-up runs"))
+    # 13. Warm-ups
+    warmups = int(get_val("warmups", 3, "13. Warm-up runs"))
 
-    # 13. Repetitions per condition
-    repetitions = int(get_val("repetitions", 3, "13. Repetitions per condition"))
+    # 14. Repetitions per condition
+    repetitions = int(get_val("repetitions", 3, "14. Repetitions per condition"))
 
     print("=" * 60 + "\n")
 
@@ -215,9 +218,9 @@ def collect_device_info(interactive: bool = False, cli_args: Optional[Dict[str, 
             "model_name": model_name
         },
         "dataset": {
-            "name": "GSM8K",
-            "evaluation_split": "test",
-            "context_source_split": "train",
+            "name": dataset_name,
+            "evaluation_split": str(get_val("evaluation_split", "test")).lower(),
+            "context_source_split": str(get_val("context_source_split", "train")).lower(),
             "evaluation_size": eval_size
         },
         "execution": {

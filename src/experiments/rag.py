@@ -15,9 +15,16 @@ from src.infrastructure.checkpoint import compute_condition_key
 class RAGExperiment(BaseExperiment):
     """Orchestrates Experiment 3: BM25 RAG Extension."""
 
-    def __init__(self, cli_args: Optional[Dict[str, Any]] = None, interactive: bool = False):
+    def __init__(
+        self,
+        experiment_name: Optional[str] = None,
+        cli_args: Optional[Dict[str, Any]] = None,
+        interactive: bool = False
+    ):
+        target_ds = (cli_args or {}).get("dataset") or (cli_args or {}).get("dataset_name") or "gsm8k"
+        exp_name = experiment_name or f"rag_{str(target_ds).lower()}"
         super().__init__(
-            experiment_name="rag_gsm8k",
+            experiment_name=exp_name,
             cli_args=cli_args,
             interactive=interactive
         )
@@ -32,11 +39,12 @@ class RAGExperiment(BaseExperiment):
             if 0 not in self.top_k_options:
                 self.top_k_options = [0] + self.top_k_options
 
+        dataset_name = self.config.get("dataset", {}).get("name", str(target_ds).lower())
         self.strategy = PromptStrategy.ZERO_SHOT_DIRECT
         self.config["top_k_list"] = self.top_k_options
         self.config["strategy"] = self.strategy.value
         self.config["strategies"] = [f"rag_top_{k}" if k > 0 else "zero_shot_direct" for k in self.top_k_options]
-        self.evaluator = get_evaluator(self.config.get("dataset", {}).get("name", "gsm8k"))
+        self.evaluator = get_evaluator(dataset_name)
 
     def run(self) -> Dict[str, Any]:
         dataset_name = self.config.get("dataset", {}).get("name", "gsm8k")

@@ -20,14 +20,21 @@ from src.infrastructure.checkpoint import compute_condition_key
 class PrimaryExperiment(BaseExperiment):
     """Orchestrates Experiment 1: Prompting Strategy Comparison."""
 
-    def __init__(self, cli_args: Optional[Dict[str, Any]] = None, interactive: bool = False):
+    def __init__(
+        self,
+        experiment_name: Optional[str] = None,
+        cli_args: Optional[Dict[str, Any]] = None,
+        interactive: bool = False
+    ):
+        target_ds = (cli_args or {}).get("dataset") or (cli_args or {}).get("dataset_name") or "gsm8k"
+        exp_name = experiment_name or f"primary_exp_{str(target_ds).lower()}"
         super().__init__(
-            experiment_name="primary_exp_gsm8k",
+            experiment_name=exp_name,
             cli_args=cli_args,
             interactive=interactive
         )
 
-        dataset_name = self.config.get("dataset", {}).get("name", "gsm8k")
+        dataset_name = self.config.get("dataset", {}).get("name", str(target_ds).lower())
         if dataset_name in DATASET_PROMPT_REGISTRY:
             supported = list(DATASET_PROMPT_REGISTRY[dataset_name].keys())
             self.strategies = [s for s in [
@@ -51,7 +58,7 @@ class PrimaryExperiment(BaseExperiment):
         # Record prompt hash in config
         self.config["strategies"] = [s.value for s in self.strategies]
         self.config["prompt_hash"] = get_prompt_hash()
-        self.evaluator = get_evaluator(self.config.get("dataset", {}).get("name", "gsm8k"))
+        self.evaluator = get_evaluator(dataset_name)
 
     def run(self) -> Dict[str, Any]:
         dataset_name = self.config.get("dataset", {}).get("name", "gsm8k")

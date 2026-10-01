@@ -15,11 +15,12 @@ class OllamaBackend(ModelBackend):
     exact prompt/eval token metrics and streaming TTFT.
     """
 
-    def __init__(self, model_name: str, host: Optional[str] = None, **kwargs):
+    def __init__(self, model_name: str, host: Optional[str] = None, think: Optional[bool] = False, **kwargs):
         super().__init__(model_name=model_name, **kwargs)
         self.host = host
         self.client = ollama.Client(host=host) if host else ollama
         self.model_info: Dict[str, Any] = {}
+        self.think = think
 
     def load_model(self) -> None:
         """Verifies that the requested model is available locally in Ollama."""
@@ -72,7 +73,8 @@ class OllamaBackend(ModelBackend):
         seed: Optional[int] = 42,
         top_p: float = 1.0,
         stream: bool = True,
-        prompt: Optional[Any] = None
+        prompt: Optional[Any] = None,
+        think: Optional[bool] = None
     ) -> InferenceOutput:
         messages = self._normalize_messages(messages, prompt)
         if not self.is_loaded:
@@ -86,6 +88,8 @@ class OllamaBackend(ModelBackend):
             options["num_predict"] = int(max_tokens)
         if seed is not None:
             options["seed"] = int(seed)
+
+        use_think = think if think is not None else self.think
 
         start_time = time.perf_counter()
         first_token_time: Optional[float] = None
@@ -101,12 +105,20 @@ class OllamaBackend(ModelBackend):
 
         try:
             if stream:
-                stream_resp = self.client.chat(
-                    model=self.model_name,
-                    messages=messages,
-                    options=options,
-                    stream=True
-                )
+                chat_kwargs: Dict[str, Any] = {
+                    "model": self.model_name,
+                    "messages": messages,
+                    "options": options,
+                    "stream": True
+                }
+                if use_think is not None:
+                    chat_kwargs["think"] = bool(use_think)
+                try:
+                    stream_resp = self.client.chat(**chat_kwargs)
+                except TypeError:
+                    chat_kwargs.pop("think", None)
+                    stream_resp = self.client.chat(**chat_kwargs)
+
                 for chunk in stream_resp:
                     now = time.perf_counter()
                     dr = getattr(chunk, "done_reason", None)
@@ -142,12 +154,20 @@ class OllamaBackend(ModelBackend):
                     if ed is not None:
                         final_eval_duration_ns = ed
             else:
-                resp = self.client.chat(
-                    model=self.model_name,
-                    messages=messages,
-                    options=options,
-                    stream=False
-                )
+                chat_kwargs: Dict[str, Any] = {
+                    "model": self.model_name,
+                    "messages": messages,
+                    "options": options,
+                    "stream": False
+                }
+                if use_think is not None:
+                    chat_kwargs["think"] = bool(use_think)
+                try:
+                    resp = self.client.chat(**chat_kwargs)
+                except TypeError:
+                    chat_kwargs.pop("think", None)
+                    resp = self.client.chat(**chat_kwargs)
+
                 first_token_time = time.perf_counter()
                 raw_done_reason = getattr(resp, "done_reason", None)
                 msg = getattr(resp, "message", None)

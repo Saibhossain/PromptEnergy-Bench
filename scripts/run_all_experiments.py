@@ -207,6 +207,19 @@ def main():
         action="store_false",
         help="Disable automatic post-run comparison generation"
     )
+    parser.add_argument(
+        "--think", "--thinking",
+        dest="think",
+        action="store_true",
+        default=False,
+        help="Enable internal thinking/reasoning for models that support it (default: False for fair prompt strategy benchmarking)"
+    )
+    parser.add_argument(
+        "--no-think", "--no-thinking",
+        dest="think",
+        action="store_false",
+        help="Explicitly disable internal model thinking mode in Ollama"
+    )
 
     args = parser.parse_args()
 
@@ -280,7 +293,8 @@ def main():
                 "skip_existing": args.skip_existing,
                 "resume": args.resume,
                 "interactive": False,
-                "non_interactive": True
+                "non_interactive": True,
+                "think": args.think
             }
 
             # 1. Experiment 1: Prompting Strategy Comparison
@@ -290,6 +304,7 @@ def main():
                 print(f"\n--- [{step_idx}/{total_matrix_steps}] Running Experiment 1: Prompting Strategies ({model_name} on {dataset_name}) ---")
                 try:
                     exp1 = PrimaryExperiment(
+                        experiment_name=exp_label,
                         cli_args=base_cli_args,
                         interactive=False
                     )
@@ -312,6 +327,7 @@ def main():
                 ctx_args["context_type"] = "relevant"
                 try:
                     exp2 = ContextScalingExperiment(
+                        experiment_name=exp_label,
                         cli_args=ctx_args,
                         interactive=False
                     )
@@ -334,6 +350,7 @@ def main():
                 rag_args["include_baseline"] = True
                 try:
                     exp3 = RAGExperiment(
+                        experiment_name=exp_label,
                         cli_args=rag_args,
                         interactive=False
                     )
