@@ -1,0 +1,12 @@
+[2026-09-29 18:59:10] [INFO] Initialized Experiment: rag_cnn_dailymail
+[2026-09-29 18:59:10] [INFO] Run ID: rag_cnn_dailymail__windows_10core_pc__2026-09-29_18-59-10
+[2026-09-29 18:59:10] [INFO] Run Directory: results\rag_cnn_dailymail\windows_10core_pc\2026-09-29_18-59-10
+[2026-09-29 18:59:10] [INFO] Model: qwen3.5:0.8b (Backend: ollama, Format: gguf)
+[2026-09-29 18:59:10] [INFO] Device: windows_10core_pc
+[2026-09-29 18:59:10] [INFO] Evaluation Size: 10 (Evaluation Split: TEST)
+[2026-09-29 18:59:10] [INFO] Initializing BM25 Index over cnn_dailymail TRAIN corpus (Evaluation on TEST split)...
+[2026-09-29 19:02:37] [INFO] Executing 1 warmup run(s)...
+[2026-09-29 19:02:41] [INFO] Warmup 1/1 completed.
+[2026-09-30 11:22:55] [INFO] Experiment completed. Summary saved to results\rag_cnn_dailymail\windows_10core_pc\2026-09-29_18-59-10\summary.json
+[2026-09-30 11:22:56] [INFO] Generated publication tables in results\rag_cnn_dailymail\windows_10core_pc\2026-09-29_18-59-10\tables
+[2026-09-30 11:23:24] [INFO] Generated publication plots in results\rag_cnn_dailymail\windows_10core_pc\2026-09-29_18-59-10

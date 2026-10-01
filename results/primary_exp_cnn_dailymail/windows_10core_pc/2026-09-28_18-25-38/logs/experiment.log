@@ -1,0 +1,14 @@
+[2026-09-28 18:25:38] [INFO] Initialized Experiment: primary_exp_cnn_dailymail
+[2026-09-28 18:25:38] [INFO] Run ID: primary_exp_cnn_dailymail__windows_10core_pc__2026-09-28_18-25-38
+[2026-09-28 18:25:38] [INFO] Run Directory: results\primary_exp_cnn_dailymail\windows_10core_pc\2026-09-28_18-25-38
+[2026-09-28 18:25:38] [INFO] Model: qwen3.5:2b (Backend: ollama, Format: gguf)
+[2026-09-28 18:25:38] [INFO] Device: windows_10core_pc
+[2026-09-28 18:25:38] [INFO] Evaluation Size: 10 (Evaluation Split: TEST)
+[2026-09-28 18:25:38] [INFO] Loading cnn_dailymail evaluation dataset (test split)...
+[2026-09-28 18:25:39] [INFO] Loaded 10 evaluation examples.
+[2026-09-28 18:25:39] [INFO] Executing 1 warmup run(s)...
+[2026-09-28 18:25:47] [INFO] Warmup 1/1 completed.
+[2026-09-28 18:25:47] [INFO] Beginning main evaluation across 50 inference requests...
+[2026-09-28 19:17:50] [INFO] Experiment completed. Summary saved to results\primary_exp_cnn_dailymail\windows_10core_pc\2026-09-28_18-25-38\summary.json
+[2026-09-28 19:17:51] [INFO] Generated publication tables in results\primary_exp_cnn_dailymail\windows_10core_pc\2026-09-28_18-25-38\tables
+[2026-09-28 19:18:06] [INFO] Generated publication plots in results\primary_exp_cnn_dailymail\windows_10core_pc\2026-09-28_18-25-38

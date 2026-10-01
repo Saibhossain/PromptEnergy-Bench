@@ -1,0 +1,14 @@
+\begin{table}
+\caption{Energy-Accuracy-Latency Trade-off and Pareto Frontier Analysis}
+\label{tab:tradeoff_comparison}
+\begin{tabular}{lllllllll}
+\toprule
+Strategy & Total Accuracy & Energy (J) & Latency (ms) & Thinking Tokens & Pareto Optimal & Accuracy Gain vs Baseline & Energy Increase vs Baseline & Latency Increase vs Baseline \\
+\midrule
+Zero-shot Direct & 0.00\% & 579.1298 & 14263.1 & 256 & Yes & Baseline & Baseline & Baseline \\
+BM25 RAG (top-1) & 0.00\% & 619.1679 & 15026.5 & 256 & No & +0.00 pp & +40.0381 J & +763.3 ms \\
+BM25 RAG (top-3) & 0.00\% & 663.3688 & 16068.1 & 256 & No & +0.00 pp & +84.2390 J & +1805.0 ms \\
+BM25 RAG (top-5) & 0.00\% & 698.2542 & 16887.5 & 256 & No & +0.00 pp & +119.1244 J & +2624.4 ms \\
+\bottomrule
+\end{tabular}
+\end{table}

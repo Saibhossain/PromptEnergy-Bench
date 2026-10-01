@@ -1,0 +1,12 @@
+[2026-09-29 16:16:39] [INFO] Initialized Experiment: rag_natural_questions
+[2026-09-29 16:16:39] [INFO] Run ID: rag_natural_questions__windows_10core_pc__2026-09-29_16-16-39
+[2026-09-29 16:16:39] [INFO] Run Directory: results\rag_natural_questions\windows_10core_pc\2026-09-29_16-16-39
+[2026-09-29 16:16:39] [INFO] Model: qwen3.5:0.8b (Backend: ollama, Format: gguf)
+[2026-09-29 16:16:39] [INFO] Device: windows_10core_pc
+[2026-09-29 16:16:39] [INFO] Evaluation Size: 10 (Evaluation Split: TEST)
+[2026-09-29 16:16:39] [INFO] Initializing BM25 Index over natural_questions TRAIN corpus (Evaluation on TEST split)...
+[2026-09-29 16:16:52] [INFO] Executing 1 warmup run(s)...
+[2026-09-29 16:16:55] [INFO] Warmup 1/1 completed.
+[2026-09-29 16:33:42] [INFO] Experiment completed. Summary saved to results\rag_natural_questions\windows_10core_pc\2026-09-29_16-16-39\summary.json
+[2026-09-29 16:33:42] [INFO] Generated publication tables in results\rag_natural_questions\windows_10core_pc\2026-09-29_16-16-39\tables
+[2026-09-29 16:33:57] [INFO] Generated publication plots in results\rag_natural_questions\windows_10core_pc\2026-09-29_16-16-39

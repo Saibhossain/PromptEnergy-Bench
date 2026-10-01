@@ -1,0 +1,14 @@
+[2026-09-30 16:35:09] [INFO] Initialized Experiment: primary_exp_cnn_dailymail
+[2026-09-30 16:35:09] [INFO] Run ID: primary_exp_cnn_dailymail__windows_10core_pc__2026-09-30_16-35-09
+[2026-09-30 16:35:09] [INFO] Run Directory: results\primary_exp_cnn_dailymail\windows_10core_pc\2026-09-30_16-35-09
+[2026-09-30 16:35:09] [INFO] Model: gemma3:4b (Backend: ollama, Format: gguf)
+[2026-09-30 16:35:09] [INFO] Device: windows_10core_pc
+[2026-09-30 16:35:09] [INFO] Evaluation Size: 10 (Evaluation Split: TEST)
+[2026-09-30 16:35:09] [INFO] Loading cnn_dailymail evaluation dataset (test split)...
+[2026-09-30 16:35:10] [INFO] Loaded 10 evaluation examples.
+[2026-09-30 16:35:10] [INFO] Executing 1 warmup run(s)...
+[2026-09-30 16:35:12] [INFO] Warmup 1/1 completed.
+[2026-09-30 16:35:12] [INFO] Beginning main evaluation across 50 inference requests...
+[2026-09-30 17:27:07] [INFO] Experiment completed. Summary saved to results\primary_exp_cnn_dailymail\windows_10core_pc\2026-09-30_16-35-09\summary.json
+[2026-09-30 17:27:07] [INFO] Generated publication tables in results\primary_exp_cnn_dailymail\windows_10core_pc\2026-09-30_16-35-09\tables
+[2026-09-30 17:27:22] [INFO] Generated publication plots in results\primary_exp_cnn_dailymail\windows_10core_pc\2026-09-30_16-35-09

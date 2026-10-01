@@ -1,0 +1,26 @@
+{
+    "run_id": "primary_exp_natural_questions__windows_10core_pc__2026-09-28_14-07-55",
+    "source_results_file": "C:\\Users\\saib\\saib_code\\GreenComputin\\results\\primary_exp_natural_questions\\windows_10core_pc\\2026-09-28_14-07-55\\results.jsonl",
+    "plot_generation_timestamp": "2026-09-28 14:50:14",
+    "models": [
+        "qwen3.5:2b"
+    ],
+    "devices": [],
+    "strategies": [
+        "zero_shot_direct",
+        "few_shot_3",
+        "zero_shot_cot",
+        "short_cot",
+        "long_cot"
+    ],
+    "sample_count": 50,
+    "repetitions": 1,
+    "plot_version": "2.0-research",
+    "plot_config": {
+        "dpi": 300,
+        "font_scale": 1.15,
+        "context": "paper",
+        "style": "whitegrid",
+        "palette": "colorblind"
+    }
+}

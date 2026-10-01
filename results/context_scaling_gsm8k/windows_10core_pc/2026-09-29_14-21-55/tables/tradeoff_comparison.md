@@ -1,0 +1,9 @@
+# Energy-Accuracy-Latency Trade-off and Pareto Frontier Analysis
+
+| Strategy            | Total Accuracy   |   Energy (J) |   Latency (ms) |   Thinking Tokens | Pareto Optimal   | Accuracy Gain vs Baseline   | Energy Increase vs Baseline   | Latency Increase vs Baseline   |
+|:--------------------|:-----------------|-------------:|---------------:|------------------:|:-----------------|:----------------------------|:------------------------------|:-------------------------------|
+| Context 0 tokens    | 0.00%            |      1177.01 |        29303.2 |               512 | Yes              | Baseline                    | Baseline                      | Baseline                       |
+| Context 512 tokens  | 0.00%            |      1492.89 |        34723.8 |               512 | No               | +0.00 pp                    | +315.8794 J                   | +5420.6 ms                     |
+| Context 1024 tokens | 0.00%            |      1780.63 |        41771.1 |               512 | No               | +0.00 pp                    | +603.6190 J                   | +12467.9 ms                    |
+| Context 2048 tokens | 0.00%            |      2186.91 |        51378.9 |               512 | No               | +0.00 pp                    | +1009.8952 J                  | +22075.8 ms                    |
+| Context 4096 tokens | 0.00%            |      2304.34 |        53763.4 |               512 | No               | +0.00 pp                    | +1127.3329 J                  | +24460.3 ms                    |

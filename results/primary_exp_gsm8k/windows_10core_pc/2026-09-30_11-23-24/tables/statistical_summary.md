@@ -1,0 +1,39 @@
+# Statistical Summary Across Prompting Strategies
+
+| Strategy         | Metric                  | Mean     | Median   | Standard Deviation   | 95% Confidence Interval   |
+|:-----------------|:------------------------|:---------|:---------|:---------------------|:--------------------------|
+| Zero-shot Direct | Total Accuracy          | 0.20     | 0.00     | 0.42                 | N/A (n=1)                 |
+| Zero-shot Direct | Energy (J)              | 276.30   | 179.47   | 246.24               | N/A (n=1)                 |
+| Zero-shot Direct | Total Latency (ms)      | 9378.63  | 5922.15  | 8617.00              | N/A (n=1)                 |
+| Zero-shot Direct | Generation Latency (ms) | 4811.33  | 875.00   | 8831.45              | N/A (n=1)                 |
+| Zero-shot Direct | TTFT (ms)               | 4567.30  | 4297.03  | 947.46               | N/A (n=1)                 |
+| Zero-shot Direct | Thinking Tokens         | N/A      | N/A      | N/A                  | N/A                       |
+| Zero-shot Direct | Output Tokens           | 44.00    | 9.00     | 78.16                | N/A (n=1)                 |
+| Few-shot (3)     | Total Accuracy          | 0.30     | 0.00     | 0.48                 | N/A (n=1)                 |
+| Few-shot (3)     | Energy (J)              | 428.77   | 343.07   | 297.87               | N/A (n=1)                 |
+| Few-shot (3)     | Total Latency (ms)      | 12876.35 | 10037.77 | 8467.90              | N/A (n=1)                 |
+| Few-shot (3)     | Generation Latency (ms) | 3280.76  | 587.94   | 8526.55              | N/A (n=1)                 |
+| Few-shot (3)     | TTFT (ms)               | 9595.59  | 9334.87  | 798.88               | N/A (n=1)                 |
+| Few-shot (3)     | Thinking Tokens         | N/A      | N/A      | N/A                  | N/A                       |
+| Few-shot (3)     | Output Tokens           | 28.90    | 6.00     | 72.43                | N/A (n=1)                 |
+| Zero-shot CoT    | Total Accuracy          | 0.80     | 1.00     | 0.42                 | N/A (n=1)                 |
+| Zero-shot CoT    | Energy (J)              | 1388.21  | 1162.08  | 655.87               | N/A (n=1)                 |
+| Zero-shot CoT    | Total Latency (ms)      | 37533.79 | 31648.64 | 17185.30             | N/A (n=1)                 |
+| Zero-shot CoT    | Generation Latency (ms) | 32899.62 | 26719.01 | 16709.61             | N/A (n=1)                 |
+| Zero-shot CoT    | TTFT (ms)               | 4634.17  | 4639.31  | 815.12               | N/A (n=1)                 |
+| Zero-shot CoT    | Thinking Tokens         | N/A      | N/A      | N/A                  | N/A                       |
+| Zero-shot CoT    | Output Tokens           | 297.20   | 244.50   | 146.85               | N/A (n=1)                 |
+| Short CoT        | Total Accuracy          | 0.70     | 1.00     | 0.48                 | N/A (n=1)                 |
+| Short CoT        | Energy (J)              | 612.90   | 559.01   | 154.09               | N/A (n=1)                 |
+| Short CoT        | Total Latency (ms)      | 15809.97 | 14387.95 | 4082.70              | N/A (n=1)                 |
+| Short CoT        | Generation Latency (ms) | 11029.71 | 9850.99  | 3316.70              | N/A (n=1)                 |
+| Short CoT        | TTFT (ms)               | 4780.26  | 4625.42  | 918.74               | N/A (n=1)                 |
+| Short CoT        | Thinking Tokens         | N/A      | N/A      | N/A                  | N/A                       |
+| Short CoT        | Output Tokens           | 101.20   | 90.50    | 29.90                | N/A (n=1)                 |
+| Long CoT         | Total Accuracy          | 0.70     | 1.00     | 0.48                 | N/A (n=1)                 |
+| Long CoT         | Energy (J)              | 2298.75  | 1782.25  | 1290.04              | N/A (n=1)                 |
+| Long CoT         | Total Latency (ms)      | 57949.11 | 45112.63 | 31937.00             | N/A (n=1)                 |
+| Long CoT         | Generation Latency (ms) | 53391.21 | 40893.59 | 31578.21             | N/A (n=1)                 |
+| Long CoT         | TTFT (ms)               | 4557.90  | 4443.26  | 794.15               | N/A (n=1)                 |
+| Long CoT         | Thinking Tokens         | N/A      | N/A      | N/A                  | N/A                       |
+| Long CoT         | Output Tokens           | 470.30   | 378.00   | 262.67               | N/A (n=1)                 |

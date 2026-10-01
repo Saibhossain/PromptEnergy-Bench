@@ -1,0 +1,15 @@
+\begin{table}
+\caption{Prompt Strategy Performance and Energy Breakdown on DATASET}
+\label{tab:strategy_comparison}
+\begin{tabular}{llllllllllllllllllllllllll}
+\toprule
+Strategy & Total Accuracy (\%) & Valid Accuracy (\%) & Valid Samples & Input Tokens & Thinking Tokens & Visible Output Tokens & Total Output Tokens & Total Energy (J) & Prefill Energy (J) & Decode Energy (J) & Prefill Share (\%) & Decode Share (\%) & Prefill (mJ/tok) & Decode (mJ/tok) & Prefill TPS (tok/s) & Decode TPS (tok/s) & TTFT (ms) & Generation Latency (ms) & Total Latency (ms) & Mean CPU (\%) & Peak CPU (\%) & RAM (GB) & Energy / Correct (J) & Accuracy / Joule & Truncation Rate (\%) \\
+\midrule
+Zero-shot Direct & 0.00 & 0.00 & 10/10 & 72.9 & N/A & 20.5 & 20.5 & 168.0961 & 86.9573 & 81.1388 & 51.7 & 48.3 & 1192.83 & 3957.99 & 32.5 & 11.82 & 2260.2 & 2113.4 & 4373.6 & 58.2 & 100.0 & 17.87 & N/A & 0.0000 & 0.0 \\
+Few-shot (3) & 0.00 & 0.00 & 10/10 & 143.9 & N/A & 5.7 & 5.7 & 191.5073 & 172.1666 & 19.3407 & 89.9 & 10.1 & 1196.43 & 3393.11 & 31.9 & 13.96 & 4508.0 & 504.6 & 5012.6 & 58.0 & 100.0 & 17.97 & N/A & 0.0000 & 0.0 \\
+Zero-shot CoT & 0.00 & 0.00 & 10/10 & 75.9 & N/A & 257.2 & 257.2 & 1190.1364 & 104.7481 & 1085.3883 & 8.8 & 91.2 & 1380.08 & 4220.02 & 28.5 & 9.37 & 2664.6 & 27617.0 & 30281.5 & 55.5 & 100.0 & 18.11 & N/A & 0.0000 & 0.0 \\
+Short CoT & 0.00 & 0.00 & 10/10 & 78.9 & N/A & 35.3 & 35.3 & 254.4257 & 108.2576 & 146.1681 & 42.5 & 57.5 & 1372.09 & 4140.74 & 29.1 & 9.66 & 2710.1 & 3658.4 & 6368.6 & 56.7 & 100.0 & 18.33 & N/A & 0.0000 & 0.0 \\
+Long CoT & 0.00 & 0.00 & 5/10 & 79.9 & N/A & 956.2 & 956.2 & 4492.5516 & 109.7435 & 4382.8079 & 2.4 & 97.6 & 1373.51 & 4583.57 & 29.7 & 8.88 & 2701.0 & 107837.2 & 110538.2 & 55.0 & 100.0 & 18.30 & N/A & 0.0000 & 50.0 \\
+\bottomrule
+\end{tabular}
+\end{table}

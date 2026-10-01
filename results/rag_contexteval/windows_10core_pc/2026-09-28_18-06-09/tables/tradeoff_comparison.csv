@@ -1,0 +1,5 @@
+Strategy,Total Accuracy,Energy (J),Latency (ms),Thinking Tokens,Pareto Optimal,Accuracy Gain vs Baseline,Energy Increase vs Baseline,Latency Increase vs Baseline
+Zero-shot Direct,0.00%,977.3254,23886.9,256,Yes,Baseline,Baseline,Baseline
+BM25 RAG (top-1),0.00%,1076.4371,25871.7,256,No,+0.00 pp,+99.1117 J,+1984.8 ms
+BM25 RAG (top-3),0.00%,1153.0164,27658.4,256,No,+0.00 pp,+175.6910 J,+3771.5 ms
+BM25 RAG (top-5),0.00%,1230.2315,29714.8,256,No,+0.00 pp,+252.9061 J,+5827.9 ms

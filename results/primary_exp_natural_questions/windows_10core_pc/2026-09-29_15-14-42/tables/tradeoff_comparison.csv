@@ -1,0 +1,6 @@
+Strategy,Total Accuracy,Energy (J),Latency (ms),Thinking Tokens,Pareto Optimal,Accuracy Gain vs Baseline,Energy Increase vs Baseline,Latency Increase vs Baseline
+Zero-shot Direct,0.00%,574.7412,14484.6,256,Yes,Baseline,Baseline,Baseline
+Few-shot (3),0.00%,636.8684,15589.0,256,No,+0.00 pp,+62.1272 J,+1104.5 ms
+Zero-shot CoT,0.00%,1203.1743,28715.4,512,No,+0.00 pp,+628.4331 J,+14230.8 ms
+Short CoT,0.00%,1224.9224,28840.0,512,No,+0.00 pp,+650.1812 J,+14355.4 ms
+Long CoT,0.00%,2427.0881,56842.8,1024,No,+0.00 pp,+1852.3469 J,+42358.2 ms

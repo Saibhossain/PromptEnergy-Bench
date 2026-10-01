@@ -1,0 +1,13 @@
+[2026-09-29 16:59:52] [INFO] Initialized Experiment: context_scaling_contexteval
+[2026-09-29 16:59:52] [INFO] Run ID: context_scaling_contexteval__windows_10core_pc__2026-09-29_16-59-51
+[2026-09-29 16:59:52] [INFO] Run Directory: results\context_scaling_contexteval\windows_10core_pc\2026-09-29_16-59-51
+[2026-09-29 16:59:52] [INFO] Model: qwen3.5:0.8b (Backend: ollama, Format: gguf)
+[2026-09-29 16:59:52] [INFO] Device: windows_10core_pc
+[2026-09-29 16:59:52] [INFO] Evaluation Size: 10 (Evaluation Split: TEST)
+[2026-09-29 16:59:52] [INFO] Loading contexteval (train split) for Context Corpus...
+[2026-09-29 16:59:52] [INFO] Loading contexteval (test split) for Evaluation...
+[2026-09-29 16:59:52] [INFO] Executing 1 warmup run(s)...
+[2026-09-29 16:59:56] [INFO] Warmup 1/1 completed.
+[2026-09-29 17:36:30] [INFO] Experiment completed. Summary saved to results\context_scaling_contexteval\windows_10core_pc\2026-09-29_16-59-51\summary.json
+[2026-09-29 17:36:31] [INFO] Generated publication tables in results\context_scaling_contexteval\windows_10core_pc\2026-09-29_16-59-51\tables
+[2026-09-29 17:36:46] [INFO] Generated publication plots in results\context_scaling_contexteval\windows_10core_pc\2026-09-29_16-59-51

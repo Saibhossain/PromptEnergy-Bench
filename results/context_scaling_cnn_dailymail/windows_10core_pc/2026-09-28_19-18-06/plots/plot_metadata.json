@@ -1,0 +1,26 @@
+{
+    "run_id": "context_scaling_cnn_dailymail__windows_10core_pc__2026-09-28_19-18-06",
+    "source_results_file": "C:\\Users\\saib\\saib_code\\GreenComputin\\results\\context_scaling_cnn_dailymail\\windows_10core_pc\\2026-09-28_19-18-06\\results.jsonl",
+    "plot_generation_timestamp": "2026-09-28 20:21:17",
+    "models": [
+        "qwen3.5:2b"
+    ],
+    "devices": [],
+    "strategies": [
+        "ctx_0",
+        "ctx_512",
+        "ctx_1024",
+        "ctx_2048",
+        "ctx_4096"
+    ],
+    "sample_count": 50,
+    "repetitions": 1,
+    "plot_version": "2.0-research",
+    "plot_config": {
+        "dpi": 300,
+        "font_scale": 1.15,
+        "context": "paper",
+        "style": "whitegrid",
+        "palette": "colorblind"
+    }
+}

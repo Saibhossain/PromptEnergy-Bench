@@ -1,0 +1,12 @@
+[2026-09-28 18:06:10] [INFO] Initialized Experiment: rag_contexteval
+[2026-09-28 18:06:10] [INFO] Run ID: rag_contexteval__windows_10core_pc__2026-09-28_18-06-09
+[2026-09-28 18:06:10] [INFO] Run Directory: results\rag_contexteval\windows_10core_pc\2026-09-28_18-06-09
+[2026-09-28 18:06:10] [INFO] Model: qwen3.5:2b (Backend: ollama, Format: gguf)
+[2026-09-28 18:06:10] [INFO] Device: windows_10core_pc
+[2026-09-28 18:06:10] [INFO] Evaluation Size: 10 (Evaluation Split: TEST)
+[2026-09-28 18:06:10] [INFO] Initializing BM25 Index over contexteval TRAIN corpus (Evaluation on TEST split)...
+[2026-09-28 18:06:10] [INFO] Executing 1 warmup run(s)...
+[2026-09-28 18:06:18] [INFO] Warmup 1/1 completed.
+[2026-09-28 18:25:23] [INFO] Experiment completed. Summary saved to results\rag_contexteval\windows_10core_pc\2026-09-28_18-06-09\summary.json
+[2026-09-28 18:25:23] [INFO] Generated publication tables in results\rag_contexteval\windows_10core_pc\2026-09-28_18-06-09\tables
+[2026-09-28 18:25:38] [INFO] Generated publication plots in results\rag_contexteval\windows_10core_pc\2026-09-28_18-06-09
