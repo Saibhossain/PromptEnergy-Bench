@@ -45,114 +45,245 @@ For verbatim prompt templates and strategy definitions across all 4 datasets, se
 
 ## 3. Supported Hardware Profiles & Telemetry Adapters
 
-| Platform / Environment | Telemetry Adapter | Measurement Level | Telemetry Resolution | Measurement Interface |
-| :--- | :--- | :--- | :--- | :--- |
-| **macOS (Apple Silicon M1/M2/M3)** | `apple_powermetrics` | Hardware Reported (Full SoC) | 100 ms | `/usr/bin/powermetrics` register counters |
-| **Windows with NVIDIA GPU** | `nvidia_nvml` / `codecarbon` | Hardware Reported (GPU Package) | 10 ms | NVML (`nvidia-ml-py`) power integration |
-| **Windows (CPU-Only / Intel / AMD)** | `rapl` / `codecarbon_estimated` | Software/RAPL Estimated (CPU Package) | 100 ms | Intel/AMD MSR power estimation + `psutil` |
-| **Linux (x86 Server + NVIDIA GPU)** | `rapl` + `nvidia_nvml` | Hardware Reported (CPU + GPU) | Microsecond / 10 ms | `/sys/class/powercap` + NVML |
+| Platform / Environment | Telemetry Adapter | Measurement Level | Telemetry Resolution | Measurement Interface | Hardware Flag |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Windows (CPU-Only / Intel / AMD)** | `rapl` / `codecarbon_estimated` | Software/RAPL Estimated (CPU Package) | 100 ms | Intel/AMD MSR power estimation + `psutil` | `--hardware windows_10core_pc` |
+| **Windows with NVIDIA GPU** | `nvidia_nvml` / `codecarbon` | Hardware Reported (GPU Package) | 10 ms | NVML (`nvidia-ml-py`) power integration | `--hardware windows_cuda_pc` |
+| **Google Colab (NVIDIA T4 / A100 GPU)** | `nvidia_nvml` | Hardware Reported (GPU Package) | 10 ms | NVML (`nvidia-ml-py`) power integration | `--hardware colab_t4_gpu` |
+| **macOS (Apple Silicon M1/M2/M3)** | `apple_powermetrics` | Hardware Reported (Full SoC) | 100 ms | `/usr/bin/powermetrics` register counters | `--hardware macbook_air_m1` |
+| **Linux (x86 Server + NVIDIA GPU)** | `rapl` + `nvidia_nvml` | Hardware Reported (CPU + GPU) | Microsecond / 10 ms | `/sys/class/powercap` + NVML | `--hardware generic_cuda_server` |
 
 ---
 
-## 4. How to Run Experiments
+## 4. How to Run the Exact Same Experiment on Any Device
 
-The primary execution entry point is `scripts/run_all_experiments.py`, which orchestrates all 3 benchmark experiment modules:
+The master execution entry point is `scripts/run_all_experiments.py`, which orchestrates all 3 benchmark experiment modules:
 1. **Experiment 1: Prompting Strategies** (`zero_shot_direct`, `few_shot_3`, `zero_shot_cot`, `short_cot`, `long_cot`)
 2. **Experiment 2: Context Scaling** (`ctx_0`, `ctx_512`, `ctx_1024`, `ctx_2048`, `ctx_4096`, `ctx_8192`)
 3. **Experiment 3: Retrieval-Augmented Generation** (`rag_top_1`, `rag_top_3`, `rag_top_5`)
 
+The standard experiment evaluates **3 core models** (`qwen3.5:2b`, `qwen3.5:0.8b`, `gemma3:4b`) across **all 4 benchmark datasets** (`gsm8k`, `natural_questions`, `contexteval`, `cnn_dailymail`).
+
 ---
 
-### Step 1: Environment Setup
+### Step 1: Environment Setup & Model Pulling
+
+Ensure Ollama is running, then pull the benchmark models:
 
 ```bash
-# 1. Create and activate Python virtual environment
-python3 -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\Activate.ps1
-
-# 2. Install dependencies
-pip install -r requirements.txt
-
-# 3. Pull target models via Ollama
-ollama pull qwen3.5:0.8b
+# Pull the 3 standard benchmark models
 ollama pull qwen3.5:2b
-```
+ollama pull qwen3.5:0.8b
+ollama pull gemma3:4b
 
-#### macOS Passwordless Telemetry Setup
-On macOS (Apple Silicon), enable non-interactive energy sampling via `powermetrics`:
-```bash
-sudo visudo
-# Add this line at the bottom of the file (replace <your_username> with your macOS username):
-<your_username> ALL=(ALL) NOPASSWD: /usr/bin/powermetrics
+# Verify active models
+ollama list
 ```
 
 ---
 
-### Step 2: Quick Smoke Test (Verify Pipeline)
+### Step 2: Multi-Platform Execution Guide
 
-Run a fast validation on **10 samples per dataset** across all 4 benchmark datasets:
+#### A. Windows PC (CPU-Only / Standard x86 PC)
+Run from PowerShell inside your activated virtual environment:
 
-```bash
-./.venv/bin/python scripts/run_all_experiments.py \
-    --hardware macbook_air_m1 \
-    --models "qwen3.5:0.8b-mlx" \
-    --dataset all \
-    --eval-size 10
-```
+```powershell
+# Quick Validation Test (10 samples per dataset)
+python scripts/run_all_experiments.py `
+    --hardware windows_10core_pc `
+    --models "qwen3.5:2b,qwen3.5:0.8b,gemma3:4b" `
+    --dataset all `
+    --experiment all `
+    --eval-size 10 `
+    --runs-per-condition 1 `
+    --skip-existing
 
----
-
-### Step 3: Run Full Benchmark Suite
-
-#### A. Full Run on macOS (Apple Silicon M1/M2/M3)
-```bash
-./.venv/bin/python scripts/run_all_experiments.py \
-    --hardware macbook_air_m1 \
-    --models "qwen3.5:0.8b-mlx,qwen3.5:2b-mlx" \
-    --dataset all \
-    --eval-size full \
-    --runs-per-condition 1 \
+# Full Benchmark Run (Full evaluation splits)
+python scripts/run_all_experiments.py `
+    --hardware windows_10core_pc `
+    --models "qwen3.5:2b,qwen3.5:0.8b,gemma3:4b" `
+    --dataset all `
+    --experiment all `
+    --eval-size full `
+    --runs-per-condition 1 `
     --skip-existing
 ```
 
-> **Note on `--skip-existing`**: If your run is interrupted, re-running with `--skip-existing` will automatically resume where it left off, skipping completed conditions.
+> **Convenience Script**: You can also run the PowerShell wrapper directly:
+> ```powershell
+> .\scripts\test_pipeline_run.ps1
+> ```
 
-#### B. Full Run on Windows with NVIDIA GPU (PowerShell)
+---
+
+#### B. Windows PC with Dedicated NVIDIA GPU (CUDA)
+Run from PowerShell with NVML hardware power polling:
+
 ```powershell
 python scripts/run_all_experiments.py `
     --hardware windows_cuda_pc `
-    --models "qwen3.5:0.8b,qwen3.5:2b" `
+    --models "qwen3.5:2b,qwen3.5:0.8b,gemma3:4b" `
     --dataset all `
-    --eval-size full `
+    --experiment all `
+    --eval-size 10 `
     --runs-per-condition 1 `
     --skip-existing
 ```
 
-#### C. Full Run on Windows CPU-Only (PowerShell)
-```powershell
-python scripts/run_all_experiments.py `
-    --hardware windows_10core_pc `
-    --models "qwen3.5:0.8b" `
-    --dataset all `
-    --eval-size full `
-    --runs-per-condition 1 `
+---
+
+#### C. Google Colab (Free NVIDIA T4 / A100 GPU)
+
+In Google Colab, set your runtime to **T4 GPU** (`Runtime -> Change runtime type -> T4 GPU`), then run the following cells:
+
+##### **Cell 1: Install & Start Ollama Daemon**
+```python
+!curl -fsSL https://ollama.com/install.sh | sh
+
+import subprocess, time
+subprocess.Popen(["ollama", "serve"])
+time.sleep(5)
+print("Ollama daemon is running!")
+```
+
+##### **Cell 2: Pull the 3 Models**
+```bash
+!ollama pull qwen3.5:2b
+!ollama pull qwen3.5:0.8b
+!ollama pull gemma3:4b
+!ollama list
+```
+
+##### **Cell 3: Clone Repository & Install Dependencies**
+```bash
+!git clone https://github.com/Saibhossain/PromptEnergy-Bench.git
+%cd PromptEnergy-Bench
+!pip install -r requirements.txt
+```
+
+##### **Cell 4: Execute the Benchmark on Colab**
+```bash
+!python scripts/run_all_experiments.py \
+    --hardware colab_t4_gpu \
+    --models "qwen3.5:2b,qwen3.5:0.8b,gemma3:4b" \
+    --dataset all \
+    --experiment all \
+    --eval-size 10 \
+    --runs-per-condition 1 \
     --skip-existing
 ```
 
-#### D. Full Run on Linux Server (Ubuntu/Debian + NVIDIA GPU)
+##### **Cell 5: Download Colab Results Package**
+```python
+!zip -r colab_results.zip results/
+from google.colab import files
+files.download('colab_results.zip')
+```
+
+---
+
+#### D. macOS (Apple Silicon M1/M2/M3)
+
+1. **Configure Passwordless Telemetry** (once):
+   ```bash
+   sudo visudo
+   # Add at the bottom: <your_username> ALL=(ALL) NOPASSWD: /usr/bin/powermetrics
+   ```
+
+2. **Execute Benchmark**:
+   ```bash
+   ./.venv/bin/python scripts/run_all_experiments.py \
+       --hardware macbook_air_m1 \
+       --models "qwen3.5:2b-mlx,qwen3.5:0.8b-mlx,gemma3:4b" \
+       --dataset all \
+       --experiment all \
+       --eval-size 10 \
+       --runs-per-condition 1 \
+       --skip-existing
+   ```
+
+---
+
+#### E. Linux Server (Ubuntu/Debian + NVIDIA GPU Cluster)
+
 ```bash
 python scripts/run_all_experiments.py \
     --hardware generic_cuda_server \
-    --models "qwen3.5:0.8b,qwen3.5:2b" \
+    --models "qwen3.5:2b,qwen3.5:0.8b,gemma3:4b" \
     --dataset all \
-    --eval-size full \
+    --experiment all \
+    --eval-size 10 \
     --runs-per-condition 1 \
     --skip-existing
 ```
 
 ---
 
-### Step 4: Run Targeted Experiments or Datasets Individually
+### Step 3: Merging Results Across Heterogeneous Devices
+
+Because PromptEnergy-Bench isolates results by normalized hardware slug, results from different devices never collide:
+
+```text
+results/
+├── primary_exp_gsm8k/
+│   ├── windows_10core_pc/     <-- Windows CPU run
+│   ├── colab_t4_gpu/          <-- Google Colab T4 GPU run
+│   └── macbook_air_m1/        <-- Apple Silicon M1 run
+├── context_scaling_gsm8k/
+│   ├── windows_10core_pc/
+│   └── colab_t4_gpu/
+└── rag_gsm8k/
+    ├── windows_10core_pc/
+    └── colab_t4_gpu/
+```
+
+**To merge Google Colab results into your main workspace:**
+1. Extract the downloaded `colab_results.zip` directly into your repository's root `results/` folder.
+2. The `colab_t4_gpu/` subdirectories will sit seamlessly alongside your `windows_10core_pc/` folders.
+3. (Optional) Commit and push the merged results to GitHub:
+   ```bash
+   git add results/
+   git commit -m "Merge Colab T4 GPU benchmark results"
+   git push
+   ```
+
+---
+
+### Step 4: Generating Cross-Hardware Comparison Deliverables
+
+Once multiple hardware folders exist in `results/`, generate cross-hardware comparative tables (CSV, Markdown, LaTeX) and high-resolution figures (PNG 300 DPI, PDF):
+
+```powershell
+python scripts/compare_hardware_results.py `
+    --input-dirs results/ `
+    --output-dir results/hardware_comparison
+```
+
+#### Generated Comparison Deliverables in `results/hardware_comparison/`:
+
+| Deliverable Type | Files Generated | Description | Formats |
+| :--- | :--- | :--- | :--- |
+| **7 Comparison Tables** | `hardware_summary` | Overall system specs, idle power, active power, and throughput | `.csv`, `.md`, `.tex` |
+| | `prompt_strategy_by_hardware` | Energy, latency, and accuracy per strategy across devices | `.csv`, `.md`, `.tex` |
+| | `model_by_hardware` | Cross-model energy consumption and inference speedups | `.csv`, `.md`, `.tex` |
+| | `energy_accuracy_comparison` | Energy efficiency per percentage point of accuracy | `.csv`, `.md`, `.tex` |
+| | `latency_comparison` | TTFT and decode latency across devices | `.csv`, `.md`, `.tex` |
+| | `measurement_method_comparison` | NVML vs. CodeCarbon vs. RAPL telemetry audit | `.csv`, `.md`, `.tex` |
+| | `cross_hardware_energy_ratios` | Relative energy consumption ($E_{\text{device\_A}} / E_{\text{device\_B}}$) | `.csv`, `.md`, `.tex` |
+| **10 Comparison Figures** | `energy_by_hardware_prompt` | Grouped bar chart of energy per prompt strategy by device | `.png`, `.pdf` |
+| | `accuracy_by_hardware_prompt` | Accuracy consistency across hardware platforms | `.png`, `.pdf` |
+| | `ttft_by_hardware_prompt` | Time-to-First-Token prefill latency by hardware | `.png`, `.pdf` |
+| | `latency_by_hardware_prompt` | Total query latency comparison | `.png`, `.pdf` |
+| | `energy_accuracy_by_hardware` | Multi-device Pareto frontiers | `.png`, `.pdf` |
+| | `model_energy_across_hardware` | Energy consumption across model scales and hardware | `.png`, `.pdf` |
+| | `context_scaling_across_hardware`| Context length scaling slopes across devices | `.png`, `.pdf` |
+| | `rag_energy_across_hardware` | Retrieval vs. Generation energy across devices | `.png`, `.pdf` |
+| | `hardware_energy_ratio_plot` | Relative hardware efficiency ratios | `.png`, `.pdf` |
+| | `summary_heatmap` | Normalized multi-dimensional performance heatmap | `.png`, `.pdf` |
+
+---
+
+### Step 5: Run Targeted Experiments or Datasets Individually
 
 You can customize the runner using CLI flags:
 
