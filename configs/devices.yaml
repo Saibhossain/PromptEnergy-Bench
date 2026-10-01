@@ -52,3 +52,16 @@ devices:
     default_energy_method: "codecarbon_estimated"
     default_operator: "ollama"
     default_model_format: "gguf"
+
+  colab_t4_gpu:
+    device_name: "Google Colab T4 GPU"
+    os: "Linux"
+    cpu: "Intel Xeon CPU"
+    gpu_available: true
+    gpu_count: 1
+    gpu_name: "NVIDIA Tesla T4"
+    gpu_vram_gb: 15
+    ram_gb: 12
+    default_energy_method: "nvidia_nvml"
+    default_operator: "ollama"
+    default_model_format: "gguf"

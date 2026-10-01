@@ -221,6 +221,8 @@ def main():
         hw_name = "macbook_air_m1"
     elif hw_name.lower() in ("windows", "windows_x86", "pc"):
         hw_name = "windows_10core_pc"
+    elif hw_name.lower() in ("colab", "colab_gpu", "t4", "colab_t4"):
+        hw_name = "colab_t4_gpu"
 
     models_to_run = resolve_models_list(args.models)
     datasets_to_run = resolve_datasets_list(args.dataset)
