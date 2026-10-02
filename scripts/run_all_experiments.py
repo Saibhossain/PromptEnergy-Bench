@@ -234,8 +234,10 @@ def main():
         hw_name = "macbook_air_m1"
     elif hw_name.lower() in ("windows", "windows_x86", "pc"):
         hw_name = "windows_10core_pc"
-    elif hw_name.lower() in ("colab", "colab_gpu", "t4", "colab_t4"):
+    elif hw_name.lower() in ("colab", "colab_gpu", "t4", "colab_t4", "colab_t4_gpu"):
         hw_name = "colab_t4_gpu"
+    elif hw_name.lower() in ("kaggle", "kaggle_gpu", "kaggle_t4", "kaggle_t4_gpu"):
+        hw_name = "kaggle_t4_gpu"
 
     models_to_run = resolve_models_list(args.models)
     datasets_to_run = resolve_datasets_list(args.dataset)

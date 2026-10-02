@@ -65,3 +65,16 @@ devices:
     default_energy_method: "nvidia_nvml"
     default_operator: "ollama"
     default_model_format: "gguf"
+
+  kaggle_t4_gpu:
+    device_name: "Kaggle T4 GPU"
+    os: "Linux"
+    cpu: "Intel Xeon CPU"
+    gpu_available: true
+    gpu_count: 1
+    gpu_name: "NVIDIA Tesla T4"
+    gpu_vram_gb: 16
+    ram_gb: 30
+    default_energy_method: "nvidia_nvml"
+    default_operator: "ollama"
+    default_model_format: "gguf"
