@@ -1,6 +1,0 @@
-Strategy,Total Accuracy (%),Valid Accuracy (%),Valid Samples,Input Tokens,Thinking Tokens,Visible Output Tokens,Total Output Tokens,Total Energy (J),Prefill Energy (J),Decode Energy (J),Prefill Share (%),Decode Share (%),Prefill (mJ/tok),Decode (mJ/tok),Prefill TPS (tok/s),Decode TPS (tok/s),TTFT (ms),Generation Latency (ms),Total Latency (ms),Mean CPU (%),Peak CPU (%),RAM (GB),Energy / Correct (J),Accuracy / Joule,Truncation Rate (%)
-Zero-shot Direct,0.00,0.00,10/10,81.9,N/A,49.3,49.3,295.9815,104.0285,191.9530,35.1,64.8,1270.19,3893.57,29.8,10.62,2753.2,5108.0,7861.2,56.8,100.0,18.70,N/A,0.0000,0.0
-Few-shot (3),0.00,0.00,9/10,272.9,N/A,44.8,44.8,490.6009,308.1254,182.4756,62.8,37.2,1129.08,4073.12,33.9,11.98,8061.8,4745.1,12807.0,55.4,100.0,18.75,N/A,0.0000,10.0
-Zero-shot CoT,0.00,0.00,5/10,84.9,N/A,388.8,388.8,1762.2749,113.6462,1648.6287,6.5,93.5,1338.59,4240.30,29.5,9.37,2877.6,41737.8,44615.4,54.4,100.0,18.55,N/A,0.0000,50.0
-Short CoT,0.00,0.00,10/10,87.9,N/A,61.2,61.2,367.4802,116.7195,250.7607,31.8,68.2,1327.87,4097.40,29.9,9.78,2935.6,6326.6,9262.2,55.0,100.0,18.52,N/A,0.0000,0.0
-Long CoT,10.00,50.00,2/10,88.9,N/A,951,951,4349.7249,117.8760,4231.8491,2.7,97.3,1325.94,4449.89,30.1,9.00,2947.6,105860.4,108808.0,54.2,100.0,18.53,43497.2493,0.0000,80.0

@@ -222,30 +222,37 @@ def compute_strategy_summary(records: List[Dict[str, Any]], task_type: Optional[
             status_counts[st] = status_counts.get(st, 0) + 1
 
     # Quality metrics
-    correct_count = sum(1 for r in successful if r.get("answer_correct") is True)
+    evaluable_samples = [r for r in successful if r.get("answer_correct") is not None]
+    has_ground_truth = len(evaluable_samples) > 0
+
+    correct_count = sum(1 for r in evaluable_samples if r.get("answer_correct") is True)
     exact_match_count = sum(
-        1 for r in successful
+        1 for r in evaluable_samples
         if r.get("exact_match") is True or (isinstance(r.get("metric_values"), dict) and r["metric_values"].get("exact_match") is True)
     )
 
     # Denominator metrics
-    total_accuracy = round(correct_count / total_requested, 4) if total_requested > 0 else 0.0
-    valid_accuracy = round(correct_count / valid_count, 4) if valid_count > 0 else None
-    exact_match_accuracy = round(exact_match_count / total_requested, 4) if total_requested > 0 else 0.0
+    if not has_ground_truth:
+        total_accuracy = None
+        valid_accuracy = None
+        exact_match_accuracy = None
+        acc_validity = MetricValidityStatus.NO_REFERENCE_ANSWERS
+    else:
+        total_accuracy = round(correct_count / total_requested, 4) if total_requested > 0 else 0.0
+        valid_accuracy = round(correct_count / valid_count, 4) if valid_count > 0 else None
+        exact_match_accuracy = round(exact_match_count / total_requested, 4) if total_requested > 0 else 0.0
+        if total_requested == 0:
+            acc_validity = MetricValidityStatus.NO_REFERENCE_ANSWERS
+        elif valid_count == 0:
+            acc_validity = MetricValidityStatus.INSUFFICIENT_VALID_SAMPLES
+        else:
+            acc_validity = MetricValidityStatus.COMPUTABLE
 
     coverage = round(valid_count / total_requested, 4) if total_requested > 0 else 0.0
     parse_success_rate = round(parse_success_count / total_requested, 4) if total_requested > 0 else 0.0
     truncation_rate = round(truncated_count / total_requested, 4) if total_requested > 0 else 0.0
     completion_rate = round(total_successful / total_requested, 4) if total_requested > 0 else 0.0
     failure_rate = round(total_failed / total_requested, 4) if total_requested > 0 else 0.0
-
-    # Metric validity status
-    if total_requested == 0:
-        acc_validity = MetricValidityStatus.NO_REFERENCE_ANSWERS
-    elif valid_count == 0:
-        acc_validity = MetricValidityStatus.INSUFFICIENT_VALID_SAMPLES
-    else:
-        acc_validity = MetricValidityStatus.COMPUTABLE
 
     # Task-specific metric distributions (F1, ROUGE, BLEU, Pass rate, Refusal rate)
     f1_list, rouge1_list, rouge2_list, rougeL_list, bleu_list, pass_list, refusal_list = [], [], [], [], [], [], []

@@ -1,8 +1,0 @@
-# Marginal Energy Gain (MEG) Relative to Baseline
-
-| Baseline Strategy   | Comparison Strategy   | Accuracy Change   | Energy Change   | Marginal Energy Gain (% / J)   | Latency Change   |
-|:--------------------|:----------------------|:------------------|:----------------|:-------------------------------|:-----------------|
-| Context 0 tokens    | Context 512 tokens    | +0.00 pp          | +463.7122 J     | 0.0000 %/J                     | +9994.0 ms       |
-| Context 0 tokens    | Context 1024 tokens   | +0.00 pp          | +950.4923 J     | 0.0000 %/J                     | +21626.3 ms      |
-| Context 0 tokens    | Context 2048 tokens   | +0.00 pp          | +1819.4859 J    | 0.0000 %/J                     | +40601.4 ms      |
-| Context 0 tokens    | Context 4096 tokens   | +0.00 pp          | +1909.7379 J    | 0.0000 %/J                     | +43625.6 ms      |

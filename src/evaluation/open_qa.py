@@ -58,6 +58,21 @@ def compute_exact_match(prediction: str, ground_truth: str) -> bool:
     return normalize_answer(prediction) == normalize_answer(ground_truth)
 
 
+def compute_span_match(prediction: str, ground_truth: str) -> bool:
+    """Computes bidirectional span containment match for open QA (e.g. passage-based NQ references)."""
+    norm_p = normalize_answer(prediction)
+    norm_g = normalize_answer(ground_truth)
+    if not norm_p or not norm_g:
+        return False
+    # If prediction has at least 2 chars and is in the reference passage
+    if len(norm_p) >= 2 and norm_p in norm_g:
+        return True
+    # If short ground truth is in the prediction
+    if len(norm_g) >= 2 and norm_g in norm_p:
+        return True
+    return False
+
+
 class OpenQAEvaluator(BaseEvaluator):
     """Evaluates open-ended question answering tasks (NQ, TriviaQA, SQuAD)."""
 
@@ -137,26 +152,48 @@ class OpenQAEvaluator(BaseEvaluator):
                 error_message="Empty model response"
             )
 
+        has_valid_reference = any(str(r).strip() for r in references)
+        if not has_valid_reference:
+            extracted = self.extract_answer(raw_output, raw_response)
+            norm_pred = normalize_answer(extracted)
+            return EvaluationResult(
+                sample_id=sample_id,
+                task_type=self.config.task_type.value if isinstance(self.config.task_type, TaskType) else str(self.config.task_type),
+                reference_answer=ref_repr,
+                raw_response=raw_output,
+                normalized_response=norm_pred,
+                parsed_answer=extracted,
+                evaluation_status=EvaluationStatus.NO_REFERENCE,
+                answer_correct=None,
+                metric_values={"exact_match": None, "token_f1": None, "span_match": None, "has_reference": False},
+                parse_success=True,
+                generation_truncated=generation_truncated
+            )
+
         extracted = self.extract_answer(raw_output, raw_response)
         norm_pred = normalize_answer(extracted)
 
         # Multi-reference scoring
         em_scores = [compute_exact_match(extracted, ref) for ref in references]
         f1_scores = [compute_f1(extracted, ref) for ref in references]
+        span_scores = [compute_span_match(extracted, ref) for ref in references]
 
         policy = self.config.multiple_reference_policy
         if policy == "first":
             exact_match = em_scores[0]
             token_f1 = f1_scores[0]
+            span_match = span_scores[0]
         elif policy == "all":
             exact_match = all(em_scores)
             token_f1 = sum(f1_scores) / len(f1_scores)
+            span_match = all(span_scores)
         else:  # "max" default
             exact_match = any(em_scores)
             token_f1 = max(f1_scores)
+            span_match = any(span_scores)
 
-        # For Open-QA, consider answer correct if exact match or high F1 (>= 0.8)
-        is_correct = exact_match or (token_f1 >= 0.8)
+        # For Open-QA, consider answer correct if exact match, high F1 (>= 0.8), or span containment in reference
+        is_correct = exact_match or (token_f1 >= 0.8) or span_match
         status = EvaluationStatus.COMPLETED_CORRECT if is_correct else EvaluationStatus.COMPLETED_INCORRECT
 
         return EvaluationResult(
@@ -171,6 +208,7 @@ class OpenQAEvaluator(BaseEvaluator):
             metric_values={
                 "exact_match": exact_match,
                 "token_f1": round(token_f1, 4),
+                "span_match": span_match,
                 "best_reference": references[f1_scores.index(max(f1_scores))] if references else ""
             },
             parse_success=True,

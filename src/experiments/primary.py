@@ -57,7 +57,7 @@ class PrimaryExperiment(BaseExperiment):
 
         # Record prompt hash in config
         self.config["strategies"] = [s.value for s in self.strategies]
-        self.config["prompt_hash"] = get_prompt_hash()
+        self.config["prompt_hash"] = get_prompt_hash(dataset=dataset_name)
         self.evaluator = get_evaluator(dataset_name)
 
     def run(self) -> Dict[str, Any]:
@@ -247,8 +247,8 @@ class PrimaryExperiment(BaseExperiment):
                             "error_message": None,
                             # 26 Research Reproducibility Fields (Section 2.B)
                             "experiment_id": self.run_id,
-                            "dataset": "gsm8k",
-                            "dataset_split": "test",
+                            "dataset": dataset_name,
+                            "dataset_split": eval_split,
                             "dataset_version": "main",
                             "question_id": sample.id,
                             "prompt_strategy": strategy.value,
@@ -259,8 +259,8 @@ class PrimaryExperiment(BaseExperiment):
                             "inference_engine": self.operator,
                             "hardware_identifier": self.normalized_device,
                             "operating_system": self.device_info.get("os", "unknown"),
-                            "generation_parameters": {"temperature": 0.0, "seed": int(self.cli_args.get("seed", 42)), "max_tokens": strat_max_tokens, "top_p": 1.0},
-                            "random_seed": int(self.cli_args.get("seed", 42)),
+                            "generation_parameters": {"temperature": temperature, "seed": int(seed), "max_tokens": strat_max_tokens, "top_p": top_p},
+                            "random_seed": int(seed),
                             "input_token_count": infer_out.input_tokens,
                             "output_token_count": infer_out.output_tokens,
                             "reasoning_token_count": infer_out.thinking_tokens,

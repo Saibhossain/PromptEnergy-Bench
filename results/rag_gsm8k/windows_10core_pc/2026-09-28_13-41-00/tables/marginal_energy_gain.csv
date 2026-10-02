@@ -1,4 +1,0 @@
-Baseline Strategy,Comparison Strategy,Accuracy Change,Energy Change,Marginal Energy Gain (% / J),Latency Change
-Zero-shot Direct,BM25 RAG (top-1),+0.00 pp,+299.4059 J,0.0000 %/J,+7910.7 ms
-Zero-shot Direct,BM25 RAG (top-3),+0.00 pp,+816.8323 J,0.0000 %/J,+19035.6 ms
-Zero-shot Direct,BM25 RAG (top-5),+0.00 pp,+896.5705 J,0.0000 %/J,+22293.0 ms

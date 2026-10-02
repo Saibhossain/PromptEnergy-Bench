@@ -327,7 +327,7 @@ class BaseExperiment(ABC):
             "device": self.normalized_device,
             "model": self.model_name,
             "backend": self.operator,
-            "evaluation_split": "test",
+            "evaluation_split": self.config.get("dataset", {}).get("evaluation_split", "test"),
             "evaluation_examples": num_examples,
             "strategies": num_strategies,
             "repetitions": self.repetitions,

@@ -36,6 +36,7 @@ class EvaluationStatus(str, Enum):
     AMBIGUOUS_ANSWER = "ambiguous_answer"
     EXECUTION_FAILURE = "execution_failure"
     EVALUATOR_ERROR = "evaluator_error"
+    NO_REFERENCE = "no_reference"
 
 
 class MetricValidityStatus(str, Enum):
@@ -104,7 +105,7 @@ class EvaluationResult:
     normalized_response: Optional[str]
     parsed_answer: Any
     evaluation_status: EvaluationStatus
-    answer_correct: bool
+    answer_correct: Optional[bool] = False
     metric_values: Dict[str, Any] = field(default_factory=dict)
     parse_success: bool = False
     generation_truncated: bool = False

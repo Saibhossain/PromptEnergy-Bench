@@ -120,15 +120,41 @@ class BM25Retriever(BaseRetriever):
         ][:top_k]
         latency_ms = (time.perf_counter() - start_time) * 1000.0
 
+        is_math = False
+        if self.corpus:
+            first_doc = self.corpus[0]
+            ds = getattr(first_doc, "dataset", "")
+            if ds in ("gsm8k", "math", "svamp"):
+                is_math = True
+
         retrieved_ids = [self.doc_ids[idx] for idx in ranked_indices]
         retrieved_snippets = []
         for idx in ranked_indices:
             doc = self.corpus[idx]
-            retrieved_snippets.append(
-                f"[Retrieved Example {doc.id}]:\nProblem: {doc.question}\nSolution: {doc.solution}\nAnswer: {doc.answer}\n"
-            )
+            q = getattr(doc, "question", getattr(doc, "input_text", ""))
+            sol = getattr(doc, "solution", getattr(doc, "context", ""))
+            ans = getattr(doc, "answer", getattr(doc, "target_text", ""))
+            d_id = getattr(doc, "id", str(idx))
+            if is_math:
+                retrieved_snippets.append(
+                    f"[Retrieved Example {d_id}]:\nProblem: {q}\nSolution: {sol}\nAnswer: {ans}\n"
+                )
+            else:
+                if sol and sol != ans:
+                    retrieved_snippets.append(
+                        f"[Retrieved Document {d_id}]:\nQuery: {q}\nPassage: {sol}\n"
+                    )
+                elif ans:
+                    retrieved_snippets.append(
+                        f"[Retrieved Document {d_id}]:\nContent: {ans}\n"
+                    )
+                else:
+                    retrieved_snippets.append(
+                        f"[Retrieved Document {d_id}]:\nText: {q}\n"
+                    )
 
-        context_text = "Retrieved Mathematical Knowledge:\n" + "\n".join(retrieved_snippets)
+        header_title = "Retrieved Mathematical Knowledge:" if is_math else "Retrieved Reference Knowledge:"
+        context_text = header_title + "\n" + "\n".join(retrieved_snippets)
         actual_tokens = estimate_tokens(context_text)
 
         return RetrievalResult(

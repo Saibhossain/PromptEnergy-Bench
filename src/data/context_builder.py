@@ -135,7 +135,14 @@ class ContextBuilder:
         snippets: List[str] = []
         current_tokens = 0
 
-        header = "Background Context (Mathematical Reference Examples):\n"
+        is_math = False
+        if self.train_records:
+            first_rec = self.train_records[0]
+            ds = getattr(first_rec, "dataset", "")
+            if ds in ("gsm8k", "math", "svamp"):
+                is_math = True
+
+        header = f"Background Context ({'Mathematical Reference Examples' if is_math else 'Reference Documents'}):\n"
         snippets.append(header)
         current_tokens += estimate_tokens(header)
 
@@ -146,10 +153,18 @@ class ContextBuilder:
             ans = getattr(rec, "answer", getattr(rec, "target_text", ""))
             r_id = getattr(rec, "id", str(idx))
             
-            if sol and sol != ans:
-                item = f"[Reference Item {r_id}]:\nInput: {q}\nContent/Reasoning: {sol}\nTarget: {ans}\n\n"
+            if is_math:
+                if sol and sol != ans:
+                    item = f"[Reference Item {r_id}]:\nInput: {q}\nContent/Reasoning: {sol}\nTarget: {ans}\n\n"
+                else:
+                    item = f"[Reference Item {r_id}]:\nInput: {q}\nTarget: {ans}\n\n"
             else:
-                item = f"[Reference Item {r_id}]:\nInput: {q}\nTarget: {ans}\n\n"
+                if sol and sol != ans:
+                    item = f"[Reference Document {r_id}]:\nQuery: {q}\nPassage: {sol}\n\n"
+                elif ans:
+                    item = f"[Reference Document {r_id}]:\nContent: {ans}\n\n"
+                else:
+                    item = f"[Reference Document {r_id}]:\nText: {q}\n\n"
             item_tokens = estimate_tokens(item)
 
             if current_tokens + item_tokens > target_tokens and len(selected_ids) > 0:

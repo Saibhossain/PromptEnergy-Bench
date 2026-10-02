@@ -1,6 +1,0 @@
-Strategy,Total Accuracy,Energy (J),Latency (ms),Thinking Tokens,Pareto Optimal,Accuracy Gain vs Baseline,Energy Increase vs Baseline,Latency Increase vs Baseline
-Context 0 tokens,0.00%,1823.7767,47075.6,512,Yes,Baseline,Baseline,Baseline
-Context 512 tokens,0.00%,4464.1167,105713.4,512,No,+0.00 pp,+2640.3400 J,+58637.8 ms
-Context 1024 tokens,0.00%,2224.3992,50849.2,512,No,+0.00 pp,+400.6225 J,+3773.6 ms
-Context 2048 tokens,0.00%,2093.2816,49644.3,512,No,+0.00 pp,+269.5049 J,+2568.7 ms
-Context 4096 tokens,0.00%,3370.0795,75950.1,512,No,+0.00 pp,+1546.3028 J,+28874.5 ms
