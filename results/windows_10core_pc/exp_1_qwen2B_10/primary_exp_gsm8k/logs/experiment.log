@@ -1,9 +1,0 @@
-[2026-10-03 19:37:15] [INFO] Initialized Experiment: primary_exp_gsm8k
-[2026-10-03 19:37:15] [INFO] Run ID: primary_exp_gsm8k__windows_10core_pc__2026-10-03_19-37-14
-[2026-10-03 19:37:15] [INFO] Run Directory: results\windows_10core_pc\exp_1_qwen2B_10\primary_exp_gsm8k
-[2026-10-03 19:37:15] [INFO] Model: qwen3.5:2b (Backend: ollama, Format: gguf)
-[2026-10-03 19:37:15] [INFO] Device: windows_10core_pc
-[2026-10-03 19:37:15] [INFO] Evaluation Size: 10 (Evaluation Split: TEST)
-[2026-10-03 19:37:15] [INFO] Loading gsm8k evaluation dataset (test split)...
-[2026-10-03 19:37:15] [INFO] Loaded 10 evaluation examples.
-[2026-10-03 19:37:15] [INFO] Executing 1 warmup run(s)...

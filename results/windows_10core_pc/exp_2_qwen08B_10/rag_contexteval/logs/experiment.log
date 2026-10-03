@@ -1,7 +1,0 @@
-[2026-10-03 19:03:20] [INFO] Initialized Experiment: rag_contexteval
-[2026-10-03 19:03:20] [INFO] Run ID: rag_contexteval__windows_10core_pc__2026-10-03_19-03-20
-[2026-10-03 19:03:20] [INFO] Run Directory: results\windows_10core_pc\exp_2_qwen08B_10\rag_contexteval
-[2026-10-03 19:03:20] [INFO] Model: qwen3.5:0.8b (Backend: ollama, Format: gguf)
-[2026-10-03 19:03:20] [INFO] Device: windows_10core_pc
-[2026-10-03 19:03:20] [INFO] Evaluation Size: 10 (Evaluation Split: TEST)
-[2026-10-03 19:03:20] [INFO] Initializing BM25 Index over contexteval TRAIN corpus (Evaluation on TEST split)...

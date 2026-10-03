@@ -1,16 +1,16 @@
 {
-    "run_id": "context_scaling_contexteval__windows_10core_pc__2026-10-03_19-03-20",
-    "experiment_name": "context_scaling_contexteval",
+    "run_id": "primary_exp_gsm8k__windows_10core_pc__2026-10-03_20-27-47",
+    "experiment_name": "primary_exp_gsm8k",
     "model": {
-        "name": "qwen3.5:0.8b",
+        "name": "qwen3.5:2b",
         "backend": "ollama",
         "format": "gguf"
     },
     "dataset": {
-        "name": "contexteval",
+        "name": "gsm8k",
         "evaluation_split": "test",
         "context_source_split": "train",
-        "evaluation_size": 10
+        "evaluation_size": "full"
     },
     "sampling": {
         "temperature": 0.0,
