@@ -1,5 +1,0 @@
-Strategy,Total Accuracy (%),Valid Accuracy (%),Valid Samples,Input Tokens,Thinking Tokens,Visible Output Tokens,Total Output Tokens,Total Energy (J),Prefill Energy (J),Decode Energy (J),Prefill Share (%),Decode Share (%),Prefill (mJ/tok),Decode (mJ/tok),Prefill TPS (tok/s),Decode TPS (tok/s),TTFT (ms),Generation Latency (ms),Total Latency (ms),Mean CPU (%),Peak CPU (%),RAM (GB),Energy / Correct (J),Accuracy / Joule,Truncation Rate (%)
-Zero-shot Direct,0.00,0.00,10/10,74.1,N/A,49.2,49.2,202.4923,31.4502,171.0421,15.5,84.5,424.43,3476.47,139.1,10.89,851.0,4635.2,5486.2,56.5,100.0,24.17,N/A,0.0000,0.0
-BM25 RAG (top-1),10.00,10.00,10/10,251.8,N/A,30.9,30.9,290.3963,186.2425,104.1539,64.1,35.9,739.64,3370.68,49.6,11.07,5107.3,2886.0,7993.3,54.5,100.0,24.33,2903.9630,0.0003,0.0
-BM25 RAG (top-3),40.00,40.00,10/10,578.5,N/A,35.6,35.6,549.3125,428.2825,121.0301,78.0,22.0,740.33,3399.72,48.9,12.12,11818.2,3348.2,15166.5,54.8,100.0,24.29,1373.2812,0.0007,0.0
-BM25 RAG (top-5),40.00,40.00,10/10,856.1,N/A,27.9,27.9,811.3258,703.5891,107.7367,86.7,13.3,821.85,3861.53,48.0,11.29,18210.2,2745.3,20955.6,60.3,100.0,24.36,2028.3145,0.0005,0.0

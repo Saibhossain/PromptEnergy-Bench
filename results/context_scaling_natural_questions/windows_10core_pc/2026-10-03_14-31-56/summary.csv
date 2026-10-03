@@ -1,6 +1,0 @@
-Strategy,Total Accuracy (%),Valid Accuracy (%),Valid Samples,Input Tokens,Thinking Tokens,Visible Output Tokens,Total Output Tokens,Total Energy (J),Prefill Energy (J),Decode Energy (J),Prefill Share (%),Decode Share (%),Prefill (mJ/tok),Decode (mJ/tok),Prefill TPS (tok/s),Decode TPS (tok/s),TTFT (ms),Generation Latency (ms),Total Latency (ms),Mean CPU (%),Peak CPU (%),RAM (GB),Energy / Correct (J),Accuracy / Joule,Truncation Rate (%)
-Context 0 tokens,0.00,0.00,10/10,77.1,N/A,370.1,370.1,806.2824,39.3563,766.9260,4.9,95.1,510.46,2072.21,78.6,19.17,992.6,19314.8,20307.5,56.0,100.0,20.82,N/A,0.0000,0.0
-Context 512 tokens,10.00,10.00,10/10,504.1,N/A,481.3,481.3,1228.6537,193.1828,1035.4709,15.7,84.3,383.22,2151.40,107.0,18.90,4753.1,25548.3,30301.4,56.4,100.0,21.21,12286.5369,0.0001,0.0
-Context 1024 tokens,0.00,0.00,9/10,1084.4,N/A,484.2,484.2,1608.7136,458.4429,1150.2706,28.5,71.5,422.76,2375.61,100.1,17.90,10848.4,27191.9,38040.2,58.4,100.0,21.64,N/A,0.0000,10.0
-Context 2048 tokens,10.00,12.50,8/10,2232.2,N/A,608.6,608.6,2158.6801,694.5779,1464.1021,32.2,67.8,311.16,2405.69,134.9,17.40,16616.5,35033.6,51650.1,57.6,100.0,21.42,21586.8011,0.0000,20.0
-Context 4096 tokens,0.00,0.00,8/10,2253.9,N/A,297.5,297.5,1538.0187,842.7084,695.3105,54.8,45.2,373.89,2337.18,109.7,18.34,20270.8,16707.3,36978.1,55.5,100.0,20.88,N/A,0.0000,20.0
