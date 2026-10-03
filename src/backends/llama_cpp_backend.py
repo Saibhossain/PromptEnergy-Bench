@@ -25,6 +25,7 @@ class LlamaCppBackend(ModelBackend):
 
     def load_model(self) -> None:
         try:
+            # pyrefly: ignore [missing-import]
             from llama_cpp import Llama
         except ImportError:
             raise ImportError(

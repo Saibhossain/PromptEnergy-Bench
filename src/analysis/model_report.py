@@ -48,26 +48,36 @@ from src.analysis.pareto import compute_pareto_frontier
 # ============================================================
 
 def get_clean_model_tag(model_name: str) -> str:
-    """Produces clean, compact model tag (e.g. 'qwen08B', 'qwen2B', 'gemma4B')."""
+    """Produces clean, compact model tag (e.g. 'qwen08B', 'qwen2B', 'llama8B', 'qwen9B', 'gemma4B')."""
     m = str(model_name).lower().replace("-mlx", "").replace(":latest", "").strip()
     if "qwen" in m:
         if "0.8b" in m or "0.8" in m:
             return "qwen08B"
         elif "0.5b" in m or "0.5" in m:
             return "qwen05B"
+        elif "1.5b" in m:
+            return "qwen15B"
         elif "2b" in m or "2.0b" in m:
             return "qwen2B"
         elif "3b" in m or "3.0b" in m:
             return "qwen3B"
         elif "7b" in m:
             return "qwen7B"
+        elif "8b" in m:
+            return "qwen8B"
+        elif "9b" in m:
+            return "qwen9B"
         elif "14b" in m:
             return "qwen14B"
     if "gemma" in m:
-        if "4b" in m:
+        if "4b" in m or "e4b" in m:
             return "gemma4B"
+        elif "1b" in m:
+            return "gemma1B"
         elif "2b" in m:
             return "gemma2B"
+        elif "7b" in m:
+            return "gemma7B"
         elif "9b" in m:
             return "gemma9B"
     if "llama" in m:
@@ -75,8 +85,15 @@ def get_clean_model_tag(model_name: str) -> str:
             return "llama1B"
         elif "3b" in m:
             return "llama3B"
+        elif "7b" in m:
+            return "llama7B"
         elif "8b" in m:
             return "llama8B"
+        elif "70b" in m:
+            return "llama70B"
+    if "mistral" in m:
+        if "7b" in m:
+            return "mistral7B"
     
     # Generic fallback: alphanumeric only
     clean = re.sub(r"[^a-zA-Z0-9]", "", m)
