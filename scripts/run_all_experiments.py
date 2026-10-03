@@ -33,10 +33,10 @@ from typing import List, Dict, Any, Optional
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from src.infrastructure.device import collect_device_info, normalize_device_name
-from src.infrastructure.logging import setup_experiment_logging
 from src.experiments.primary import PrimaryExperiment
 from src.experiments.context_scaling import ContextScalingExperiment
 from src.experiments.rag import RAGExperiment
+from src.analysis.model_report import generate_single_model_report, get_clean_model_tag
 
 
 ALL_DATASETS = ["gsm8k", "natural_questions", "contexteval", "cnn_dailymail"]
@@ -220,8 +220,18 @@ def main():
         action="store_false",
         help="Explicitly disable internal model thinking mode in Ollama"
     )
+    parser.add_argument(
+        "--gpu-id",
+        type=int,
+        default=None,
+        help="Target GPU device ID (e.g. 0 or 1 for Kaggle Dual-T4 parallel execution)"
+    )
 
     args = parser.parse_args()
+
+    if args.gpu_id is not None:
+        os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu_id)
+        print(f"[GPU PINNING] Active CUDA device pinned to GPU ID: {args.gpu_id}")
 
     # Parse eval size
     eval_size_val = args.eval_size
@@ -272,16 +282,23 @@ def main():
     total_matrix_steps = len(models_to_run) * len(datasets_to_run) * len(experiments_to_execute)
     step_idx = 0
 
-    for model_info in models_to_run:
+    for model_idx, model_info in enumerate(models_to_run, start=1):
         model_name = model_info["name"]
         operator = args.operator or model_info.get("backend", "ollama")
         model_fmt = model_info.get("format", "mlx" if "mlx" in model_name else "gguf")
+        
+        # Canonical model experiment directory: results/{hardware}/exp_{model_idx}_{clean_tag}_{eval_size}/
+        clean_tag = get_clean_model_tag(model_name)
+        model_folder_name = f"exp_{model_idx}_{clean_tag}_{eval_size_val}"
+        model_run_dir = os.path.join(args.output_dir, hw_name, model_folder_name)
+        os.makedirs(model_run_dir, exist_ok=True)
+        print(f"\n{'='*75}")
+        print(f">>> [Model Matrix {model_idx}/{len(models_to_run)}] Model: {model_name} | Folder: {model_folder_name} | Backend: {operator} <<<")
+        print(f"{'='*75}")
+
+        model_created_dirs = []
 
         for dataset_name in datasets_to_run:
-            print(f"\n{'='*75}")
-            print(f">>> [Matrix] Model: {model_name} | Dataset: {dataset_name} | Backend: {operator} <<<")
-            print(f"{'='*75}")
-
             base_cli_args = {
                 "device_name": hw_name,
                 "model": model_name,
@@ -296,24 +313,30 @@ def main():
                 "resume": args.resume,
                 "interactive": False,
                 "non_interactive": True,
-                "think": args.think
+                "think": args.think,
+                "gpu_id": args.gpu_id,
+                "generate_plots": False  # Disable per-experiment plot overhead; generated comprehensively per model
             }
 
             # 1. Experiment 1: Prompting Strategy Comparison
             if "primary" in experiments_to_execute:
                 step_idx += 1
                 exp_label = f"primary_exp_{dataset_name}"
+                exp_run_dir = os.path.join(model_run_dir, exp_label)
+                p_args = dict(base_cli_args)
+                p_args["run_dir"] = exp_run_dir
                 print(f"\n--- [{step_idx}/{total_matrix_steps}] Running Experiment 1: Prompting Strategies ({model_name} on {dataset_name}) ---")
                 try:
                     exp1 = PrimaryExperiment(
                         experiment_name=exp_label,
-                        cli_args=base_cli_args,
+                        cli_args=p_args,
                         interactive=False
                     )
                     summary1 = exp1.run()
                     run_dir = exp1.paths["run_dir"]
                     successful_runs.append((model_name, dataset_name, exp_label, run_dir))
                     created_run_dirs.append(run_dir)
+                    model_created_dirs.append(run_dir)
                     print(f"[SUCCESS] Experiment 1 completed -> {run_dir}")
                 except Exception as e:
                     print(f"[ERROR] Experiment 1 failed for {model_name} on {dataset_name}: {e}")
@@ -323,10 +346,12 @@ def main():
             if "context" in experiments_to_execute:
                 step_idx += 1
                 exp_label = f"context_scaling_{dataset_name}"
-                print(f"\n--- [{step_idx}/{total_matrix_steps}] Running Experiment 2: Context-Length Scaling ({model_name} on {dataset_name}) ---")
+                exp_run_dir = os.path.join(model_run_dir, exp_label)
                 ctx_args = dict(base_cli_args)
+                ctx_args["run_dir"] = exp_run_dir
                 ctx_args["context_lengths"] = args.context_lengths
                 ctx_args["context_type"] = "relevant"
+                print(f"\n--- [{step_idx}/{total_matrix_steps}] Running Experiment 2: Context-Length Scaling ({model_name} on {dataset_name}) ---")
                 try:
                     exp2 = ContextScalingExperiment(
                         experiment_name=exp_label,
@@ -337,6 +362,7 @@ def main():
                     run_dir = exp2.paths["run_dir"]
                     successful_runs.append((model_name, dataset_name, exp_label, run_dir))
                     created_run_dirs.append(run_dir)
+                    model_created_dirs.append(run_dir)
                     print(f"[SUCCESS] Experiment 2 completed -> {run_dir}")
                 except Exception as e:
                     print(f"[ERROR] Experiment 2 failed for {model_name} on {dataset_name}: {e}")
@@ -346,10 +372,12 @@ def main():
             if "rag" in experiments_to_execute:
                 step_idx += 1
                 exp_label = f"rag_{dataset_name}"
-                print(f"\n--- [{step_idx}/{total_matrix_steps}] Running Experiment 3: BM25 RAG Pipeline ({model_name} on {dataset_name}) ---")
+                exp_run_dir = os.path.join(model_run_dir, exp_label)
                 rag_args = dict(base_cli_args)
+                rag_args["run_dir"] = exp_run_dir
                 rag_args["top_k_list"] = args.top_k_list
                 rag_args["include_baseline"] = True
+                print(f"\n--- [{step_idx}/{total_matrix_steps}] Running Experiment 3: BM25 RAG Pipeline ({model_name} on {dataset_name}) ---")
                 try:
                     exp3 = RAGExperiment(
                         experiment_name=exp_label,
@@ -360,10 +388,28 @@ def main():
                     run_dir = exp3.paths["run_dir"]
                     successful_runs.append((model_name, dataset_name, exp_label, run_dir))
                     created_run_dirs.append(run_dir)
+                    model_created_dirs.append(run_dir)
                     print(f"[SUCCESS] Experiment 3 completed -> {run_dir}")
                 except Exception as e:
                     print(f"[ERROR] Experiment 3 failed for {model_name} on {dataset_name}: {e}")
                     failed_runs.append((model_name, dataset_name, exp_label, str(e)))
+
+        # ============================================================
+        # MODEL COMPLETION: Generate Aggregated Tables & Seaborn Plots
+        # ============================================================
+        if model_created_dirs:
+            print(f"\n{'='*75}")
+            print(f"[MODEL COMPLETED] All benchmark experiments for {model_name} finished!")
+            print(f"Generating Table 1, Table 2, and publication Seaborn figures in {model_run_dir}...")
+            print(f"{'='*75}")
+            try:
+                generate_single_model_report(
+                    model_run_dir=model_run_dir,
+                    model_name=model_name,
+                    hw_name=hw_name
+                )
+            except Exception as e:
+                print(f"[WARNING] Failed to generate single-model report for {model_name}: {e}")
 
     print("\n" + "=" * 75)
     print("ALL EXPERIMENT EXECUTIONS FINISHED")

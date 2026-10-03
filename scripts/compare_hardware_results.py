@@ -110,8 +110,12 @@ def load_hardware_records(input_dirs: List[str]) -> Dict[str, List[Dict[str, Any
                                         hw_name = "MacBook Air M1"
                                     elif "windows" in hw_str or "10core" in hw_str or "10-core" in hw_str:
                                         hw_name = "Windows 10-Core PC"
-                                    elif "colab" in hw_str or "t4" in hw_str:
+                                    elif "kaggle" in hw_str:
+                                        hw_name = "Kaggle T4 GPU"
+                                    elif "colab" in hw_str:
                                         hw_name = "Google Colab T4 GPU"
+                                    elif "t4" in hw_str:
+                                        hw_name = "NVIDIA T4 GPU"
                                     elif "cuda" in hw_str or "rtx" in hw_str or "gpu" in hw_str:
                                         hw_name = "Linux NVIDIA Server"
                                     else:

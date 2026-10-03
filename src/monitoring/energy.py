@@ -301,8 +301,18 @@ class AppleSiliconHardwareMonitor(EnergyMonitor):
 class NvidiaGPUMonitor(EnergyMonitor):
     """High-frequency NVIDIA GPU power polling using NVML / nvidia-ml-py."""
 
-    def __init__(self, device_index: int = 0, poll_interval_ms: int = 50):
+    def __init__(self, device_index: Optional[int] = None, poll_interval_ms: int = 50):
         super().__init__()
+        if device_index is None:
+            # Respect CUDA_VISIBLE_DEVICES for multi-GPU setups (e.g. Kaggle dual-T4)
+            cuda_vis = os.environ.get("CUDA_VISIBLE_DEVICES", "").strip()
+            if cuda_vis:
+                try:
+                    device_index = int(cuda_vis.split(",")[0].strip())
+                except Exception:
+                    device_index = 0
+            else:
+                device_index = 0
         self.device_index = device_index
         self.poll_interval = poll_interval_ms / 1000.0
         self.power_samples: List[float] = []
@@ -315,7 +325,9 @@ class NvidiaGPUMonitor(EnergyMonitor):
         try:
             import pynvml
             pynvml.nvmlInit()
-            self.nvml_handle = pynvml.nvmlDeviceGetHandleByIndex(self.device_index)
+            device_count = pynvml.nvmlDeviceGetCount()
+            target_idx = self.device_index if self.device_index < device_count else 0
+            self.nvml_handle = pynvml.nvmlDeviceGetHandleByIndex(target_idx)
         except Exception:
             self.nvml_handle = None
 

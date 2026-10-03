@@ -64,12 +64,22 @@ def compute_span_match(prediction: str, ground_truth: str) -> bool:
     norm_g = normalize_answer(ground_truth)
     if not norm_p or not norm_g:
         return False
-    # If prediction has at least 2 chars and is in the reference passage
+    # Direct bidirectional substring containment
     if len(norm_p) >= 2 and norm_p in norm_g:
         return True
-    # If short ground truth is in the prediction
     if len(norm_g) >= 2 and norm_g in norm_p:
         return True
+
+    # If prediction is a sentence ending with the answer entity (e.g., "...filmed in Vancouver")
+    words_p = norm_p.split()
+    if len(words_p) >= 2:
+        stops = {"the", "a", "an", "is", "was", "are", "were", "in", "at", "on", "to", "for", "of", "and", "or"}
+        # Check trailing spans from 1 up to 6 words
+        for k in range(min(6, len(words_p)), 0, -1):
+            sub_span = " ".join(words_p[-k:])
+            if len(sub_span) >= 3 and sub_span not in stops and sub_span in norm_g:
+                return True
+
     return False
 
 
@@ -85,17 +95,53 @@ class OpenQAEvaluator(BaseEvaluator):
         non_thinking = self.strip_thinking(raw_output, raw_response)
         target = non_thinking if non_thinking else raw_output
 
-        # Check for explicit answer phrase
-        phrase_match = re.search(r"(?:the\s+answer\s+is|answer\s*[:=]|final\s+answer\s*[:=])\s*(.+)", target, re.IGNORECASE)
-        if phrase_match:
-            # Take the rest of the line or first sentence
-            cand = phrase_match.group(1).split("\n")[0].strip()
-            if cand:
-                return cand
+        # 1. Search for explicit answer pattern (case-insensitive)
+        # Matches inline answers and markdown headers like:
+        # "**Final Answer:**\n<actual text>" or "**Answer:** <actual text>" or "Answer: <text>"
+        pattern = r"(?:the\s+answer\s+is|final\s+answer\s*[:=]|answer\s*[:=]|conclusion\s*[:=])\s*(.*)"
+        matches = list(re.finditer(pattern, target, re.IGNORECASE))
+        if matches:
+            phrase_match = matches[-1]
+            rest_of_line = phrase_match.group(1).split("\n")[0].strip()
+            # Strip markdown formatting markers like ** or ## or `
+            cleaned_rest = re.sub(r"^[*_#`\s]+|[*_#`\s]+$", "", rest_of_line)
+            if cleaned_rest:
+                bold_in_line = re.search(r"\*\*([^*]+)\*\*", rest_of_line)
+                if bold_in_line and 0 < len(bold_in_line.group(1).strip()) < 80:
+                    return bold_in_line.group(1).strip()
+                return cleaned_rest
 
-        # Otherwise return non-thinking text or first line
+            # If the rest of the line was empty or only markdown delimiters (e.g. "**Final Answer:**\n"),
+            # grab the subsequent non-empty line
+            post_match = target[phrase_match.end():]
+            for raw_line in post_match.split("\n"):
+                cleaned_line = re.sub(r"^[*_#`\s]+|[*_#`\s]+$", "", raw_line.strip())
+                if cleaned_line:
+                    bold_in_line = re.search(r"\*\*([^*]+)\*\*", raw_line)
+                    if bold_in_line and 0 < len(bold_in_line.group(1).strip()) < 80:
+                        return bold_in_line.group(1).strip()
+                    return cleaned_line
+
+        # 2. Check for markdown bold answer near the end, e.g. "**Vancouver**"
+        bold_matches = re.findall(r"\*\*([^*]+)\*\*", target)
+        if bold_matches:
+            last_bold = bold_matches[-1].strip()
+            if 0 < len(last_bold) < 120 and not last_bold.lower().startswith(("step", "note", "analysis", "conclusion")):
+                # Check if this bold text occurs in the final segment of text
+                last_segment = target[-300:] if len(target) > 300 else target
+                if last_bold in last_segment:
+                    return last_bold
+
+        # 3. Fallback: return the last non-empty line of response (not lines[0], which is CoT intro)
         lines = [l.strip() for l in target.split("\n") if l.strip()]
-        return lines[0] if lines else target.strip()
+        if lines:
+            for line in reversed(lines):
+                cleaned = re.sub(r"^[*_#`\s]+|[*_#`\s]+$", "", line)
+                if cleaned and not cleaned.lower().startswith(("step", "note:", "source:")):
+                    return cleaned
+            return lines[-1]
+
+        return target.strip()
 
     def evaluate(
         self,

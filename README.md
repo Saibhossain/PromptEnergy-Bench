@@ -182,7 +182,72 @@ files.download('colab_results.zip')
 
 ---
 
-#### D. macOS (Apple Silicon M1/M2/M3)
+#### D. Kaggle (Dual NVIDIA T4 GPUs — 2x Faster Parallel Execution)
+
+In Kaggle Notebooks, select **Accelerator -> GPU T4 x 2** in the right-hand panel.
+
+##### **Cell 1: Install & Launch Ollama Daemon**
+```bash
+!curl -fsSL https://ollama.com/install.sh | sh
+import subprocess, time
+subprocess.Popen(["ollama", "serve"])
+time.sleep(5)
+```
+
+##### **Cell 2: Pull Benchmark Models**
+```bash
+!ollama pull qwen3.5:2b
+!ollama pull qwen3.5:0.8b
+!ollama pull gemma3:4b
+```
+
+##### **Cell 3: Clone Repository & Install Dependencies**
+```bash
+!git clone https://github.com/Saibhossain/PromptEnergy-Bench.git
+%cd PromptEnergy-Bench
+!pip install -r requirements.txt
+```
+
+##### **Cell 4: Run Dual-GPU Parallel Execution**
+Split model workloads across GPU 0 and GPU 1 to complete the benchmark in half the time:
+```python
+import subprocess
+
+# GPU 0 executes qwen3.5:2b
+p0 = subprocess.Popen([
+    "python", "scripts/run_all_experiments.py",
+    "--hardware", "kaggle_t4_gpu",
+    "--gpu-id", "0",
+    "--models", "qwen3.5:2b",
+    "--dataset", "all",
+    "--eval-size", "10",
+    "--skip-existing"
+])
+
+# GPU 1 executes qwen3.5:0.8b & gemma3:4b
+p1 = subprocess.Popen([
+    "python", "scripts/run_all_experiments.py",
+    "--hardware", "kaggle_t4_gpu",
+    "--gpu-id", "1",
+    "--models", "qwen3.5:0.8b,gemma3:4b",
+    "--dataset", "all",
+    "--eval-size", "10",
+    "--skip-existing"
+])
+
+p0.wait()
+p1.wait()
+print("All Kaggle Dual-GPU experiments completed!")
+```
+
+##### **Cell 5: Download Kaggle Results Package**
+```python
+!zip -r kaggle_results.zip results/
+```
+
+---
+
+#### E. macOS (Apple Silicon M1/M2/M3)
 
 1. **Configure Passwordless Telemetry** (once):
    ```bash
@@ -204,7 +269,7 @@ files.download('colab_results.zip')
 
 ---
 
-#### E. Linux Server (Ubuntu/Debian + NVIDIA GPU Cluster)
+#### F. Linux Server (Ubuntu/Debian + NVIDIA GPU Cluster)
 
 ```bash
 python scripts/run_all_experiments.py \

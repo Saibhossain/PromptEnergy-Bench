@@ -1,5 +1,4 @@
-"""Ollama Model Backend with streaming TTFT and reasoning token accounting."""
-
+import os
 import time
 from typing import Dict, List, Optional, Any
 import ollama
@@ -21,6 +20,11 @@ class OllamaBackend(ModelBackend):
         self.client = ollama.Client(host=host) if host else ollama
         self.model_info: Dict[str, Any] = {}
         self.think = think
+        try:
+            import psutil
+            self.physical_cores = psutil.cpu_count(logical=False) or os.cpu_count() or 4
+        except Exception:
+            self.physical_cores = os.cpu_count() or 4
 
     def load_model(self) -> None:
         """Verifies that the requested model is available locally in Ollama."""
@@ -88,6 +92,12 @@ class OllamaBackend(ModelBackend):
             options["num_predict"] = int(max_tokens)
         if seed is not None:
             options["seed"] = int(seed)
+
+        # Dynamic physical CPU core allocation and 8K context support
+        if "num_thread" not in options and self.physical_cores:
+            options["num_thread"] = int(self.physical_cores)
+        if "num_ctx" not in options:
+            options["num_ctx"] = 8192
 
         use_think = think if think is not None else self.think
 

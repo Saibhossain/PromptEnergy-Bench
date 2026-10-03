@@ -1,0 +1,29 @@
+Strategy,Metric,Mean,Median,Standard Deviation,95% Confidence Interval
+Zero-shot Direct,Total Accuracy,0.40,0.00,0.52,N/A (n=1)
+Zero-shot Direct,Energy (J),320.58,348.09,85.01,N/A (n=1)
+Zero-shot Direct,Total Latency (ms),9418.56,10102.53,2338.82,N/A (n=1)
+Zero-shot Direct,Generation Latency (ms),8584.30,9260.70,2311.74,N/A (n=1)
+Zero-shot Direct,TTFT (ms),834.26,811.19,50.66,N/A (n=1)
+Zero-shot Direct,Thinking Tokens,N/A,N/A,N/A,N/A
+Zero-shot Direct,Output Tokens,88.20,92.00,24.43,N/A (n=1)
+BM25 RAG (top-1),Total Accuracy,0.30,0.00,0.48,N/A (n=1)
+BM25 RAG (top-1),Energy (J),1021.06,928.10,376.98,N/A (n=1)
+BM25 RAG (top-1),Total Latency (ms),34280.41,30248.92,12643.84,N/A (n=1)
+BM25 RAG (top-1),Generation Latency (ms),7218.70,6579.39,3755.01,N/A (n=1)
+BM25 RAG (top-1),TTFT (ms),27061.71,25723.23,9517.02,N/A (n=1)
+BM25 RAG (top-1),Thinking Tokens,N/A,N/A,N/A,N/A
+BM25 RAG (top-1),Output Tokens,71.90,68.00,35.97,N/A (n=1)
+BM25 RAG (top-3),Total Accuracy,0.30,0.00,0.48,N/A (n=1)
+BM25 RAG (top-3),Energy (J),1428.32,1325.51,415.20,N/A (n=1)
+BM25 RAG (top-3),Total Latency (ms),46012.05,42856.00,13331.53,N/A (n=1)
+BM25 RAG (top-3),Generation Latency (ms),8768.56,8519.28,2781.06,N/A (n=1)
+BM25 RAG (top-3),TTFT (ms),37243.49,34210.40,10996.58,N/A (n=1)
+BM25 RAG (top-3),Thinking Tokens,N/A,N/A,N/A,N/A
+BM25 RAG (top-3),Output Tokens,84.10,83.50,27.21,N/A (n=1)
+BM25 RAG (top-5),Total Accuracy,0.30,0.00,0.48,N/A (n=1)
+BM25 RAG (top-5),Energy (J),1622.94,1592.30,385.39,N/A (n=1)
+BM25 RAG (top-5),Total Latency (ms),52149.62,51372.85,12204.46,N/A (n=1)
+BM25 RAG (top-5),Generation Latency (ms),9012.76,7656.01,3945.70,N/A (n=1)
+BM25 RAG (top-5),TTFT (ms),43136.86,41534.99,8996.21,N/A (n=1)
+BM25 RAG (top-5),Thinking Tokens,N/A,N/A,N/A,N/A
+BM25 RAG (top-5),Output Tokens,82.30,69.50,35.15,N/A (n=1)

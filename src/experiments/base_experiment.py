@@ -123,11 +123,32 @@ class BaseExperiment(ABC):
 
 
             # Create paths
-            self.paths = build_experiment_paths(
-                experiment_name=self.experiment_name,
-                normalized_device_name=self.normalized_device,
-                timestamp=self.timestamp
-            )
+            custom_run_dir = self.cli_args.get("run_dir") or self.cli_args.get("custom_run_dir")
+            if custom_run_dir:
+                plots_dir = os.path.join(custom_run_dir, "plots")
+                logs_dir = os.path.join(custom_run_dir, "logs")
+                tables_dir = os.path.join(custom_run_dir, "tables")
+                os.makedirs(custom_run_dir, exist_ok=True)
+                os.makedirs(plots_dir, exist_ok=True)
+                os.makedirs(logs_dir, exist_ok=True)
+                os.makedirs(tables_dir, exist_ok=True)
+                self.paths = {
+                    "run_dir": custom_run_dir,
+                    "metadata_file": os.path.join(custom_run_dir, "metadata.json"),
+                    "config_file": os.path.join(custom_run_dir, "config.json"),
+                    "results_file": os.path.join(custom_run_dir, "results.jsonl"),
+                    "summary_file": os.path.join(custom_run_dir, "summary.json"),
+                    "plots_dir": plots_dir,
+                    "logs_dir": logs_dir,
+                    "tables_dir": tables_dir,
+                    "log_file": os.path.join(logs_dir, "experiment.log")
+                }
+            else:
+                self.paths = build_experiment_paths(
+                    experiment_name=self.experiment_name,
+                    normalized_device_name=self.normalized_device,
+                    timestamp=self.timestamp
+                )
 
             # Build metadata and config
             software_meta = get_software_metadata()
@@ -351,26 +372,27 @@ class BaseExperiment(ABC):
             except Exception:
                 pass
 
-        # Generate publication tables (CSV, Markdown, LaTeX)
-        try:
-            tables_dir = os.path.join(self.paths["run_dir"], "tables")
-            generate_all_tables(records, self.metadata, self.config, summary, tables_dir)
-            self.logger.info(f"Generated publication tables in {tables_dir}")
-            # Ensure summary.csv exists in root of run directory as well
-            root_summary_csv = os.path.join(self.paths["run_dir"], "summary.csv")
-            src_csv = os.path.join(tables_dir, "strategy_comparison.csv")
-            if os.path.exists(src_csv):
-                import shutil
-                shutil.copyfile(src_csv, root_summary_csv)
-        except Exception as e:
-            self.logger.warning(f"Failed to generate tables: {e}")
+        # Individual sub-experiment tables and plots are skipped by default for speed,
+        # and are instead generated comprehensively per-model upon completion of all runs.
+        generate_plots_flag = bool(self.cli_args.get("generate_plots", False))
+        if generate_plots_flag:
+            try:
+                tables_dir = os.path.join(self.paths["run_dir"], "tables")
+                generate_all_tables(records, self.metadata, self.config, summary, tables_dir)
+                self.logger.info(f"Generated publication tables in {tables_dir}")
+                root_summary_csv = os.path.join(self.paths["run_dir"], "summary.csv")
+                src_csv = os.path.join(tables_dir, "strategy_comparison.csv")
+                if os.path.exists(src_csv):
+                    import shutil
+                    shutil.copyfile(src_csv, root_summary_csv)
+            except Exception as e:
+                self.logger.warning(f"Failed to generate tables: {e}")
 
-        # Generate publication plots (PNG @ 300 DPI, PDF, SVG)
-        try:
-            from visual.plot_results import generate_all_plots_for_run
-            generate_all_plots_for_run(self.paths["run_dir"])
-            self.logger.info(f"Generated publication plots in {self.paths['run_dir']}")
-        except Exception as e:
-            self.logger.warning(f"Failed to generate plots: {e}")
+            try:
+                from visual.plot_results import generate_all_plots_for_run
+                generate_all_plots_for_run(self.paths["run_dir"])
+                self.logger.info(f"Generated publication plots in {self.paths['run_dir']}")
+            except Exception as e:
+                self.logger.warning(f"Failed to generate plots: {e}")
 
         return summary

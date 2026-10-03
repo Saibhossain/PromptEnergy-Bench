@@ -1,0 +1,9 @@
+[2026-10-03 16:43:07] [INFO] Initialized Experiment: rag_cnn_dailymail
+[2026-10-03 16:43:07] [INFO] Run ID: rag_cnn_dailymail__windows_10core_pc__2026-10-03_16-43-07
+[2026-10-03 16:43:07] [INFO] Run Directory: results\rag_cnn_dailymail\windows_10core_pc\2026-10-03_16-43-07
+[2026-10-03 16:43:07] [INFO] Model: qwen3.5:0.8b (Backend: ollama, Format: gguf)
+[2026-10-03 16:43:07] [INFO] Device: windows_10core_pc
+[2026-10-03 16:43:07] [INFO] Evaluation Size: 10 (Evaluation Split: TEST)
+[2026-10-03 16:43:07] [INFO] Initializing BM25 Index over cnn_dailymail TRAIN corpus (Evaluation on TEST split)...
+[2026-10-03 16:46:59] [INFO] Executing 1 warmup run(s)...
+[2026-10-03 16:47:00] [INFO] Warmup 1/1 completed.

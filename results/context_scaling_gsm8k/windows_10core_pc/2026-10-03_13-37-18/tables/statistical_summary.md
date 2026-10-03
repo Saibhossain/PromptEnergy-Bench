@@ -1,0 +1,39 @@
+# Statistical Summary Across Prompting Strategies
+
+| Strategy            | Metric                  | Mean     | Median   | Standard Deviation   | 95% Confidence Interval   |
+|:--------------------|:------------------------|:---------|:---------|:---------------------|:--------------------------|
+| Context 0 tokens    | Total Accuracy          | 0.20     | 0.00     | 0.42                 | N/A (n=1)                 |
+| Context 0 tokens    | Energy (J)              | 1103.58  | 1034.67  | 496.57               | N/A (n=1)                 |
+| Context 0 tokens    | Total Latency (ms)      | 27333.65 | 25121.71 | 12412.71             | N/A (n=1)                 |
+| Context 0 tokens    | Generation Latency (ms) | 26310.53 | 24161.89 | 11892.12             | N/A (n=1)                 |
+| Context 0 tokens    | TTFT (ms)               | 1023.12  | 877.86   | 899.12               | N/A (n=1)                 |
+| Context 0 tokens    | Thinking Tokens         | N/A      | N/A      | N/A                  | N/A                       |
+| Context 0 tokens    | Output Tokens           | 500.00   | 462.50   | 226.00               | N/A (n=1)                 |
+| Context 512 tokens  | Total Accuracy          | 0.20     | 0.00     | 0.42                 | N/A (n=1)                 |
+| Context 512 tokens  | Energy (J)              | 1370.49  | 1196.11  | 618.50               | N/A (n=1)                 |
+| Context 512 tokens  | Total Latency (ms)      | 33540.91 | 29286.76 | 15064.78             | N/A (n=1)                 |
+| Context 512 tokens  | Generation Latency (ms) | 27867.96 | 22988.38 | 14994.41             | N/A (n=1)                 |
+| Context 512 tokens  | TTFT (ms)               | 5672.95  | 6214.88  | 1135.73              | N/A (n=1)                 |
+| Context 512 tokens  | Thinking Tokens         | N/A      | N/A      | N/A                  | N/A                       |
+| Context 512 tokens  | Output Tokens           | 518.10   | 421.00   | 274.95               | N/A (n=1)                 |
+| Context 1024 tokens | Total Accuracy          | 0.30     | 0.00     | 0.48                 | N/A (n=1)                 |
+| Context 1024 tokens | Energy (J)              | 1599.82  | 1484.76  | 533.98               | N/A (n=1)                 |
+| Context 1024 tokens | Total Latency (ms)      | 38431.86 | 36163.24 | 12242.42             | N/A (n=1)                 |
+| Context 1024 tokens | Generation Latency (ms) | 26250.28 | 23274.33 | 12693.73             | N/A (n=1)                 |
+| Context 1024 tokens | TTFT (ms)               | 12181.58 | 11694.10 | 1699.53              | N/A (n=1)                 |
+| Context 1024 tokens | Thinking Tokens         | N/A      | N/A      | N/A                  | N/A                       |
+| Context 1024 tokens | Output Tokens           | 471.00   | 419.50   | 223.46               | N/A (n=1)                 |
+| Context 2048 tokens | Total Accuracy          | 0.40     | 0.00     | 0.52                 | N/A (n=1)                 |
+| Context 2048 tokens | Energy (J)              | 1830.59  | 1731.14  | 587.97               | N/A (n=1)                 |
+| Context 2048 tokens | Total Latency (ms)      | 44174.33 | 41540.51 | 13919.11             | N/A (n=1)                 |
+| Context 2048 tokens | Generation Latency (ms) | 26237.94 | 23110.22 | 12830.95             | N/A (n=1)                 |
+| Context 2048 tokens | TTFT (ms)               | 17936.39 | 17796.28 | 2357.17              | N/A (n=1)                 |
+| Context 2048 tokens | Thinking Tokens         | N/A      | N/A      | N/A                  | N/A                       |
+| Context 2048 tokens | Output Tokens           | 457.30   | 385.50   | 224.08               | N/A (n=1)                 |
+| Context 4096 tokens | Total Accuracy          | 0.30     | 0.00     | 0.48                 | N/A (n=1)                 |
+| Context 4096 tokens | Energy (J)              | 1828.91  | 1685.64  | 527.41               | N/A (n=1)                 |
+| Context 4096 tokens | Total Latency (ms)      | 44444.76 | 40657.07 | 12817.01             | N/A (n=1)                 |
+| Context 4096 tokens | Generation Latency (ms) | 23989.88 | 19639.71 | 12954.83             | N/A (n=1)                 |
+| Context 4096 tokens | TTFT (ms)               | 20454.88 | 20118.63 | 820.65               | N/A (n=1)                 |
+| Context 4096 tokens | Thinking Tokens         | N/A      | N/A      | N/A                  | N/A                       |
+| Context 4096 tokens | Output Tokens           | 429.80   | 353.00   | 230.42               | N/A (n=1)                 |

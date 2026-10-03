@@ -1,0 +1,7 @@
+[2026-10-03 15:30:38] [INFO] Initialized Experiment: context_scaling_contexteval
+[2026-10-03 15:30:38] [INFO] Run ID: context_scaling_contexteval__windows_10core_pc__2026-10-03_15-30-38
+[2026-10-03 15:30:38] [INFO] Run Directory: results\context_scaling_contexteval\windows_10core_pc\2026-10-03_15-30-38
+[2026-10-03 15:30:38] [INFO] Model: qwen3.5:0.8b (Backend: ollama, Format: gguf)
+[2026-10-03 15:30:38] [INFO] Device: windows_10core_pc
+[2026-10-03 15:30:38] [INFO] Evaluation Size: 10 (Evaluation Split: TEST)
+[2026-10-03 15:30:38] [INFO] Loading contexteval (train split) for Context Corpus...

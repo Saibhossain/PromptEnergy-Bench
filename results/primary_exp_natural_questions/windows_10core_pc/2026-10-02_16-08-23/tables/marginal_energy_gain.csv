@@ -1,0 +1,5 @@
+Baseline Strategy,Comparison Strategy,Accuracy Change,Energy Change,Marginal Energy Gain (% / J),Latency Change
+Zero-shot Direct,Few-shot (3),+10.00 pp,+5.5465 J,1.8029 %/J,+93.8 ms
+Zero-shot Direct,Zero-shot CoT,+0.00 pp,+1705.5512 J,0.0000 %/J,+40190.1 ms
+Zero-shot Direct,Short CoT,+0.00 pp,+164.6143 J,0.0000 %/J,+3506.5 ms
+Zero-shot Direct,Long CoT,+0.00 pp,+3868.5293 J,0.0000 %/J,+88853.1 ms

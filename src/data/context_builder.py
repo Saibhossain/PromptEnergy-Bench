@@ -33,6 +33,8 @@ def estimate_tokens(text: str) -> int:
     return max(1, int(len(words) * 1.1))
 
 
+import heapq
+
 class ContextBuilder:
     def __init__(self, train_records: Optional[List[GSM8KRecord]] = None, dataset_dir: str = "datasets/gsm8k"):
         if train_records is None:
@@ -40,10 +42,17 @@ class ContextBuilder:
         else:
             self.train_records = train_records
         
-        # Precompute keywords for each training record for relevance scoring
-        self.doc_keywords: List[Set[str]] = [
-            self._extract_keywords(getattr(rec, "question", getattr(rec, "input_text", ""))) for rec in self.train_records
-        ]
+        # Precompute keywords and inverted keyword index for rapid sparse lookup
+        self.doc_keywords: List[Set[str]] = []
+        self.keyword_to_docs: Dict[str, List[int]] = {}
+        
+        for idx, rec in enumerate(self.train_records):
+            kws = self._extract_keywords(getattr(rec, "question", getattr(rec, "input_text", "")))
+            self.doc_keywords.append(kws)
+            for kw in kws:
+                if kw not in self.keyword_to_docs:
+                    self.keyword_to_docs[kw] = []
+                self.keyword_to_docs[kw].append(idx)
 
     @staticmethod
     def _extract_keywords(text: str) -> Set[str]:
@@ -56,31 +65,70 @@ class ContextBuilder:
         }
         return {w for w in words if w not in stops}
 
-    def _rank_by_relevance(self, target_question: str, exclude_id: Optional[str] = None) -> List[int]:
+    def _rank_by_relevance(self, target_question: str, exclude_id: Optional[str] = None, max_candidates: int = 150) -> List[int]:
         target_kws = self._extract_keywords(target_question)
-        scores = []
-        for idx, kws in enumerate(self.doc_keywords):
-            if exclude_id and self.train_records[idx].id == exclude_id:
-                continue
-            overlap = len(target_kws.intersection(kws)) if target_kws else 0
-            scores.append((overlap, idx))
+        if not target_kws:
+            return [i for i, r in enumerate(self.train_records) if not (exclude_id and r.id == exclude_id)]
 
-        # Higher overlap first
-        scores.sort(key=lambda x: x[0], reverse=True)
-        return [idx for _, idx in scores]
+        # Sparse scoring via inverted keyword index
+        scores: Dict[int, int] = {}
+        for kw in target_kws:
+            if kw in self.keyword_to_docs:
+                for idx in self.keyword_to_docs[kw]:
+                    if exclude_id and self.train_records[idx].id == exclude_id:
+                        continue
+                    scores[idx] = scores.get(idx, 0) + 1
 
-    def _rank_by_distractor(self, target_question: str, exclude_id: Optional[str] = None) -> List[int]:
+        if not scores:
+            return [i for i, r in enumerate(self.train_records) if not (exclude_id and r.id == exclude_id)]
+
+        # Highest overlap first
+        sorted_candidates = heapq.nlargest(min(len(scores), max_candidates), scores.keys(), key=lambda i: scores[i])
+        
+        # If additional documents are needed, append remaining documents
+        if len(sorted_candidates) < max_candidates:
+            seen = set(sorted_candidates)
+            for i, r in enumerate(self.train_records):
+                if exclude_id and r.id == exclude_id:
+                    continue
+                if i not in seen:
+                    sorted_candidates.append(i)
+                    if len(sorted_candidates) >= max_candidates:
+                        break
+        return sorted_candidates
+
+    def _rank_by_distractor(self, target_question: str, exclude_id: Optional[str] = None, max_candidates: int = 150) -> List[int]:
         target_kws = self._extract_keywords(target_question)
-        scores = []
-        for idx, kws in enumerate(self.doc_keywords):
-            if exclude_id and self.train_records[idx].id == exclude_id:
-                continue
-            overlap = len(target_kws.intersection(kws)) if target_kws else 0
-            scores.append((overlap, idx))
+        if not target_kws:
+            return [i for i, r in enumerate(self.train_records) if not (exclude_id and r.id == exclude_id)]
 
-        # Lowest overlap first (zero overlap prioritized)
-        scores.sort(key=lambda x: x[0])
-        return [idx for _, idx in scores]
+        # Collect documents that share at least one keyword
+        matching_docs: Set[int] = set()
+        for kw in target_kws:
+            if kw in self.keyword_to_docs:
+                matching_docs.update(self.keyword_to_docs[kw])
+
+        # Distractors are documents with zero keyword overlap
+        distractors: List[int] = []
+        for idx, rec in enumerate(self.train_records):
+            if exclude_id and rec.id == exclude_id:
+                continue
+            if idx not in matching_docs:
+                distractors.append(idx)
+                if len(distractors) >= max_candidates:
+                    break
+
+        # Fallback to remaining if more documents are needed
+        if len(distractors) < max_candidates:
+            for idx, rec in enumerate(self.train_records):
+                if exclude_id and rec.id == exclude_id:
+                    continue
+                if idx not in distractors:
+                    distractors.append(idx)
+                    if len(distractors) >= max_candidates:
+                        break
+
+        return distractors
 
     def build_context(
         self,

@@ -88,7 +88,16 @@ def detect_device_specs() -> Dict[str, Any]:
         if count > 0:
             gpu_available = True
             gpu_count = count
-            h = pynvml.nvmlDeviceGetHandleByIndex(0)
+            target_idx = 0
+            cuda_vis = os.environ.get("CUDA_VISIBLE_DEVICES", "").strip()
+            if cuda_vis:
+                try:
+                    target_idx = int(cuda_vis.split(",")[0].strip())
+                    if target_idx >= count:
+                        target_idx = 0
+                except Exception:
+                    target_idx = 0
+            h = pynvml.nvmlDeviceGetHandleByIndex(target_idx)
             gpu_name = pynvml.nvmlDeviceGetName(h)
             if isinstance(gpu_name, bytes):
                 gpu_name = gpu_name.decode("utf-8")

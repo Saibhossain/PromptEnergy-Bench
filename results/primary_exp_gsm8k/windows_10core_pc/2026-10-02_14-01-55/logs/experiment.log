@@ -9,3 +9,6 @@
 [2026-10-02 14:02:03] [INFO] Executing 1 warmup run(s)...
 [2026-10-02 14:02:04] [INFO] Warmup 1/1 completed.
 [2026-10-02 14:02:04] [INFO] Beginning main evaluation across 50 inference requests...
+[2026-10-02 14:41:23] [INFO] Experiment completed. Summary saved to results\primary_exp_gsm8k\windows_10core_pc\2026-10-02_14-01-55\summary.json
+[2026-10-02 14:41:23] [INFO] Generated publication tables in results\primary_exp_gsm8k\windows_10core_pc\2026-10-02_14-01-55\tables
+[2026-10-02 14:41:40] [INFO] Generated publication plots in results\primary_exp_gsm8k\windows_10core_pc\2026-10-02_14-01-55

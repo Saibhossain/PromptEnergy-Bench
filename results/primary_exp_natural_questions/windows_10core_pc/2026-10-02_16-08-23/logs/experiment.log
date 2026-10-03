@@ -1,0 +1,14 @@
+[2026-10-02 16:08:23] [INFO] Initialized Experiment: primary_exp_natural_questions
+[2026-10-02 16:08:23] [INFO] Run ID: primary_exp_natural_questions__windows_10core_pc__2026-10-02_16-08-23
+[2026-10-02 16:08:23] [INFO] Run Directory: results\primary_exp_natural_questions\windows_10core_pc\2026-10-02_16-08-23
+[2026-10-02 16:08:23] [INFO] Model: qwen3.5:2b (Backend: ollama, Format: gguf)
+[2026-10-02 16:08:23] [INFO] Device: windows_10core_pc
+[2026-10-02 16:08:23] [INFO] Evaluation Size: 10 (Evaluation Split: TEST)
+[2026-10-02 16:08:23] [INFO] Loading natural_questions evaluation dataset (test split)...
+[2026-10-02 16:08:25] [INFO] Loaded 10 evaluation examples.
+[2026-10-02 16:08:25] [INFO] Executing 1 warmup run(s)...
+[2026-10-02 16:08:27] [INFO] Warmup 1/1 completed.
+[2026-10-02 16:08:27] [INFO] Beginning main evaluation across 50 inference requests...
+[2026-10-02 16:37:20] [INFO] Experiment completed. Summary saved to results\primary_exp_natural_questions\windows_10core_pc\2026-10-02_16-08-23\summary.json
+[2026-10-02 16:37:21] [INFO] Generated publication tables in results\primary_exp_natural_questions\windows_10core_pc\2026-10-02_16-08-23\tables
+[2026-10-02 16:37:36] [INFO] Generated publication plots in results\primary_exp_natural_questions\windows_10core_pc\2026-10-02_16-08-23

@@ -1,0 +1,14 @@
+\begin{table}
+\caption{Prompt Strategy Performance and Energy Breakdown on DATASET}
+\label{tab:strategy_comparison}
+\begin{tabular}{llllllllllllllllllllllllll}
+\toprule
+Strategy & Total Accuracy (\%) & Valid Accuracy (\%) & Valid Samples & Input Tokens & Thinking Tokens & Visible Output Tokens & Total Output Tokens & Total Energy (J) & Prefill Energy (J) & Decode Energy (J) & Prefill Share (\%) & Decode Share (\%) & Prefill (mJ/tok) & Decode (mJ/tok) & Prefill TPS (tok/s) & Decode TPS (tok/s) & TTFT (ms) & Generation Latency (ms) & Total Latency (ms) & Mean CPU (\%) & Peak CPU (\%) & RAM (GB) & Energy / Correct (J) & Accuracy / Joule & Truncation Rate (\%) \\
+\midrule
+Zero-shot Direct & 40.00 & 40.00 & 10/10 & 608.8 & N/A & 88.2 & 88.2 & 320.5765 & 28.3440 & 292.2325 & 8.8 & 91.2 & 46.56 & 3313.29 & 725.6 & 10.27 & 834.3 & 8584.3 & 9418.6 & 56.2 & 100.0 & 31.54 & 801.4412 & 0.0012 & 0.0 \\
+BM25 RAG (top-1) & 30.00 & 30.00 & 10/10 & 718.1 & N/A & 71.9 & 71.9 & 1021.0638 & 806.2723 & 214.7915 & 79.0 & 21.0 & 1122.79 & 2987.36 & 26.7 & 10.02 & 27061.7 & 7218.7 & 34280.4 & 57.6 & 100.0 & 26.84 & 3403.5461 & 0.0003 & 0.0 \\
+BM25 RAG (top-3) & 30.00 & 30.00 & 10/10 & 953.2 & N/A & 84.1 & 84.1 & 1428.3176 & 1156.2116 & 272.1060 & 81.0 & 19.1 & 1212.98 & 3235.51 & 25.6 & 9.55 & 37243.5 & 8768.6 & 46012.1 & 65.1 & 100.0 & 27.70 & 4761.0587 & 0.0002 & 0.0 \\
+BM25 RAG (top-5) & 30.00 & 30.00 & 10/10 & 1177.4 & N/A & 82.3 & 82.3 & 1622.9377 & 1342.2421 & 280.6956 & 82.7 & 17.3 & 1140.00 & 3410.64 & 27.2 & 9.16 & 43136.9 & 9012.8 & 52149.6 & 65.5 & 100.0 & 27.35 & 5409.7924 & 0.0002 & 0.0 \\
+\bottomrule
+\end{tabular}
+\end{table}

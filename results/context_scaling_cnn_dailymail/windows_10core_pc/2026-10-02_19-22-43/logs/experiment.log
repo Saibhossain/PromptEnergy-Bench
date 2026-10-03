@@ -1,0 +1,13 @@
+[2026-10-02 19:22:43] [INFO] Initialized Experiment: context_scaling_cnn_dailymail
+[2026-10-02 19:22:43] [INFO] Run ID: context_scaling_cnn_dailymail__windows_10core_pc__2026-10-02_19-22-43
+[2026-10-02 19:22:43] [INFO] Run Directory: results\context_scaling_cnn_dailymail\windows_10core_pc\2026-10-02_19-22-43
+[2026-10-02 19:22:43] [INFO] Model: qwen3.5:2b (Backend: ollama, Format: gguf)
+[2026-10-02 19:22:43] [INFO] Device: windows_10core_pc
+[2026-10-02 19:22:43] [INFO] Evaluation Size: 10 (Evaluation Split: TEST)
+[2026-10-02 19:22:43] [INFO] Loading cnn_dailymail (train split) for Context Corpus...
+[2026-10-02 19:25:02] [INFO] Loading cnn_dailymail (test split) for Evaluation...
+[2026-10-02 19:25:03] [INFO] Executing 1 warmup run(s)...
+[2026-10-02 19:25:11] [INFO] Warmup 1/1 completed.
+[2026-10-02 20:48:37] [INFO] Experiment completed. Summary saved to results\context_scaling_cnn_dailymail\windows_10core_pc\2026-10-02_19-22-43\summary.json
+[2026-10-02 20:48:38] [INFO] Generated publication tables in results\context_scaling_cnn_dailymail\windows_10core_pc\2026-10-02_19-22-43\tables
+[2026-10-02 20:48:53] [INFO] Generated publication plots in results\context_scaling_cnn_dailymail\windows_10core_pc\2026-10-02_19-22-43

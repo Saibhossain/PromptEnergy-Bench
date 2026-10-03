@@ -9,10 +9,18 @@ from src.data.context_builder import estimate_tokens
 class LlamaCppBackend(ModelBackend):
     """Adapter for GGUF models executed via llama-cpp-python."""
 
-    def __init__(self, model_name: str, n_ctx: int = 4096, n_gpu_layers: int = -1, **kwargs):
+    def __init__(self, model_name: str, n_ctx: int = 8192, n_gpu_layers: int = -1, **kwargs):
         super().__init__(model_name=model_name, **kwargs)
         self.n_ctx = n_ctx
         self.n_gpu_layers = n_gpu_layers
+        self.n_threads = kwargs.get("n_threads", None)
+        if self.n_threads is None:
+            try:
+                import psutil
+                self.n_threads = psutil.cpu_count(logical=False) or os.cpu_count() or 4
+            except Exception:
+                import os
+                self.n_threads = os.cpu_count() or 4
         self.llm = None
 
     def load_model(self) -> None:
@@ -27,6 +35,7 @@ class LlamaCppBackend(ModelBackend):
             model_path=self.model_name,
             n_ctx=self.n_ctx,
             n_gpu_layers=self.n_gpu_layers,
+            n_threads=self.n_threads,
             verbose=False
         )
         self.is_loaded = True

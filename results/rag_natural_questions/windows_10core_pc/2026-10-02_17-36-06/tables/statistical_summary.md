@@ -1,0 +1,32 @@
+# Statistical Summary Across Prompting Strategies
+
+| Strategy         | Metric                  | Mean     | Median   | Standard Deviation   | 95% Confidence Interval   |
+|:-----------------|:------------------------|:---------|:---------|:---------------------|:--------------------------|
+| Zero-shot Direct | Total Accuracy          | 0.00     | 0.00     | 0.00                 | N/A (n=1)                 |
+| Zero-shot Direct | Energy (J)              | 202.49   | 167.03   | 122.49               | N/A (n=1)                 |
+| Zero-shot Direct | Total Latency (ms)      | 5486.22  | 4733.76  | 3206.55              | N/A (n=1)                 |
+| Zero-shot Direct | Generation Latency (ms) | 4635.20  | 3937.03  | 3180.62              | N/A (n=1)                 |
+| Zero-shot Direct | TTFT (ms)               | 851.02   | 412.46   | 624.14               | N/A (n=1)                 |
+| Zero-shot Direct | Thinking Tokens         | N/A      | N/A      | N/A                  | N/A                       |
+| Zero-shot Direct | Output Tokens           | 49.20    | 42.50    | 32.84                | N/A (n=1)                 |
+| BM25 RAG (top-1) | Total Accuracy          | 0.10     | 0.00     | 0.32                 | N/A (n=1)                 |
+| BM25 RAG (top-1) | Energy (J)              | 290.40   | 233.44   | 126.14               | N/A (n=1)                 |
+| BM25 RAG (top-1) | Total Latency (ms)      | 7993.29  | 6453.65  | 3473.73              | N/A (n=1)                 |
+| BM25 RAG (top-1) | Generation Latency (ms) | 2885.97  | 2003.15  | 3149.23              | N/A (n=1)                 |
+| BM25 RAG (top-1) | TTFT (ms)               | 5107.33  | 4664.72  | 1977.98              | N/A (n=1)                 |
+| BM25 RAG (top-1) | Thinking Tokens         | N/A      | N/A      | N/A                  | N/A                       |
+| BM25 RAG (top-1) | Output Tokens           | 30.90    | 21.00    | 33.07                | N/A (n=1)                 |
+| BM25 RAG (top-3) | Total Accuracy          | 0.40     | 0.00     | 0.52                 | N/A (n=1)                 |
+| BM25 RAG (top-3) | Energy (J)              | 549.31   | 565.03   | 155.60               | N/A (n=1)                 |
+| BM25 RAG (top-3) | Total Latency (ms)      | 15166.46 | 15779.12 | 4342.23              | N/A (n=1)                 |
+| BM25 RAG (top-3) | Generation Latency (ms) | 3348.25  | 2212.64  | 3669.77              | N/A (n=1)                 |
+| BM25 RAG (top-3) | TTFT (ms)               | 11818.22 | 10971.17 | 3537.69              | N/A (n=1)                 |
+| BM25 RAG (top-3) | Thinking Tokens         | N/A      | N/A      | N/A                  | N/A                       |
+| BM25 RAG (top-3) | Output Tokens           | 35.60    | 24.00    | 38.70                | N/A (n=1)                 |
+| BM25 RAG (top-5) | Total Accuracy          | 0.40     | 0.00     | 0.52                 | N/A (n=1)                 |
+| BM25 RAG (top-5) | Energy (J)              | 811.33   | 840.82   | 208.83               | N/A (n=1)                 |
+| BM25 RAG (top-5) | Total Latency (ms)      | 20955.58 | 21913.42 | 4816.41              | N/A (n=1)                 |
+| BM25 RAG (top-5) | Generation Latency (ms) | 2745.34  | 1468.20  | 3818.46              | N/A (n=1)                 |
+| BM25 RAG (top-5) | TTFT (ms)               | 18210.24 | 19078.15 | 3724.16              | N/A (n=1)                 |
+| BM25 RAG (top-5) | Thinking Tokens         | N/A      | N/A      | N/A                  | N/A                       |
+| BM25 RAG (top-5) | Output Tokens           | 27.90    | 15.00    | 38.37                | N/A (n=1)                 |
