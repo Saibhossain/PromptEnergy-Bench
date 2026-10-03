@@ -95,16 +95,34 @@ def load_benchmark_dataset(
     # Generalized JSONL loading
     file_path = os.path.join(root, f"{split}.jsonl")
     if not os.path.exists(file_path):
-        # If test split was requested but only train exists (e.g. NQ pair)
-        if split == "test" and os.path.exists(os.path.join(root, "train.jsonl")):
-            file_path = os.path.join(root, "train.jsonl")
-            split = "train"
+        # Fallback to any existing split in the dataset directory
+        found_path = None
+        for alt_split in ["train", "test", "validation", "val"]:
+            alt_path = os.path.join(root, f"{alt_split}.jsonl")
+            if os.path.exists(alt_path):
+                found_path = alt_path
+                split = alt_split
+                break
+        if found_path:
+            file_path = found_path
         else:
             raise FileNotFoundError(f"Data file not found at: {file_path}")
+
+    # Determine slice limit if eval_size is passed
+    limit = None
+    if eval_size is not None and str(eval_size).lower() != "full":
+        try:
+            val = int(eval_size)
+            if val > 0:
+                limit = val
+        except (ValueError, TypeError):
+            pass
 
     records: List[BenchmarkRecord] = []
     with open(file_path, "r", encoding="utf-8") as handle:
         for idx, line in enumerate(handle):
+            if limit is not None and len(records) >= limit:
+                break
             line = line.strip()
             if not line:
                 continue
@@ -142,15 +160,5 @@ def load_benchmark_dataset(
                 context=context.strip() if context else None,
                 metadata=data
             ))
-
-    # Deterministic slice if eval_size is passed
-    if eval_size is not None and str(eval_size).lower() != "full":
-        try:
-            limit = int(eval_size)
-            if limit < 0:
-                raise ValueError("eval_size must be positive.")
-            records = records[:limit]
-        except ValueError:
-            pass
 
     return records

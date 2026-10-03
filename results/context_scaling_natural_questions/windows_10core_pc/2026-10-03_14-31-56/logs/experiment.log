@@ -11,3 +11,14 @@
 [2026-10-03 15:03:13] [INFO] Experiment completed. Summary saved to results\context_scaling_natural_questions\windows_10core_pc\2026-10-03_14-31-56\summary.json
 [2026-10-03 15:03:13] [INFO] Generated publication tables in results\context_scaling_natural_questions\windows_10core_pc\2026-10-03_14-31-56\tables
 [2026-10-03 15:03:29] [INFO] Generated publication plots in results\context_scaling_natural_questions\windows_10core_pc\2026-10-03_14-31-56
+[2026-10-03 19:02:49] [INFO] Initialized Experiment: context_scaling_natural_questions
+[2026-10-03 19:02:49] [INFO] Run ID: context_scaling_natural_questions__windows_10core_pc__2026-10-03_14-31-56
+[2026-10-03 19:02:49] [INFO] Run Directory: results\context_scaling_natural_questions\windows_10core_pc\2026-10-03_14-31-56
+[2026-10-03 19:02:49] [INFO] Model: qwen3.5:0.8b (Backend: ollama, Format: gguf)
+[2026-10-03 19:02:49] [INFO] Device: windows_10core_pc
+[2026-10-03 19:02:49] [INFO] Evaluation Size: 10 (Evaluation Split: TEST)
+[2026-10-03 19:02:49] [INFO] Loading natural_questions (train split) for Context Corpus...
+[2026-10-03 19:02:51] [INFO] Loading natural_questions (test split) for Evaluation...
+[2026-10-03 19:02:53] [INFO] Executing 1 warmup run(s)...
+[2026-10-03 19:02:57] [INFO] Warmup 1/1 completed.
+[2026-10-03 19:02:57] [INFO] Experiment completed. Summary saved to results\context_scaling_natural_questions\windows_10core_pc\2026-10-03_14-31-56\summary.json

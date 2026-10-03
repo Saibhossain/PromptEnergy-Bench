@@ -54,7 +54,7 @@ class ContextScalingExperiment(BaseExperiment):
         corpus_split = self.config.get("dataset", {}).get("context_source_split", "train")
 
         self.logger.info(f"Loading {dataset_name} ({corpus_split} split) for Context Corpus...")
-        train_records = load_benchmark_dataset(dataset_name, split=corpus_split)
+        train_records = load_benchmark_dataset(dataset_name, split=corpus_split, eval_size=2000)
         context_builder = ContextBuilder(train_records)
 
         self.logger.info(f"Loading {dataset_name} ({eval_split} split) for Evaluation...")

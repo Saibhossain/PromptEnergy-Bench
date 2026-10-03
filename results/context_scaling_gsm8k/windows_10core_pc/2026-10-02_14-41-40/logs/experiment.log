@@ -11,3 +11,14 @@
 [2026-10-02 15:49:27] [INFO] Experiment completed. Summary saved to results\context_scaling_gsm8k\windows_10core_pc\2026-10-02_14-41-40\summary.json
 [2026-10-02 15:49:27] [INFO] Generated publication tables in results\context_scaling_gsm8k\windows_10core_pc\2026-10-02_14-41-40\tables
 [2026-10-02 15:49:46] [INFO] Generated publication plots in results\context_scaling_gsm8k\windows_10core_pc\2026-10-02_14-41-40
+[2026-10-03 18:50:29] [INFO] Initialized Experiment: context_scaling_gsm8k
+[2026-10-03 18:50:29] [INFO] Run ID: context_scaling_gsm8k__windows_10core_pc__2026-10-02_14-41-40
+[2026-10-03 18:50:29] [INFO] Run Directory: results\context_scaling_gsm8k\windows_10core_pc\2026-10-02_14-41-40
+[2026-10-03 18:50:29] [INFO] Model: qwen3.5:2b (Backend: ollama, Format: gguf)
+[2026-10-03 18:50:29] [INFO] Device: windows_10core_pc
+[2026-10-03 18:50:29] [INFO] Evaluation Size: 10 (Evaluation Split: TEST)
+[2026-10-03 18:50:29] [INFO] Loading gsm8k (train split) for Context Corpus...
+[2026-10-03 18:50:30] [INFO] Loading gsm8k (test split) for Evaluation...
+[2026-10-03 18:50:30] [INFO] Executing 1 warmup run(s)...
+[2026-10-03 18:50:38] [INFO] Warmup 1/1 completed.
+[2026-10-03 18:50:38] [INFO] Experiment completed. Summary saved to results\context_scaling_gsm8k\windows_10core_pc\2026-10-02_14-41-40\summary.json

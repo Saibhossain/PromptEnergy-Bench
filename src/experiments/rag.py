@@ -53,7 +53,7 @@ class RAGExperiment(BaseExperiment):
 
         self.logger.info(f"Initializing BM25 Index over {dataset_name} {corpus_split.upper()} corpus (Evaluation on {eval_split.upper()} split)...")
         eval_records = load_benchmark_dataset(dataset_name, split=eval_split, eval_size=self.eval_size)
-        train_records = load_benchmark_dataset(dataset_name, split=corpus_split)
+        train_records = load_benchmark_dataset(dataset_name, split=corpus_split, eval_size=5000)
         retriever = BM25Retriever(corpus=train_records)
 
         # Warmup

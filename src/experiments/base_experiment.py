@@ -74,8 +74,17 @@ class BaseExperiment(ABC):
             self.format = self.backend_info["model_format"]
             self.energy_mode = self.exec_info["energy_mode"]
 
-            # If skip_existing or resume=auto requested, check if a matching run directory exists
-            if self.cli_args.get("skip_existing") or self.cli_args.get("resume") == "auto":
+            custom_run_dir = self.cli_args.get("run_dir") or self.cli_args.get("custom_run_dir")
+            
+            # If a specific custom run_dir was passed (e.g. from run_all_experiments.py):
+            if custom_run_dir:
+                cfg_path = os.path.join(custom_run_dir, "config.json")
+                res_path = os.path.join(custom_run_dir, "results.jsonl")
+                meta_path = os.path.join(custom_run_dir, "metadata.json")
+                if (self.cli_args.get("skip_existing") or self.cli_args.get("resume")) and os.path.exists(cfg_path) and os.path.exists(res_path) and os.path.exists(meta_path):
+                    self.resume_dir = custom_run_dir
+                    self.is_resumed = True
+            elif self.cli_args.get("skip_existing") or self.cli_args.get("resume") == "auto":
                 discovered_resume = find_latest_resumable_run(
                     results_root="results",
                     experiment_name=self.experiment_name,
@@ -88,17 +97,26 @@ class BaseExperiment(ABC):
                     self.resume_dir = discovered_resume
                     self.is_resumed = True
 
+        custom_run_dir = self.cli_args.get("run_dir") or self.cli_args.get("custom_run_dir")
+
         if self.is_resumed:
             # Resuming an existing run
+            plots_dir = os.path.join(self.resume_dir, "plots")
+            logs_dir = os.path.join(self.resume_dir, "logs")
+            tables_dir = os.path.join(self.resume_dir, "tables")
+            os.makedirs(plots_dir, exist_ok=True)
+            os.makedirs(logs_dir, exist_ok=True)
+            os.makedirs(tables_dir, exist_ok=True)
             self.paths = {
                 "run_dir": self.resume_dir,
                 "metadata_file": os.path.join(self.resume_dir, "metadata.json"),
                 "config_file": os.path.join(self.resume_dir, "config.json"),
                 "results_file": os.path.join(self.resume_dir, "results.jsonl"),
                 "summary_file": os.path.join(self.resume_dir, "summary.json"),
-                "plots_dir": os.path.join(self.resume_dir, "plots"),
-                "logs_dir": os.path.join(self.resume_dir, "logs"),
-                "log_file": os.path.join(self.resume_dir, "logs", "experiment.log")
+                "plots_dir": plots_dir,
+                "logs_dir": logs_dir,
+                "tables_dir": tables_dir,
+                "log_file": os.path.join(logs_dir, "experiment.log")
             }
             # Verify and load config
             self.config, self.metadata = validate_resume_directory(
@@ -121,9 +139,7 @@ class BaseExperiment(ABC):
             self.timestamp = generate_timestamp()
             self.run_id = generate_run_id(self.experiment_name, self.normalized_device, self.timestamp)
 
-
             # Create paths
-            custom_run_dir = self.cli_args.get("run_dir") or self.cli_args.get("custom_run_dir")
             if custom_run_dir:
                 plots_dir = os.path.join(custom_run_dir, "plots")
                 logs_dir = os.path.join(custom_run_dir, "logs")
