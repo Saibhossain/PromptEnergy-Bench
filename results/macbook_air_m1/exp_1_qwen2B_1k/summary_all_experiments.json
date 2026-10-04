@@ -1,0 +1,12 @@
+{
+    "model_name": "qwen3.5:2b-mlx",
+    "clean_tag": "qwen2B",
+    "hardware": "macbook_air_m1",
+    "total_records": 700,
+    "generated_timestamp": "2026-10-04 07:04:25",
+    "tables": {
+        "table1_csv": "results/macbook_air_m1/exp_1_qwen2B_1k/tables/table1_full_merged_results.csv",
+        "table2_csv": "results/macbook_air_m1/exp_1_qwen2B_1k/tables/table2_model_execution_energy.csv"
+    },
+    "plots_directory": "results/macbook_air_m1/exp_1_qwen2B_1k/plots"
+}

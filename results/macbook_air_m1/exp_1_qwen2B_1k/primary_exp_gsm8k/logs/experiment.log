@@ -1,0 +1,12 @@
+[2026-10-04 02:22:05] [INFO] Initialized Experiment: primary_exp_gsm8k
+[2026-10-04 02:22:05] [INFO] Run ID: primary_exp_gsm8k__macbook_air_m1__2026-10-04_02-22-04
+[2026-10-04 02:22:05] [INFO] Run Directory: results/macbook_air_m1/exp_1_qwen2B_1k/primary_exp_gsm8k
+[2026-10-04 02:22:05] [INFO] Model: qwen3.5:2b-mlx (Backend: ollama, Format: mlx)
+[2026-10-04 02:22:05] [INFO] Device: macbook_air_m1
+[2026-10-04 02:22:05] [INFO] Evaluation Size: 50 (Evaluation Split: TEST)
+[2026-10-04 02:22:05] [INFO] Loading gsm8k evaluation dataset (test split)...
+[2026-10-04 02:22:05] [INFO] Loaded 50 evaluation examples.
+[2026-10-04 02:22:05] [INFO] Executing 1 warmup run(s)...
+[2026-10-04 02:22:17] [INFO] Warmup 1/1 completed.
+[2026-10-04 02:22:17] [INFO] Beginning main evaluation across 250 inference requests...
+[2026-10-04 04:00:54] [INFO] Experiment completed. Summary saved to results/macbook_air_m1/exp_1_qwen2B_1k/primary_exp_gsm8k/summary.json

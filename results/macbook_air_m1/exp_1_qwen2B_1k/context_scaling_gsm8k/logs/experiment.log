@@ -1,0 +1,11 @@
+[2026-10-04 04:00:55] [INFO] Initialized Experiment: context_scaling_gsm8k
+[2026-10-04 04:00:55] [INFO] Run ID: context_scaling_gsm8k__macbook_air_m1__2026-10-04_04-00-54
+[2026-10-04 04:00:55] [INFO] Run Directory: results/macbook_air_m1/exp_1_qwen2B_1k/context_scaling_gsm8k
+[2026-10-04 04:00:55] [INFO] Model: qwen3.5:2b-mlx (Backend: ollama, Format: mlx)
+[2026-10-04 04:00:55] [INFO] Device: macbook_air_m1
+[2026-10-04 04:00:55] [INFO] Evaluation Size: 50 (Evaluation Split: TEST)
+[2026-10-04 04:00:55] [INFO] Loading gsm8k (train split) for Context Corpus...
+[2026-10-04 04:00:56] [INFO] Loading gsm8k (test split) for Evaluation...
+[2026-10-04 04:00:56] [INFO] Executing 1 warmup run(s)...
+[2026-10-04 04:01:01] [INFO] Warmup 1/1 completed.
+[2026-10-04 06:35:52] [INFO] Experiment completed. Summary saved to results/macbook_air_m1/exp_1_qwen2B_1k/context_scaling_gsm8k/summary.json

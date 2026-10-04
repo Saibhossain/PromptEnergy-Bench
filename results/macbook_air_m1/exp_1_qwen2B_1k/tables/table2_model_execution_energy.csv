@@ -1,0 +1,19 @@
+Metric Parameter,Measured Value,Unit
+Model Name,qwen3.5:2b-mlx,string
+Hardware Environment,macbook_air_m1,string
+Energy Telemetry Adapter,apple_estimated,method
+Total Evaluated Inferences,700,queries
+Total Inference Duration,16864.66,seconds
+Total Inference Duration (Minutes),281.08,minutes
+Total Prompt (Input) Tokens,"629,330",tokens
+Total Generated (Output) Tokens,"262,066",tokens
+Total Token Budget Ingested + Emitted,"891,396",tokens
+Mean Generation Speed,15.54,tokens/sec
+Total Gross Energy Consumed,85539.80,Joules (J)
+Total Net Energy Consumed (Excl. Idle),0.00,Joules (J)
+Total Electrical Energy in kWh,0.023761,kWh
+Mean Active Power Draw,5.35,Watts (W)
+Calibrated Idle Power Baseline,N/A,Watts (W)
+Unit Energy Cost per Token,95.962,mJ / token
+Unit Energy Cost per Query,122.200,Joules / query
+Overall Macro Accuracy Across All Tasks,59.14%,percent
