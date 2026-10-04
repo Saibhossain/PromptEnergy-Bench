@@ -1,0 +1,121 @@
+% Marginal Energy Gain (MEG) across Prompting Strategies
+\begin{table*}[t]
+\centering
+\small
+\begin{tabular}{lrrrrr}
+\toprule
+Model & Baseline & Strategy & Delta Acc (% pts) & Delta Energy (J) & MEG (% / J) \\
+\midrule
+gemma3:1b & zero\_shot\_direct & ctx\_0 & +25.00\% & +189.168 J & 0.132 \%/J \\
+gemma3:1b & zero\_shot\_direct & ctx\_512 & +27.00\% & +169.458 J & 0.159 \%/J \\
+gemma3:1b & zero\_shot\_direct & ctx\_1024 & +11.00\% & +190.639 J & 0.058 \%/J \\
+gemma3:1b & zero\_shot\_direct & ctx\_2048 & +9.00\% & +175.730 J & 0.051 \%/J \\
+gemma3:1b & zero\_shot\_direct & ctx\_4096 & +17.00\% & +192.506 J & 0.088 \%/J \\
+gemma3:1b & zero\_shot\_direct & few\_shot\_3 & -3.00\% & +0.737 J & -4.073 \%/J \\
+gemma3:1b & zero\_shot\_direct & zero\_shot\_cot & +27.00\% & +215.643 J & 0.125 \%/J \\
+gemma3:1b & zero\_shot\_direct & short\_cot & +13.00\% & +77.602 J & 0.168 \%/J \\
+gemma3:1b & zero\_shot\_direct & long\_cot & +23.00\% & +335.924 J & 0.068 \%/J \\
+gemma3:1b & zero\_shot\_direct & rag\_top\_1 & -5.00\% & +3.361 J & -1.487 \%/J \\
+gemma3:1b & zero\_shot\_direct & rag\_top\_3 & -7.00\% & +10.686 J & -0.655 \%/J \\
+gemma3:1b & zero\_shot\_direct & rag\_top\_5 & -7.00\% & +16.396 J & -0.427 \%/J \\
+gemma3:4b & zero\_shot\_direct & ctx\_0 & +52.00\% & +543.832 J & 0.096 \%/J \\
+gemma3:4b & zero\_shot\_direct & ctx\_512 & +56.00\% & +531.662 J & 0.105 \%/J \\
+gemma3:4b & zero\_shot\_direct & ctx\_1024 & +52.00\% & +532.638 J & 0.098 \%/J \\
+gemma3:4b & zero\_shot\_direct & ctx\_2048 & +48.00\% & +502.614 J & 0.096 \%/J \\
+gemma3:4b & zero\_shot\_direct & ctx\_4096 & +50.00\% & +586.294 J & 0.085 \%/J \\
+gemma3:4b & zero\_shot\_direct & few\_shot\_3 & -2.00\% & +35.856 J & -0.056 \%/J \\
+gemma3:4b & zero\_shot\_direct & zero\_shot\_cot & +52.00\% & +568.301 J & 0.092 \%/J \\
+gemma3:4b & zero\_shot\_direct & short\_cot & +44.00\% & +133.595 J & 0.329 \%/J \\
+gemma3:4b & zero\_shot\_direct & long\_cot & +50.00\% & +878.928 J & 0.057 \%/J \\
+gemma3:4b & zero\_shot\_direct & rag\_top\_1 & -4.00\% & +2.990 J & -1.338 \%/J \\
+gemma3:4b & zero\_shot\_direct & rag\_top\_3 & +30.00\% & +162.226 J & 0.185 \%/J \\
+gemma3:4b & zero\_shot\_direct & rag\_top\_5 & +16.00\% & +100.802 J & 0.159 \%/J \\
+llama3.2:3b & zero\_shot\_direct & ctx\_0 & +51.00\% & +382.278 J & 0.133 \%/J \\
+llama3.2:3b & zero\_shot\_direct & ctx\_512 & +51.00\% & +373.598 J & 0.137 \%/J \\
+llama3.2:3b & zero\_shot\_direct & ctx\_1024 & +49.00\% & +417.919 J & 0.117 \%/J \\
+llama3.2:3b & zero\_shot\_direct & ctx\_2048 & +49.00\% & +566.660 J & 0.086 \%/J \\
+llama3.2:3b & zero\_shot\_direct & ctx\_4096 & +53.00\% & +607.310 J & 0.087 \%/J \\
+llama3.2:3b & zero\_shot\_direct & few\_shot\_3 & +57.00\% & +310.631 J & 0.183 \%/J \\
+llama3.2:3b & zero\_shot\_direct & zero\_shot\_cot & +49.00\% & +413.223 J & 0.119 \%/J \\
+llama3.2:3b & zero\_shot\_direct & short\_cot & +53.00\% & +145.313 J & 0.365 \%/J \\
+llama3.2:3b & zero\_shot\_direct & long\_cot & +57.00\% & +561.793 J & 0.101 \%/J \\
+llama3.2:3b & zero\_shot\_direct & rag\_top\_1 & +25.00\% & +53.380 J & 0.468 \%/J \\
+llama3.2:3b & zero\_shot\_direct & rag\_top\_3 & +17.00\% & +65.554 J & 0.259 \%/J \\
+llama3.2:3b & zero\_shot\_direct & rag\_top\_5 & +19.00\% & +82.245 J & 0.231 \%/J \\
+mistral:7b & zero\_shot\_direct & ctx\_0 & +38.00\% & +908.136 J & 0.042 \%/J \\
+mistral:7b & zero\_shot\_direct & ctx\_512 & +28.00\% & +932.106 J & 0.030 \%/J \\
+mistral:7b & zero\_shot\_direct & ctx\_1024 & +38.00\% & +956.128 J & 0.040 \%/J \\
+mistral:7b & zero\_shot\_direct & ctx\_2048 & +40.00\% & +1160.664 J & 0.034 \%/J \\
+mistral:7b & zero\_shot\_direct & ctx\_4096 & +34.00\% & +1442.861 J & 0.024 \%/J \\
+mistral:7b & zero\_shot\_direct & few\_shot\_3 & +10.00\% & +529.081 J & 0.019 \%/J \\
+mistral:7b & zero\_shot\_direct & zero\_shot\_cot & +44.00\% & +888.212 J & 0.050 \%/J \\
+mistral:7b & zero\_shot\_direct & short\_cot & +36.00\% & +363.198 J & 0.099 \%/J \\
+mistral:7b & zero\_shot\_direct & long\_cot & +42.00\% & +1169.807 J & 0.036 \%/J \\
+mistral:7b & zero\_shot\_direct & rag\_top\_1 & +4.00\% & +287.272 J & 0.014 \%/J \\
+mistral:7b & zero\_shot\_direct & rag\_top\_3 & +10.00\% & +276.031 J & 0.036 \%/J \\
+mistral:7b & zero\_shot\_direct & rag\_top\_5 & +6.00\% & +279.345 J & 0.021 \%/J \\
+qwen3.5:0.8b & zero\_shot\_direct & ctx\_0 & +34.00\% & +508.956 J & 0.067 \%/J \\
+qwen3.5:0.8b & zero\_shot\_direct & ctx\_512 & +8.00\% & +514.047 J & 0.016 \%/J \\
+qwen3.5:0.8b & zero\_shot\_direct & ctx\_1024 & +22.00\% & +473.368 J & 0.046 \%/J \\
+qwen3.5:0.8b & zero\_shot\_direct & ctx\_2048 & +20.00\% & +471.309 J & 0.042 \%/J \\
+qwen3.5:0.8b & zero\_shot\_direct & ctx\_4096 & +20.00\% & +477.252 J & 0.042 \%/J \\
+qwen3.5:0.8b & zero\_shot\_direct & few\_shot\_3 & +20.00\% & +363.161 J & 0.055 \%/J \\
+qwen3.5:0.8b & zero\_shot\_direct & zero\_shot\_cot & +34.00\% & +540.213 J & 0.063 \%/J \\
+qwen3.5:0.8b & zero\_shot\_direct & short\_cot & +4.00\% & +69.619 J & 0.057 \%/J \\
+qwen3.5:0.8b & zero\_shot\_direct & long\_cot & +30.00\% & +808.248 J & 0.037 \%/J \\
+qwen3.5:0.8b & zero\_shot\_direct & rag\_top\_1 & -14.00\% & -42.895 J & 0.000 \%/J \\
+qwen3.5:0.8b & zero\_shot\_direct & rag\_top\_3 & -10.00\% & -36.484 J & 0.000 \%/J \\
+qwen3.5:0.8b & zero\_shot\_direct & rag\_top\_5 & -14.00\% & -28.657 J & 0.000 \%/J \\
+qwen3.5:2b & zero\_shot\_direct & ctx\_0 & +36.00\% & +579.752 J & 0.062 \%/J \\
+qwen3.5:2b & zero\_shot\_direct & ctx\_512 & +34.00\% & +558.338 J & 0.061 \%/J \\
+qwen3.5:2b & zero\_shot\_direct & ctx\_1024 & +34.00\% & +626.507 J & 0.054 \%/J \\
+qwen3.5:2b & zero\_shot\_direct & ctx\_2048 & +22.00\% & +680.391 J & 0.032 \%/J \\
+qwen3.5:2b & zero\_shot\_direct & ctx\_4096 & +36.00\% & +558.657 J & 0.064 \%/J \\
+qwen3.5:2b & zero\_shot\_direct & few\_shot\_3 & +28.00\% & +357.393 J & 0.078 \%/J \\
+qwen3.5:2b & zero\_shot\_direct & zero\_shot\_cot & +36.00\% & +580.449 J & 0.062 \%/J \\
+qwen3.5:2b & zero\_shot\_direct & short\_cot & +22.00\% & -0.289 J & 0.000 \%/J \\
+qwen3.5:2b & zero\_shot\_direct & long\_cot & +32.00\% & +1259.607 J & 0.025 \%/J \\
+qwen3.5:2b & zero\_shot\_direct & rag\_top\_1 & +16.00\% & -9.091 J & 0.000 \%/J \\
+qwen3.5:2b & zero\_shot\_direct & rag\_top\_3 & +2.00\% & -5.437 J & 0.000 \%/J \\
+qwen3.5:2b & zero\_shot\_direct & rag\_top\_5 & +4.00\% & +20.118 J & 0.199 \%/J \\
+qwen3.5:9b & zero\_shot\_direct & ctx\_0 & +2.00\% & +1831.000 J & 0.001 \%/J \\
+qwen3.5:9b & zero\_shot\_direct & ctx\_512 & +0.00\% & +1811.493 J & 0.000 \%/J \\
+qwen3.5:9b & zero\_shot\_direct & ctx\_1024 & +4.00\% & +1714.907 J & 0.002 \%/J \\
+qwen3.5:9b & zero\_shot\_direct & ctx\_2048 & +2.00\% & +1885.708 J & 0.001 \%/J \\
+qwen3.5:9b & zero\_shot\_direct & ctx\_4096 & +0.00\% & +2173.203 J & 0.000 \%/J \\
+qwen3.5:9b & zero\_shot\_direct & few\_shot\_3 & -8.00\% & +870.826 J & -0.009 \%/J \\
+qwen3.5:9b & zero\_shot\_direct & zero\_shot\_cot & +2.00\% & +1818.186 J & 0.001 \%/J \\
+qwen3.5:9b & zero\_shot\_direct & short\_cot & -4.00\% & -178.521 J & 0.000 \%/J \\
+qwen3.5:9b & zero\_shot\_direct & long\_cot & +2.00\% & +3376.489 J & 0.001 \%/J \\
+qwen3.5:9b & zero\_shot\_direct & rag\_top\_1 & -4.00\% & +7.224 J & -0.554 \%/J \\
+qwen3.5:9b & zero\_shot\_direct & rag\_top\_3 & +0.00\% & +94.927 J & 0.000 \%/J \\
+qwen3.5:9b & zero\_shot\_direct & rag\_top\_5 & -10.00\% & +400.238 J & -0.025 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & ctx\_0 & +38.00\% & +65.454 J & 0.581 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & ctx\_512 & +38.00\% & +44.886 J & 0.847 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & ctx\_1024 & +34.00\% & +47.603 J & 0.714 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & ctx\_2048 & +22.00\% & +100.548 J & 0.219 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & ctx\_4096 & +30.00\% & +93.322 J & 0.321 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & few\_shot\_3 & +30.00\% & +28.837 J & 1.040 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & zero\_shot\_cot & +34.00\% & +48.836 J & 0.696 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & short\_cot & +32.00\% & +11.127 J & 2.876 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & long\_cot & +38.00\% & +110.771 J & 0.343 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & rag\_top\_1 & +0.00\% & -2.466 J & 0.000 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & rag\_top\_3 & +2.00\% & +1.386 J & 1.443 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & rag\_top\_5 & +2.00\% & +2.919 J & 0.685 \%/J \\
+qwen3.5:2b-mlx & zero\_shot\_direct & ctx\_0 & +11.00\% & +122.141 J & 0.090 \%/J \\
+qwen3.5:2b-mlx & zero\_shot\_direct & ctx\_512 & +3.00\% & +139.173 J & 0.022 \%/J \\
+qwen3.5:2b-mlx & zero\_shot\_direct & ctx\_1024 & +11.00\% & +167.965 J & 0.065 \%/J \\
+qwen3.5:2b-mlx & zero\_shot\_direct & ctx\_2048 & +7.00\% & +181.417 J & 0.039 \%/J \\
+qwen3.5:2b-mlx & zero\_shot\_direct & ctx\_4096 & +5.00\% & +228.039 J & 0.022 \%/J \\
+qwen3.5:2b-mlx & zero\_shot\_direct & few\_shot\_3 & +3.00\% & +35.272 J & 0.085 \%/J \\
+qwen3.5:2b-mlx & zero\_shot\_direct & zero\_shot\_cot & +5.00\% & +129.009 J & 0.039 \%/J \\
+qwen3.5:2b-mlx & zero\_shot\_direct & short\_cot & +1.00\% & -1.744 J & 0.000 \%/J \\
+qwen3.5:2b-mlx & zero\_shot\_direct & long\_cot & +17.00\% & +219.268 J & 0.078 \%/J \\
+qwen3.5:2b-mlx & zero\_shot\_direct & rag\_top\_1 & -15.00\% & +3.120 J & -4.808 \%/J \\
+qwen3.5:2b-mlx & zero\_shot\_direct & rag\_top\_3 & -7.00\% & +22.515 J & -0.311 \%/J \\
+qwen3.5:2b-mlx & zero\_shot\_direct & rag\_top\_5 & -11.00\% & +31.322 J & -0.351 \%/J \\
+\bottomrule
+\end{tabular}
+\caption{Marginal Energy Gain (MEG) across Prompting Strategies}
+\label{tab:3_marginal_energy_gain}
+\end{table*}

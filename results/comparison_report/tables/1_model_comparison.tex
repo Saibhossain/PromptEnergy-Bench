@@ -1,0 +1,22 @@
+% Cross-Model Comparative Performance and Energy Decomposition Summary
+\begin{table*}[t]
+\centering
+\small
+\begin{tabular}{lrrrrrrrrrrr}
+\toprule
+Model & Hardware & Samples & Accuracy (%) & Total Energy (J) & Prefill Energy (J) & Decode Energy (J) & Prefill (mJ/tok) & Decode (mJ/tok) & Decode TPS (tok/s) & Mean TTFT (ms) & Mean Latency (ms) \\
+\midrule
+gemma3:1b & kaggle\_t4\_gpu & 700 & 16.29\% & 126.130 & 16.885 & 109.245 & 18.77 & 769.65 & 140.92 & 164.2 & 1223.8 \\
+gemma3:4b & kaggle\_t4\_gpu & 700 & 65.71\% & 509.166 & 65.225 & 443.941 & 72.44 & 2253.41 & 47.34 & 686.9 & 5271.5 \\
+llama3.2:3b & kaggle\_t4\_gpu & 700 & 54.86\% & 316.186 & 38.728 & 277.458 & 48.44 & 1397.13 & 78.58 & 394.5 & 3136.6 \\
+mistral:7b & kaggle\_t4\_gpu & 700 & 31.57\% & 748.086 & 88.203 & 659.883 & 94.01 & 3200.49 & 32.33 & 920.8 & 7741.7 \\
+qwen3.5:0.8b & kaggle\_t4\_gpu & 700 & 27.00\% & 358.786 & 21.531 & 337.256 & 23.91 & 998.33 & 104.38 & 212.4 & 3524.6 \\
+qwen3.5:2b & kaggle\_t4\_gpu & 700 & 59.57\% & 586.548 & 30.932 & 555.616 & 34.33 & 1528.40 & 67.27 & 309.4 & 5860.4 \\
+qwen3.5:9b & kaggle\_t4\_gpu & 700 & 91.00\% & 1896.097 & 138.863 & 1757.234 & 154.26 & 4938.35 & 20.36 & 1406.8 & 19153.3 \\
+qwen3.5:0.8b-mlx & macbook\_air\_m1 & 700 & 23.43\% & 43.052 & 6.072 & 36.979 & 6.75 & 106.11 & 29.61 & 2257.6 & 15381.5 \\
+qwen3.5:2b-mlx & macbook\_air\_m1 & 700 & 59.14\% & 122.200 & 19.579 & 102.621 & 21.78 & 274.11 & 18.73 & 3524.2 & 24092.4 \\
+\bottomrule
+\end{tabular}
+\caption{Cross-Model Comparative Performance and Energy Decomposition Summary}
+\label{tab:1_model_comparison}
+\end{table*}

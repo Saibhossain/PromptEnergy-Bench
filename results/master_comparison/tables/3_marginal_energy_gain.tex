@@ -6,18 +6,18 @@
 \toprule
 Model & Baseline & Strategy & Delta Acc (% pts) & Delta Energy (J) & MEG (% / J) \\
 \midrule
-qwen3.5:2b-mlx & zero\_shot\_direct & few\_shot\_3 & +3.00\% & +35.272 J & 0.085 \%/J \\
-qwen3.5:2b-mlx & zero\_shot\_direct & zero\_shot\_cot & +5.00\% & +129.009 J & 0.039 \%/J \\
-qwen3.5:2b-mlx & zero\_shot\_direct & short\_cot & +1.00\% & -1.744 J & 0.000 \%/J \\
-qwen3.5:2b-mlx & zero\_shot\_direct & long\_cot & +17.00\% & +219.268 J & 0.078 \%/J \\
-qwen3.5:2b-mlx & zero\_shot\_direct & ctx\_0 & +11.00\% & +122.141 J & 0.090 \%/J \\
-qwen3.5:2b-mlx & zero\_shot\_direct & ctx\_512 & +3.00\% & +139.173 J & 0.022 \%/J \\
-qwen3.5:2b-mlx & zero\_shot\_direct & ctx\_1024 & +11.00\% & +167.965 J & 0.065 \%/J \\
-qwen3.5:2b-mlx & zero\_shot\_direct & ctx\_2048 & +7.00\% & +181.417 J & 0.039 \%/J \\
-qwen3.5:2b-mlx & zero\_shot\_direct & ctx\_4096 & +5.00\% & +228.039 J & 0.022 \%/J \\
-qwen3.5:2b-mlx & zero\_shot\_direct & rag\_top\_1 & -15.00\% & +3.120 J & -4.808 \%/J \\
-qwen3.5:2b-mlx & zero\_shot\_direct & rag\_top\_3 & -7.00\% & +22.515 J & -0.311 \%/J \\
-qwen3.5:2b-mlx & zero\_shot\_direct & rag\_top\_5 & -11.00\% & +31.322 J & -0.351 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & few\_shot\_3 & +30.00\% & +28.837 J & 1.040 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & zero\_shot\_cot & +34.00\% & +48.836 J & 0.696 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & short\_cot & +32.00\% & +11.127 J & 2.876 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & long\_cot & +38.00\% & +110.771 J & 0.343 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & ctx\_0 & +38.00\% & +65.454 J & 0.581 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & ctx\_512 & +38.00\% & +44.886 J & 0.847 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & ctx\_1024 & +34.00\% & +47.603 J & 0.714 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & ctx\_2048 & +22.00\% & +100.548 J & 0.219 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & ctx\_4096 & +30.00\% & +93.322 J & 0.321 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & rag\_top\_1 & +0.00\% & -2.466 J & 0.000 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & rag\_top\_3 & +2.00\% & +1.386 J & 1.443 \%/J \\
+qwen3.5:0.8b-mlx & zero\_shot\_direct & rag\_top\_5 & +2.00\% & +2.919 J & 0.685 \%/J \\
 \bottomrule
 \end{tabular}
 \caption{Marginal Energy Gain (MEG) across Prompting Strategies}
