@@ -1,0 +1,34 @@
+{
+    "run_id": "rag_natural_questions__kaggle_t4_gpu__2026-10-04_12-45-29",
+    "experiment_name": "rag_natural_questions",
+    "model": {
+        "name": "gemma3:4b",
+        "backend": "ollama",
+        "format": "gguf"
+    },
+    "dataset": {
+        "name": "natural_questions",
+        "evaluation_split": "test",
+        "context_source_split": "train",
+        "evaluation_size": 50
+    },
+    "sampling": {
+        "temperature": 0.0,
+        "seed": 42,
+        "top_p": 1.0,
+        "max_tokens": 1024
+    },
+    "generation": {
+        "default_max_tokens": 1024,
+        "strategy_max_tokens": {
+            "zero_shot_direct": 512,
+            "few_shot_3": 512,
+            "zero_shot_cot": 1024,
+            "short_cot": 1024,
+            "long_cot": 2048
+        }
+    },
+    "warmups": 1,
+    "repetitions": 1,
+    "validation": true
+}

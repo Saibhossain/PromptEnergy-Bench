@@ -1,0 +1,12 @@
+[2026-10-04 10:50:42] [INFO] Initialized Experiment: primary_exp_natural_questions
+[2026-10-04 10:50:42] [INFO] Run ID: primary_exp_natural_questions__kaggle_t4_gpu__2026-10-04_10-50-41
+[2026-10-04 10:50:42] [INFO] Run Directory: results/kaggle_t4_gpu/exp_1_qwen2B_1k/primary_exp_natural_questions
+[2026-10-04 10:50:42] [INFO] Model: qwen3.5:2b (Backend: ollama, Format: gguf)
+[2026-10-04 10:50:42] [INFO] Device: kaggle_t4_gpu
+[2026-10-04 10:50:42] [INFO] Evaluation Size: 50 (Evaluation Split: TEST)
+[2026-10-04 10:50:42] [INFO] Loading natural_questions evaluation dataset (test split)...
+[2026-10-04 10:50:42] [INFO] Loaded 50 evaluation examples.
+[2026-10-04 10:50:42] [INFO] Executing 1 warmup run(s)...
+[2026-10-04 10:51:07] [INFO] Warmup 1/1 completed.
+[2026-10-04 10:51:07] [INFO] Beginning main evaluation across 250 inference requests...
+[2026-10-04 11:12:51] [INFO] Experiment completed. Summary saved to results/kaggle_t4_gpu/exp_1_qwen2B_1k/primary_exp_natural_questions/summary.json

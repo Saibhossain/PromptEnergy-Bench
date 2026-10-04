@@ -2,8 +2,8 @@
     "model_name": "gemma3:4b",
     "clean_tag": "gemma4B",
     "hardware": "kaggle_t4_gpu",
-    "total_records": 700,
-    "generated_timestamp": "2026-10-04 01:51:32",
+    "total_records": 1400,
+    "generated_timestamp": "2026-10-04 12:48:02",
     "tables": {
         "table1_csv": "results/kaggle_t4_gpu/exp_1_gemma4B_1k/tables/table1_full_merged_results.csv",
         "table2_csv": "results/kaggle_t4_gpu/exp_1_gemma4B_1k/tables/table2_model_execution_energy.csv"

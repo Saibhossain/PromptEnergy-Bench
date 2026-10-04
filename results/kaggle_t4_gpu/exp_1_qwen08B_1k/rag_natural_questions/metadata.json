@@ -1,0 +1,60 @@
+{
+    "run_id": "rag_natural_questions__kaggle_t4_gpu__2026-10-04_13-28-43",
+    "experiment_name": "rag_natural_questions",
+    "timestamp": "2026-10-04_13-28-43",
+    "device": {
+        "name": "kaggle_t4_gpu",
+        "normalized_name": "kaggle_t4_gpu",
+        "os": "Linux",
+        "cpu": "x86_64",
+        "gpu_available": true,
+        "gpu_count": 2,
+        "gpu_name": "Tesla T4",
+        "gpu_vram_gb": 15.0,
+        "ram_gb": 31
+    },
+    "backend": {
+        "operator": "ollama",
+        "model_format": "gguf",
+        "model_name": "qwen3.5:0.8b"
+    },
+    "dataset": {
+        "name": "natural_questions",
+        "evaluation_split": "test",
+        "context_source_split": "train",
+        "evaluation_size": 50
+    },
+    "measurement": {
+        "energy_method": "codecarbon_estimated",
+        "energy_quality": "estimated",
+        "token_method": "backend_usage",
+        "latency_method": "perf_counter"
+    },
+    "software": {
+        "python_version": "3.13.15",
+        "platform": "Linux-6.18.48+-x86_64-with-glibc2.39",
+        "ollama_version": "0.35.1",
+        "git_commit": "573a6c20a2c549fcd11f973c8e54b4a08cd417a4",
+        "git_dirty": true,
+        "package_versions": {
+            "datasets": "4.8.5",
+            "codecarbon": "3.3.1",
+            "ollama": "unknown",
+            "pandas": "2.3.3",
+            "matplotlib": "3.10.0",
+            "seaborn": "0.13.2",
+            "psutil": "7.2.2",
+            "scipy": "1.16.3"
+        }
+    },
+    "generation": {
+        "default_max_tokens": 1024,
+        "strategy_max_tokens": {
+            "zero_shot_direct": 512,
+            "few_shot_3": 512,
+            "zero_shot_cot": 1024,
+            "short_cot": 1024,
+            "long_cot": 2048
+        }
+    }
+}

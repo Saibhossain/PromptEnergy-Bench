@@ -1,14 +1,27 @@
 Dataset,Experiment Type,Strategy,Raw Strategy,Raw Dataset,Samples,Accuracy (%),Token F1,ROUGE-L,Total Energy (J),Net Energy (J),Prefill Energy (J),Decode Energy (J),TTFT (ms),Decode Latency (ms),Total Latency (ms),Input Tokens,Output Tokens,Thinking Tokens,Throughput (tok/s),Energy/Token (mJ),Truncation Rate (%)
+Natural Questions (QA),Prompting (Exp 1),Zero-shot Direct,zero_shot_direct,natural_questions,100,42.0,0.1859,,144.7,,,,52.7,1380.8,1433.6,71.3,44.5,N/A,32.26,1249.57,0.0
+Natural Questions (QA),BM25 RAG (Exp 3),BM25 RAG (top-1),rag_top_1,natural_questions,50,48.0,0.1893,,168.526,,,,224.6,1502.7,1727.3,249.4,46.7,N/A,31.08,569.08,0.0
+Natural Questions (QA),BM25 RAG (Exp 3),BM25 RAG (top-3),rag_top_3,natural_questions,50,46.0,0.1973,,217.681,,,,521.1,1728.6,2249.6,584.7,53.4,N/A,30.92,341.11,0.0
+Natural Questions (QA),BM25 RAG (Exp 3),BM25 RAG (top-5),rag_top_5,natural_questions,50,42.0,0.1993,,223.29,,,,587.1,1741.0,2328.2,951.2,53.6,N/A,30.79,222.22,0.0
+Natural Questions (QA),Context Scaling (Exp 2),Context 0 tokens,ctx_0,natural_questions,50,46.0,0.1814,,805.837,,,,68.6,8176.7,8245.3,72.3,246.1,N/A,30.1,2531.37,0.0
+Natural Questions (QA),Context Scaling (Exp 2),Context 512 tokens,ctx_512,natural_questions,50,44.0,0.1435,,705.755,,,,579.4,6670.9,7250.2,570.9,200.8,N/A,30.1,914.55,0.0
+Natural Questions (QA),Context Scaling (Exp 2),Context 1024 tokens,ctx_1024,natural_questions,50,42.0,0.1533,,823.9,,,,992.7,7498.8,8491.4,1234.0,224.3,N/A,29.91,564.98,0.0
+Natural Questions (QA),Context Scaling (Exp 2),Context 2048 tokens,ctx_2048,natural_questions,50,40.0,0.1665,,978.349,,,,2658.7,7487.1,10145.8,2486.5,221.7,N/A,29.61,361.26,0.0
+Natural Questions (QA),Context Scaling (Exp 2),Context 4096 tokens,ctx_4096,natural_questions,50,36.0,0.1681,,1299.765,,,,5580.3,8001.2,13581.6,4994.6,228.8,N/A,28.59,248.84,4.0
 GSM8K (Math),Prompting (Exp 1),Zero-shot Direct,zero_shot_direct,gsm8k,100,8.0,,,91.454,,,,104.5,803.7,908.1,143.3,28.6,N/A,35.64,531.77,0.0
+GSM8K (Math),BM25 RAG (Exp 3),BM25 RAG (top-1),rag_top_1,gsm8k,50,12.0,,,378.726,,,,399.3,3513.7,3913.0,410.6,107.7,N/A,30.66,730.68,2.0
+GSM8K (Math),BM25 RAG (Exp 3),BM25 RAG (top-3),rag_top_3,gsm8k,50,18.0,,,367.485,,,,758.9,3068.5,3827.5,911.1,94.0,N/A,30.63,365.64,2.0
+GSM8K (Math),BM25 RAG (Exp 3),BM25 RAG (top-5),rag_top_5,gsm8k,50,14.0,,,370.799,,,,1001.0,2880.1,3881.1,1405.3,87.7,N/A,30.46,248.35,0.0
 GSM8K (Math),Prompting (Exp 1),Few-shot (3),few_shot_3,gsm8k,50,18.0,,,620.536,,,,134.3,6128.4,6262.7,338.3,188.0,N/A,30.68,1178.96,2.0
 GSM8K (Math),Prompting (Exp 1),Zero-shot CoT,zero_shot_cot,gsm8k,50,52.0,,,979.666,,,,158.2,9935.7,10094.0,145.3,302.3,N/A,30.43,2188.32,0.0
 GSM8K (Math),Prompting (Exp 1),Short CoT,short_cot,gsm8k,50,44.0,,,454.652,,,,144.4,4541.8,4686.2,149.3,139.3,N/A,30.66,1575.37,0.0
 GSM8K (Math),Prompting (Exp 1),Long CoT,long_cot,gsm8k,50,50.0,,,1261.261,,,,166.1,12839.7,13005.8,147.3,389.4,N/A,30.33,2349.94,0.0
+Natural Questions (QA),Prompting (Exp 1),Few-shot (3),few_shot_3,natural_questions,50,42.0,0.1826,,172.806,,,,54.3,1696.7,1751.0,149.3,53.3,N/A,31.39,853.28,0.0
+Natural Questions (QA),Prompting (Exp 1),Zero-shot CoT,zero_shot_cot,natural_questions,50,40.0,0.1753,,783.125,,,,94.3,7921.3,8015.7,72.3,240.3,N/A,30.34,2505.52,0.0
+Natural Questions (QA),Prompting (Exp 1),Short CoT,short_cot,natural_questions,50,42.0,0.2167,,218.453,,,,72.2,2161.0,2233.2,74.3,66.8,N/A,30.89,1549.09,0.0
+Natural Questions (QA),Prompting (Exp 1),Long CoT,long_cot,natural_questions,50,44.0,0.2024,,1436.913,,,,120.8,14592.8,14713.6,79.3,437.4,N/A,29.98,2780.94,0.0
 GSM8K (Math),Context Scaling (Exp 2),Context 0 tokens,ctx_0,gsm8k,50,46.0,,,999.591,,,,107.8,10213.4,10321.2,145.3,310.1,N/A,30.36,2194.97,0.0
 GSM8K (Math),Context Scaling (Exp 2),Context 512 tokens,ctx_512,gsm8k,50,36.0,,,1023.56,,,,625.4,9960.7,10586.1,616.1,300.5,N/A,30.17,1116.74,0.0
 GSM8K (Math),Context Scaling (Exp 2),Context 1024 tokens,ctx_1024,gsm8k,50,46.0,,,1047.583,,,,1043.5,9819.9,10863.5,1239.9,296.2,N/A,30.17,681.98,0.0
 GSM8K (Math),Context Scaling (Exp 2),Context 2048 tokens,ctx_2048,gsm8k,50,48.0,,,1252.119,,,,2620.2,10428.0,13048.2,2425.6,310.1,N/A,29.73,457.71,0.0
 GSM8K (Math),Context Scaling (Exp 2),Context 4096 tokens,ctx_4096,gsm8k,50,42.0,,,1534.315,,,,5523.1,10555.1,16078.1,4913.9,304.0,N/A,28.8,294.05,0.0
-GSM8K (Math),BM25 RAG (Exp 3),BM25 RAG (top-1),rag_top_1,gsm8k,50,12.0,,,378.726,,,,399.3,3513.7,3913.0,410.6,107.7,N/A,30.66,730.68,2.0
-GSM8K (Math),BM25 RAG (Exp 3),BM25 RAG (top-3),rag_top_3,gsm8k,50,18.0,,,367.485,,,,758.9,3068.5,3827.5,911.1,94.0,N/A,30.63,365.64,2.0
-GSM8K (Math),BM25 RAG (Exp 3),BM25 RAG (top-5),rag_top_5,gsm8k,50,14.0,,,370.799,,,,1001.0,2880.1,3881.1,1405.3,87.7,N/A,30.46,248.35,0.0

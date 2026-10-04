@@ -2,8 +2,8 @@
     "model_name": "llama3.2:3b",
     "clean_tag": "llama3B",
     "hardware": "kaggle_t4_gpu",
-    "total_records": 700,
-    "generated_timestamp": "2026-10-03 22:06:40",
+    "total_records": 1400,
+    "generated_timestamp": "2026-10-04 09:41:58",
     "tables": {
         "table1_csv": "results/kaggle_t4_gpu/exp_1_llama3B_1k/tables/table1_full_merged_results.csv",
         "table2_csv": "results/kaggle_t4_gpu/exp_1_llama3B_1k/tables/table2_model_execution_energy.csv"

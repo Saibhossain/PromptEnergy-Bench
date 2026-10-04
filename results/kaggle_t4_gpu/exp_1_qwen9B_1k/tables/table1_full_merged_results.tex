@@ -1,13 +1,22 @@
 % Table 1: Full Merged Results
-\begin{tabular}{lllrrllrlllrrrrrlrrr}
+\begin{tabular}{lllrrrlrlllrrrrrlrrr}
 \toprule
 Dataset & Experiment Type & Strategy & Samples & Accuracy (\%) & Token F1 & ROUGE-L & Total Energy (J) & Net Energy (J) & Prefill Energy (J) & Decode Energy (J) & TTFT (ms) & Decode Latency (ms) & Total Latency (ms) & Input Tokens & Output Tokens & Thinking Tokens & Throughput (tok/s) & Energy/Token (mJ) & Truncation Rate (\%) \\
 \midrule
+Natural Questions (QA) & Prompting (Exp 1) & Zero-shot Direct & 100 & 44.000000 & 0.087500 & NaN & 261.680000 & NaN & NaN & NaN & 235.200000 & 2427.100000 & 2662.400000 & 74.400000 & 62.900000 & N/A & 25.900000 & 1906.730000 & 2.000000 \\
+Natural Questions (QA) & BM25 RAG (Exp 3) & BM25 RAG (top-1) & 50 & 36.000000 & 0.161000 & NaN & 252.704000 & NaN & NaN & NaN & 473.800000 & 2169.700000 & 2643.400000 & 230.500000 & 54.400000 & N/A & 25.090000 & 886.870000 & 2.000000 \\
+Natural Questions (QA) & BM25 RAG (Exp 3) & BM25 RAG (top-3) & 50 & 28.000000 & 0.137800 & NaN & 320.194000 & NaN & NaN & NaN & 846.700000 & 2499.800000 & 3346.500000 & 531.400000 & 62.600000 & N/A & 25.050000 & 539.010000 & 4.000000 \\
+Natural Questions (QA) & BM25 RAG (Exp 3) & BM25 RAG (top-5) & 50 & 38.000000 & 0.125700 & NaN & 338.664000 & NaN & NaN & NaN & 1237.000000 & 2310.200000 & 3547.200000 & 858.300000 & 57.900000 & N/A & 25.080000 & 369.640000 & 2.000000 \\
 GSM8K (Math) & Context Scaling (Exp 2) & Context 0 tokens & 50 & 94.000000 & NaN & NaN & 2598.120000 & NaN & NaN & NaN & 418.300000 & 25781.800000 & 26200.000000 & 146.300000 & 513.100000 & N/A & 19.900000 & 3939.770000 & 2.000000 \\
 GSM8K (Math) & Context Scaling (Exp 2) & Context 512 tokens & 50 & 92.000000 & NaN & NaN & 2578.613000 & NaN & NaN & NaN & 992.200000 & 25013.600000 & 26005.800000 & 603.800000 & 497.300000 & N/A & 19.880000 & 2341.940000 & 6.000000 \\
 GSM8K (Math) & Context Scaling (Exp 2) & Context 1024 tokens & 50 & 96.000000 & NaN & NaN & 2482.026000 & NaN & NaN & NaN & 1789.600000 & 23295.900000 & 25085.500000 & 1171.800000 & 466.900000 & N/A & 20.040000 & 1514.670000 & 0.000000 \\
 GSM8K (Math) & Context Scaling (Exp 2) & Context 2048 tokens & 50 & 94.000000 & NaN & NaN & 2652.827000 & NaN & NaN & NaN & 3344.100000 & 23523.900000 & 26868.000000 & 2344.800000 & 471.800000 & N/A & 20.060000 & 941.870000 & 6.000000 \\
 GSM8K (Math) & Context Scaling (Exp 2) & Context 4096 tokens & 50 & 92.000000 & NaN & NaN & 2940.322000 & NaN & NaN & NaN & 6422.800000 & 23388.900000 & 29811.700000 & 4713.800000 & 468.700000 & N/A & 20.040000 & 567.360000 & 6.000000 \\
+Natural Questions (QA) & Context Scaling (Exp 2) & Context 0 tokens & 50 & 42.000000 & 0.036200 & NaN & 2213.256000 & NaN & NaN & NaN & 298.800000 & 22660.200000 & 22959.000000 & 77.400000 & 558.900000 & N/A & 24.670000 & 3478.320000 & 12.000000 \\
+Natural Questions (QA) & Context Scaling (Exp 2) & Context 512 tokens & 50 & 36.000000 & 0.038100 & NaN & 2530.825000 & NaN & NaN & NaN & 805.000000 & 25442.100000 & 26247.100000 & 504.900000 & 627.400000 & N/A & 24.660000 & 2235.240000 & 22.000000 \\
+Natural Questions (QA) & Context Scaling (Exp 2) & Context 1024 tokens & 50 & 38.000000 & 0.034300 & NaN & 2632.252000 & NaN & NaN & NaN & 1594.500000 & 25718.400000 & 27312.900000 & 1115.600000 & 634.300000 & N/A & 24.660000 & 1504.230000 & 22.000000 \\
+Natural Questions (QA) & Context Scaling (Exp 2) & Context 2048 tokens & 50 & 34.000000 & 0.028300 & NaN & 3211.480000 & NaN & NaN & NaN & 2925.300000 & 30396.400000 & 33321.600000 & 2233.700000 & 749.400000 & N/A & 24.650000 & 1076.570000 & 36.000000 \\
+Natural Questions (QA) & Context Scaling (Exp 2) & Context 4096 tokens & 50 & 32.000000 & 0.039300 & NaN & 3231.393000 & NaN & NaN & NaN & 5601.300000 & 27950.600000 & 33551.900000 & 4461.400000 & 689.100000 & N/A & 24.650000 & 627.400000 & 34.000000 \\
 GSM8K (Math) & Prompting (Exp 1) & Zero-shot Direct & 100 & 92.000000 & NaN & NaN & 767.120000 & NaN & NaN & NaN & 387.200000 & 7342.800000 & 7730.000000 & 142.300000 & 152.300000 & N/A & 20.740000 & 2603.580000 & 2.000000 \\
 GSM8K (Math) & BM25 RAG (Exp 3) & BM25 RAG (top-1) & 50 & 88.000000 & NaN & NaN & 774.344000 & NaN & NaN & NaN & 725.900000 & 7108.700000 & 7834.700000 & 390.500000 & 144.300000 & N/A & 20.300000 & 1447.910000 & 0.000000 \\
 GSM8K (Math) & BM25 RAG (Exp 3) & BM25 RAG (top-3) & 50 & 92.000000 & NaN & NaN & 862.047000 & NaN & NaN & NaN & 1354.600000 & 7380.800000 & 8735.400000 & 861.200000 & 150.500000 & N/A & 20.390000 & 852.110000 & 2.000000 \\
@@ -16,6 +25,10 @@ GSM8K (Math) & Prompting (Exp 1) & Few-shot (3) & 50 & 84.000000 & NaN & NaN & 1
 GSM8K (Math) & Prompting (Exp 1) & Zero-shot CoT & 50 & 94.000000 & NaN & NaN & 2585.305000 & NaN & NaN & NaN & 413.900000 & 25648.000000 & 26062.000000 & 146.300000 & 513.100000 & N/A & 20.010000 & 3920.340000 & 2.000000 \\
 GSM8K (Math) & Prompting (Exp 1) & Short CoT & 50 & 88.000000 & NaN & NaN & 588.598000 & NaN & NaN & NaN & 418.500000 & 5534.100000 & 5952.600000 & 151.300000 & 111.500000 & N/A & 20.150000 & 2239.550000 & 0.000000 \\
 GSM8K (Math) & Prompting (Exp 1) & Long CoT & 50 & 94.000000 & NaN & NaN & 4143.609000 & NaN & NaN & NaN & 424.800000 & 41332.600000 & 41757.400000 & 144.300000 & 823.100000 & N/A & 19.910000 & 4283.240000 & 4.000000 \\
+Natural Questions (QA) & Prompting (Exp 1) & Few-shot (3) & 50 & 34.000000 & 0.044100 & NaN & 207.427000 & NaN & NaN & NaN & 275.400000 & 1798.800000 & 2074.100000 & 146.400000 & 45.400000 & N/A & 25.230000 & 1081.700000 & 4.000000 \\
+Natural Questions (QA) & Prompting (Exp 1) & Zero-shot CoT & 50 & 42.000000 & 0.036200 & NaN & 2212.849000 & NaN & NaN & NaN & 293.400000 & 22659.700000 & 22953.100000 & 77.400000 & 558.900000 & N/A & 24.670000 & 3477.680000 & 12.000000 \\
+Natural Questions (QA) & Prompting (Exp 1) & Short CoT & 50 & 36.000000 & 0.058000 & NaN & 526.385000 & NaN & NaN & NaN & 293.800000 & 5192.100000 & 5485.900000 & 81.400000 & 128.800000 & N/A & 24.810000 & 2504.450000 & 2.000000 \\
+Natural Questions (QA) & Prompting (Exp 1) & Long CoT & 50 & 28.000000 & 0.035600 & NaN & 5169.701000 & NaN & NaN & NaN & 324.100000 & 53242.800000 & 53566.800000 & 78.400000 & 1311.900000 & N/A & 24.640000 & 3718.570000 & 28.000000 \\
 \bottomrule
 \end{tabular}
 

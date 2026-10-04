@@ -1,9 +1,18 @@
 Dataset,Experiment Type,Strategy,Raw Strategy,Raw Dataset,Samples,Accuracy (%),Token F1,ROUGE-L,Total Energy (J),Net Energy (J),Prefill Energy (J),Decode Energy (J),TTFT (ms),Decode Latency (ms),Total Latency (ms),Input Tokens,Output Tokens,Thinking Tokens,Throughput (tok/s),Energy/Token (mJ),Truncation Rate (%)
+Natural Questions (QA),Prompting (Exp 1),Zero-shot Direct,zero_shot_direct,natural_questions,100,36.0,0.0548,,31.269,,,,71.1,190.4,261.5,73.2,12.0,N/A,63.03,367.01,0.0
+Natural Questions (QA),BM25 RAG (Exp 3),BM25 RAG (top-1),rag_top_1,natural_questions,50,52.0,0.0911,,43.944,,,,190.8,255.1,445.9,229.1,14.8,N/A,57.93,180.19,0.0
+Natural Questions (QA),BM25 RAG (Exp 3),BM25 RAG (top-3),rag_top_3,natural_questions,50,54.0,0.101,,70.148,,,,438.9,297.5,736.4,529.6,16.8,N/A,56.41,128.38,0.0
+Natural Questions (QA),BM25 RAG (Exp 3),BM25 RAG (top-5),rag_top_5,natural_questions,50,62.0,0.0932,,94.481,,,,716.2,306.6,1022.7,856.1,17.1,N/A,55.78,108.2,0.0
 GSM8K (Math),Context Scaling (Exp 2),Context 0 tokens,ctx_0,gsm8k,50,86.0,,,725.874,,,,178.9,7394.0,7572.9,145.3,316.1,N/A,42.76,1573.2,2.0
 GSM8K (Math),Context Scaling (Exp 2),Context 512 tokens,ctx_512,gsm8k,50,90.0,,,713.704,,,,510.0,6954.7,7464.7,584.0,297.7,N/A,42.8,809.44,4.0
 GSM8K (Math),Context Scaling (Exp 2),Context 1024 tokens,ctx_1024,gsm8k,50,86.0,,,714.68,,,,904.5,6608.7,7513.3,1171.7,277.8,N/A,42.03,493.08,6.0
 GSM8K (Math),Context Scaling (Exp 2),Context 2048 tokens,ctx_2048,gsm8k,50,82.0,,,684.656,,,,1662.1,5576.7,7238.8,2347.0,232.4,N/A,41.67,265.44,2.0
 GSM8K (Math),Context Scaling (Exp 2),Context 4096 tokens,ctx_4096,gsm8k,50,84.0,,,768.336,,,,3016.3,5130.8,8147.1,4743.7,213.0,N/A,41.51,155.01,0.0
+Natural Questions (QA),Context Scaling (Exp 2),Context 0 tokens,ctx_0,natural_questions,50,38.0,0.1148,,556.517,,,,123.0,5604.5,5727.4,76.2,279.7,N/A,49.9,1563.78,0.0
+Natural Questions (QA),Context Scaling (Exp 2),Context 512 tokens,ctx_512,natural_questions,50,30.0,0.0622,,260.014,,,,444.1,2256.6,2700.7,506.1,113.9,N/A,50.48,419.35,0.0
+Natural Questions (QA),Context Scaling (Exp 2),Context 1024 tokens,ctx_1024,natural_questions,50,48.0,0.0776,,377.256,,,,1043.3,2965.0,4008.3,1109.8,148.4,N/A,50.05,299.83,0.0
+Natural Questions (QA),Context Scaling (Exp 2),Context 2048 tokens,ctx_2048,natural_questions,50,46.0,0.0994,,651.535,,,,1572.7,5241.7,6814.4,2218.1,260.7,N/A,49.73,262.85,0.0
+Natural Questions (QA),Context Scaling (Exp 2),Context 4096 tokens,ctx_4096,natural_questions,50,46.0,0.0981,,831.994,,,,2749.9,5929.9,8679.8,4462.0,294.5,N/A,49.66,174.92,0.0
 GSM8K (Math),Prompting (Exp 1),Zero-shot Direct,zero_shot_direct,gsm8k,100,34.0,,,182.042,,,,139.3,1584.5,1723.9,141.3,79.7,N/A,50.31,823.79,6.0
 GSM8K (Math),BM25 RAG (Exp 3),BM25 RAG (top-1),rag_top_1,gsm8k,50,30.0,,,185.032,,,,355.3,1581.3,1936.6,390.6,69.8,N/A,44.11,401.95,2.0
 GSM8K (Math),BM25 RAG (Exp 3),BM25 RAG (top-3),rag_top_3,gsm8k,50,64.0,,,344.268,,,,907.6,2791.9,3699.5,861.3,118.8,N/A,42.57,351.24,2.0
@@ -12,3 +21,7 @@ GSM8K (Math),Prompting (Exp 1),Few-shot (3),few_shot_3,gsm8k,50,32.0,,,217.898,,
 GSM8K (Math),Prompting (Exp 1),Zero-shot CoT,zero_shot_cot,gsm8k,50,86.0,,,750.343,,,,192.2,7352.0,7544.2,145.3,316.1,N/A,43.0,1626.23,2.0
 GSM8K (Math),Prompting (Exp 1),Short CoT,short_cot,gsm8k,50,78.0,,,315.637,,,,167.6,3121.5,3289.1,149.3,135.0,N/A,43.25,1110.3,2.0
 GSM8K (Math),Prompting (Exp 1),Long CoT,long_cot,gsm8k,50,84.0,,,1060.97,,,,201.9,10863.1,11065.1,144.3,463.0,N/A,42.62,1747.2,2.0
+Natural Questions (QA),Prompting (Exp 1),Few-shot (3),few_shot_3,natural_questions,50,28.0,0.0148,,23.874,,,,99.1,79.9,179.0,144.2,5.9,N/A,73.56,159.07,0.0
+Natural Questions (QA),Prompting (Exp 1),Zero-shot CoT,zero_shot_cot,natural_questions,50,38.0,0.1148,,603.512,,,,128.5,5260.4,5388.9,76.2,279.7,N/A,53.17,1695.83,0.0
+Natural Questions (QA),Prompting (Exp 1),Short CoT,short_cot,natural_questions,50,40.0,0.0521,,90.942,,,,94.3,830.4,924.7,79.2,43.4,N/A,52.26,741.78,0.0
+Natural Questions (QA),Prompting (Exp 1),Long CoT,long_cot,natural_questions,50,24.0,0.0927,,1878.043,,,,206.0,19165.0,19370.9,80.2,951.3,N/A,49.64,1820.62,0.0

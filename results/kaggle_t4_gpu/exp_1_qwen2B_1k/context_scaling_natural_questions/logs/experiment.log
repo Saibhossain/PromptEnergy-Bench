@@ -1,0 +1,11 @@
+[2026-10-04 11:12:51] [INFO] Initialized Experiment: context_scaling_natural_questions
+[2026-10-04 11:12:51] [INFO] Run ID: context_scaling_natural_questions__kaggle_t4_gpu__2026-10-04_11-12-51
+[2026-10-04 11:12:51] [INFO] Run Directory: results/kaggle_t4_gpu/exp_1_qwen2B_1k/context_scaling_natural_questions
+[2026-10-04 11:12:51] [INFO] Model: qwen3.5:2b (Backend: ollama, Format: gguf)
+[2026-10-04 11:12:51] [INFO] Device: kaggle_t4_gpu
+[2026-10-04 11:12:51] [INFO] Evaluation Size: 50 (Evaluation Split: TEST)
+[2026-10-04 11:12:51] [INFO] Loading natural_questions (train split) for Context Corpus...
+[2026-10-04 11:12:51] [INFO] Loading natural_questions (test split) for Evaluation...
+[2026-10-04 11:12:51] [INFO] Executing 1 warmup run(s)...
+[2026-10-04 11:12:52] [INFO] Warmup 1/1 completed.
+[2026-10-04 11:55:29] [INFO] Experiment completed. Summary saved to results/kaggle_t4_gpu/exp_1_qwen2B_1k/context_scaling_natural_questions/summary.json

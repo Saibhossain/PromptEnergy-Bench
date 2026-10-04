@@ -1,0 +1,11 @@
+[2026-10-04 20:57:53] [INFO] Initialized Experiment: primary_exp_natural_questions
+[2026-10-04 20:57:53] [INFO] Run ID: primary_exp_natural_questions__macbook_air_m1__2026-10-04_20-57-51
+[2026-10-04 20:57:53] [INFO] Run Directory: results/macbook_air_m1/exp_1_qwen08B_1k/primary_exp_natural_questions
+[2026-10-04 20:57:53] [INFO] Model: qwen3.5:0.8b-mlx (Backend: ollama, Format: mlx)
+[2026-10-04 20:57:53] [INFO] Device: macbook_air_m1
+[2026-10-04 20:57:53] [INFO] Evaluation Size: 50 (Evaluation Split: TEST)
+[2026-10-04 20:57:53] [INFO] Loading natural_questions evaluation dataset (test split)...
+[2026-10-04 20:57:53] [INFO] Loaded 50 evaluation examples.
+[2026-10-04 20:57:53] [INFO] Executing 1 warmup run(s)...
+[2026-10-04 20:57:56] [INFO] Warmup 1/1 completed.
+[2026-10-04 20:57:56] [INFO] Beginning main evaluation across 250 inference requests...

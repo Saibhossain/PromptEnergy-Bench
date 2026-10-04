@@ -5,18 +5,18 @@
 | Model Name                              | qwen3.5:0.8b         | string         |
 | Hardware Environment                    | kaggle_t4_gpu        | string         |
 | Energy Telemetry Adapter                | codecarbon_estimated | method         |
-| Total Evaluated Inferences              | 700                  | queries        |
-| Total Inference Duration                | 2467.19              | seconds        |
-| Total Inference Duration (Minutes)      | 41.12                | minutes        |
-| Total Prompt (Input) Tokens             | 630,276              | tokens         |
-| Total Generated (Output) Tokens         | 236,474              | tokens         |
-| Total Token Budget Ingested + Emitted   | 866,750              | tokens         |
-| Mean Generation Speed                   | 95.85                | tokens/sec     |
-| Total Gross Energy Consumed             | 251150.39            | Joules (J)     |
+| Total Evaluated Inferences              | 1,400                | queries        |
+| Total Inference Duration                | 4937.81              | seconds        |
+| Total Inference Duration (Minutes)      | 82.30                | minutes        |
+| Total Prompt (Input) Tokens             | 1,159,438            | tokens         |
+| Total Generated (Output) Tokens         | 471,663              | tokens         |
+| Total Token Budget Ingested + Emitted   | 1,631,101            | tokens         |
+| Mean Generation Speed                   | 95.52                | tokens/sec     |
+| Total Gross Energy Consumed             | 501155.18            | Joules (J)     |
 | Total Net Energy Consumed (Excl. Idle)  | 0.00                 | Joules (J)     |
-| Total Electrical Energy in kWh          | 0.069764             | kWh            |
-| Mean Active Power Draw                  | 99.14                | Watts (W)      |
+| Total Electrical Energy in kWh          | 0.139210             | kWh            |
+| Mean Active Power Draw                  | 99.51                | Watts (W)      |
 | Calibrated Idle Power Baseline          | N/A                  | Watts (W)      |
-| Unit Energy Cost per Token              | 289.761              | mJ / token     |
-| Unit Energy Cost per Query              | 358.786              | Joules / query |
-| Overall Macro Accuracy Across All Tasks | 27.00%               | percent        |
+| Unit Energy Cost per Token              | 307.250              | mJ / token     |
+| Unit Energy Cost per Query              | 357.968              | Joules / query |
+| Overall Macro Accuracy Across All Tasks | 25.86%               | percent        |

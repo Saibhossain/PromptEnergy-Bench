@@ -1,0 +1,10 @@
+[2026-10-04 11:55:29] [INFO] Initialized Experiment: rag_natural_questions
+[2026-10-04 11:55:29] [INFO] Run ID: rag_natural_questions__kaggle_t4_gpu__2026-10-04_11-55-29
+[2026-10-04 11:55:29] [INFO] Run Directory: results/kaggle_t4_gpu/exp_1_qwen2B_1k/rag_natural_questions
+[2026-10-04 11:55:29] [INFO] Model: qwen3.5:2b (Backend: ollama, Format: gguf)
+[2026-10-04 11:55:29] [INFO] Device: kaggle_t4_gpu
+[2026-10-04 11:55:29] [INFO] Evaluation Size: 50 (Evaluation Split: TEST)
+[2026-10-04 11:55:29] [INFO] Initializing BM25 Index over natural_questions TRAIN corpus (Evaluation on TEST split)...
+[2026-10-04 11:55:29] [INFO] Executing 1 warmup run(s)...
+[2026-10-04 11:55:29] [INFO] Warmup 1/1 completed.
+[2026-10-04 11:58:33] [INFO] Experiment completed. Summary saved to results/kaggle_t4_gpu/exp_1_qwen2B_1k/rag_natural_questions/summary.json
