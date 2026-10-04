@@ -1,0 +1,14 @@
+Dataset,Experiment Type,Strategy,Raw Strategy,Raw Dataset,Samples,Accuracy (%),Token F1,ROUGE-L,Total Energy (J),Net Energy (J),Prefill Energy (J),Decode Energy (J),TTFT (ms),Decode Latency (ms),Total Latency (ms),Input Tokens,Output Tokens,Thinking Tokens,Throughput (tok/s),Energy/Token (mJ),Truncation Rate (%)
+GSM8K (Math),Context Scaling (Exp 2),Context 0 tokens,ctx_0,gsm8k,50,50.0,,,573.589,,,,60.1,5701.2,5761.3,146.3,584.8,N/A,102.58,784.49,18.0
+GSM8K (Math),Context Scaling (Exp 2),Context 512 tokens,ctx_512,gsm8k,50,24.0,,,578.681,,,,163.6,5654.4,5818.0,579.8,575.4,N/A,101.76,500.94,22.0
+GSM8K (Math),Context Scaling (Exp 2),Context 1024 tokens,ctx_1024,gsm8k,50,38.0,,,538.002,,,,295.3,5120.5,5415.8,1177.3,520.8,N/A,101.7,316.82,12.0
+GSM8K (Math),Context Scaling (Exp 2),Context 2048 tokens,ctx_2048,gsm8k,50,36.0,,,535.943,,,,502.1,4900.4,5402.5,2363.0,495.3,N/A,101.08,187.5,10.0
+GSM8K (Math),Context Scaling (Exp 2),Context 4096 tokens,ctx_4096,gsm8k,50,36.0,,,541.886,,,,766.8,4711.0,5477.8,4716.8,470.2,N/A,99.8,104.47,8.0
+GSM8K (Math),Prompting (Exp 1),Zero-shot Direct,zero_shot_direct,gsm8k,100,16.0,,,64.634,,,,74.9,509.5,584.4,142.3,53.0,N/A,104.07,330.88,2.0
+GSM8K (Math),BM25 RAG (Exp 3),BM25 RAG (top-1),rag_top_1,gsm8k,50,2.0,,,21.739,,,,115.4,93.4,208.7,390.5,9.9,N/A,105.61,54.3,0.0
+GSM8K (Math),BM25 RAG (Exp 3),BM25 RAG (top-3),rag_top_3,gsm8k,50,6.0,,,28.149,,,,208.3,67.6,275.9,861.2,7.2,N/A,105.9,32.42,0.0
+GSM8K (Math),BM25 RAG (Exp 3),BM25 RAG (top-5),rag_top_5,gsm8k,50,2.0,,,35.976,,,,303.1,60.3,363.4,1325.7,6.4,N/A,106.72,27.01,0.0
+GSM8K (Math),Prompting (Exp 1),Few-shot (3),few_shot_3,gsm8k,50,36.0,,,427.795,,,,122.9,3395.3,3518.1,318.3,348.2,N/A,102.54,641.87,22.0
+GSM8K (Math),Prompting (Exp 1),Zero-shot CoT,zero_shot_cot,gsm8k,50,50.0,,,604.847,,,,102.1,5708.7,5810.8,146.3,584.8,N/A,102.45,827.24,18.0
+GSM8K (Math),Prompting (Exp 1),Short CoT,short_cot,gsm8k,50,20.0,,,134.253,,,,95.3,1255.3,1350.6,151.3,127.0,N/A,101.17,482.37,0.0
+GSM8K (Math),Prompting (Exp 1),Long CoT,long_cot,gsm8k,50,46.0,,,872.882,,,,88.5,8683.5,8772.0,144.3,893.5,N/A,102.89,841.09,10.0

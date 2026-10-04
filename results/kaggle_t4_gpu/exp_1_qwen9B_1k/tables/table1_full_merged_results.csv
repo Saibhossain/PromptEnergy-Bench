@@ -1,0 +1,14 @@
+Dataset,Experiment Type,Strategy,Raw Strategy,Raw Dataset,Samples,Accuracy (%),Token F1,ROUGE-L,Total Energy (J),Net Energy (J),Prefill Energy (J),Decode Energy (J),TTFT (ms),Decode Latency (ms),Total Latency (ms),Input Tokens,Output Tokens,Thinking Tokens,Throughput (tok/s),Energy/Token (mJ),Truncation Rate (%)
+GSM8K (Math),Context Scaling (Exp 2),Context 0 tokens,ctx_0,gsm8k,50,94.0,,,2598.12,,,,418.3,25781.8,26200.0,146.3,513.1,N/A,19.9,3939.77,2.0
+GSM8K (Math),Context Scaling (Exp 2),Context 512 tokens,ctx_512,gsm8k,50,92.0,,,2578.613,,,,992.2,25013.6,26005.8,603.8,497.3,N/A,19.88,2341.94,6.0
+GSM8K (Math),Context Scaling (Exp 2),Context 1024 tokens,ctx_1024,gsm8k,50,96.0,,,2482.026,,,,1789.6,23295.9,25085.5,1171.8,466.9,N/A,20.04,1514.67,0.0
+GSM8K (Math),Context Scaling (Exp 2),Context 2048 tokens,ctx_2048,gsm8k,50,94.0,,,2652.827,,,,3344.1,23523.9,26868.0,2344.8,471.8,N/A,20.06,941.87,6.0
+GSM8K (Math),Context Scaling (Exp 2),Context 4096 tokens,ctx_4096,gsm8k,50,92.0,,,2940.322,,,,6422.8,23388.9,29811.7,4713.8,468.7,N/A,20.04,567.36,6.0
+GSM8K (Math),Prompting (Exp 1),Zero-shot Direct,zero_shot_direct,gsm8k,100,92.0,,,767.12,,,,387.2,7342.8,7730.0,142.3,152.3,N/A,20.74,2603.58,2.0
+GSM8K (Math),BM25 RAG (Exp 3),BM25 RAG (top-1),rag_top_1,gsm8k,50,88.0,,,774.344,,,,725.9,7108.7,7834.7,390.5,144.3,N/A,20.3,1447.91,0.0
+GSM8K (Math),BM25 RAG (Exp 3),BM25 RAG (top-3),rag_top_3,gsm8k,50,92.0,,,862.047,,,,1354.6,7380.8,8735.4,861.2,150.5,N/A,20.39,852.11,2.0
+GSM8K (Math),BM25 RAG (Exp 3),BM25 RAG (top-5),rag_top_5,gsm8k,50,82.0,,,1167.358,,,,2001.5,9854.9,11856.4,1325.7,200.1,N/A,20.31,765.05,12.0
+GSM8K (Math),Prompting (Exp 1),Few-shot (3),few_shot_3,gsm8k,50,84.0,,,1637.946,,,,615.1,15902.0,16517.0,318.3,316.6,N/A,19.91,2579.85,14.0
+GSM8K (Math),Prompting (Exp 1),Zero-shot CoT,zero_shot_cot,gsm8k,50,94.0,,,2585.305,,,,413.9,25648.0,26062.0,146.3,513.1,N/A,20.01,3920.34,2.0
+GSM8K (Math),Prompting (Exp 1),Short CoT,short_cot,gsm8k,50,88.0,,,588.598,,,,418.5,5534.1,5952.6,151.3,111.5,N/A,20.15,2239.55,0.0
+GSM8K (Math),Prompting (Exp 1),Long CoT,long_cot,gsm8k,50,94.0,,,4143.609,,,,424.8,41332.6,41757.4,144.3,823.1,N/A,19.91,4283.24,4.0

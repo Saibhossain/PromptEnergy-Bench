@@ -1,0 +1,12 @@
+[2026-10-03 21:28:30] [INFO] Initialized Experiment: primary_exp_gsm8k
+[2026-10-03 21:28:30] [INFO] Run ID: primary_exp_gsm8k__kaggle_t4_gpu__2026-10-03_21-28-30
+[2026-10-03 21:28:30] [INFO] Run Directory: results/kaggle_t4_gpu/exp_1_llama3B_1k/primary_exp_gsm8k
+[2026-10-03 21:28:30] [INFO] Model: llama3.2:3b (Backend: ollama, Format: gguf)
+[2026-10-03 21:28:30] [INFO] Device: kaggle_t4_gpu
+[2026-10-03 21:28:30] [INFO] Evaluation Size: 50 (Evaluation Split: TEST)
+[2026-10-03 21:28:30] [INFO] Loading gsm8k evaluation dataset (test split)...
+[2026-10-03 21:28:30] [INFO] Loaded 50 evaluation examples.
+[2026-10-03 21:28:30] [INFO] Executing 1 warmup run(s)...
+[2026-10-03 21:28:42] [INFO] Warmup 1/1 completed.
+[2026-10-03 21:28:42] [INFO] Beginning main evaluation across 250 inference requests...
+[2026-10-03 21:41:35] [INFO] Experiment completed. Summary saved to results/kaggle_t4_gpu/exp_1_llama3B_1k/primary_exp_gsm8k/summary.json

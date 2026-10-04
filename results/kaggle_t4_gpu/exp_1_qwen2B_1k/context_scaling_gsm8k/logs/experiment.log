@@ -1,0 +1,11 @@
+[2026-10-04 00:05:21] [INFO] Initialized Experiment: context_scaling_gsm8k
+[2026-10-04 00:05:21] [INFO] Run ID: context_scaling_gsm8k__kaggle_t4_gpu__2026-10-04_00-05-21
+[2026-10-04 00:05:21] [INFO] Run Directory: results/kaggle_t4_gpu/exp_1_qwen2B_1k/context_scaling_gsm8k
+[2026-10-04 00:05:21] [INFO] Model: qwen3.5:2b (Backend: ollama, Format: gguf)
+[2026-10-04 00:05:21] [INFO] Device: kaggle_t4_gpu
+[2026-10-04 00:05:21] [INFO] Evaluation Size: 50 (Evaluation Split: TEST)
+[2026-10-04 00:05:21] [INFO] Loading gsm8k (train split) for Context Corpus...
+[2026-10-04 00:05:21] [INFO] Loading gsm8k (test split) for Evaluation...
+[2026-10-04 00:05:21] [INFO] Executing 1 warmup run(s)...
+[2026-10-04 00:05:22] [INFO] Warmup 1/1 completed.
+[2026-10-04 00:40:15] [INFO] Experiment completed. Summary saved to results/kaggle_t4_gpu/exp_1_qwen2B_1k/context_scaling_gsm8k/summary.json

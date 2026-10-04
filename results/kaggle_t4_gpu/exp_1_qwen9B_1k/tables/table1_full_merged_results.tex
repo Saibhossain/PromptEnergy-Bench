@@ -1,0 +1,21 @@
+% Table 1: Full Merged Results
+\begin{tabular}{lllrrllrlllrrrrrlrrr}
+\toprule
+Dataset & Experiment Type & Strategy & Samples & Accuracy (\%) & Token F1 & ROUGE-L & Total Energy (J) & Net Energy (J) & Prefill Energy (J) & Decode Energy (J) & TTFT (ms) & Decode Latency (ms) & Total Latency (ms) & Input Tokens & Output Tokens & Thinking Tokens & Throughput (tok/s) & Energy/Token (mJ) & Truncation Rate (\%) \\
+\midrule
+GSM8K (Math) & Context Scaling (Exp 2) & Context 0 tokens & 50 & 94.000000 & NaN & NaN & 2598.120000 & NaN & NaN & NaN & 418.300000 & 25781.800000 & 26200.000000 & 146.300000 & 513.100000 & N/A & 19.900000 & 3939.770000 & 2.000000 \\
+GSM8K (Math) & Context Scaling (Exp 2) & Context 512 tokens & 50 & 92.000000 & NaN & NaN & 2578.613000 & NaN & NaN & NaN & 992.200000 & 25013.600000 & 26005.800000 & 603.800000 & 497.300000 & N/A & 19.880000 & 2341.940000 & 6.000000 \\
+GSM8K (Math) & Context Scaling (Exp 2) & Context 1024 tokens & 50 & 96.000000 & NaN & NaN & 2482.026000 & NaN & NaN & NaN & 1789.600000 & 23295.900000 & 25085.500000 & 1171.800000 & 466.900000 & N/A & 20.040000 & 1514.670000 & 0.000000 \\
+GSM8K (Math) & Context Scaling (Exp 2) & Context 2048 tokens & 50 & 94.000000 & NaN & NaN & 2652.827000 & NaN & NaN & NaN & 3344.100000 & 23523.900000 & 26868.000000 & 2344.800000 & 471.800000 & N/A & 20.060000 & 941.870000 & 6.000000 \\
+GSM8K (Math) & Context Scaling (Exp 2) & Context 4096 tokens & 50 & 92.000000 & NaN & NaN & 2940.322000 & NaN & NaN & NaN & 6422.800000 & 23388.900000 & 29811.700000 & 4713.800000 & 468.700000 & N/A & 20.040000 & 567.360000 & 6.000000 \\
+GSM8K (Math) & Prompting (Exp 1) & Zero-shot Direct & 100 & 92.000000 & NaN & NaN & 767.120000 & NaN & NaN & NaN & 387.200000 & 7342.800000 & 7730.000000 & 142.300000 & 152.300000 & N/A & 20.740000 & 2603.580000 & 2.000000 \\
+GSM8K (Math) & BM25 RAG (Exp 3) & BM25 RAG (top-1) & 50 & 88.000000 & NaN & NaN & 774.344000 & NaN & NaN & NaN & 725.900000 & 7108.700000 & 7834.700000 & 390.500000 & 144.300000 & N/A & 20.300000 & 1447.910000 & 0.000000 \\
+GSM8K (Math) & BM25 RAG (Exp 3) & BM25 RAG (top-3) & 50 & 92.000000 & NaN & NaN & 862.047000 & NaN & NaN & NaN & 1354.600000 & 7380.800000 & 8735.400000 & 861.200000 & 150.500000 & N/A & 20.390000 & 852.110000 & 2.000000 \\
+GSM8K (Math) & BM25 RAG (Exp 3) & BM25 RAG (top-5) & 50 & 82.000000 & NaN & NaN & 1167.358000 & NaN & NaN & NaN & 2001.500000 & 9854.900000 & 11856.400000 & 1325.700000 & 200.100000 & N/A & 20.310000 & 765.050000 & 12.000000 \\
+GSM8K (Math) & Prompting (Exp 1) & Few-shot (3) & 50 & 84.000000 & NaN & NaN & 1637.946000 & NaN & NaN & NaN & 615.100000 & 15902.000000 & 16517.000000 & 318.300000 & 316.600000 & N/A & 19.910000 & 2579.850000 & 14.000000 \\
+GSM8K (Math) & Prompting (Exp 1) & Zero-shot CoT & 50 & 94.000000 & NaN & NaN & 2585.305000 & NaN & NaN & NaN & 413.900000 & 25648.000000 & 26062.000000 & 146.300000 & 513.100000 & N/A & 20.010000 & 3920.340000 & 2.000000 \\
+GSM8K (Math) & Prompting (Exp 1) & Short CoT & 50 & 88.000000 & NaN & NaN & 588.598000 & NaN & NaN & NaN & 418.500000 & 5534.100000 & 5952.600000 & 151.300000 & 111.500000 & N/A & 20.150000 & 2239.550000 & 0.000000 \\
+GSM8K (Math) & Prompting (Exp 1) & Long CoT & 50 & 94.000000 & NaN & NaN & 4143.609000 & NaN & NaN & NaN & 424.800000 & 41332.600000 & 41757.400000 & 144.300000 & 823.100000 & N/A & 19.910000 & 4283.240000 & 4.000000 \\
+\bottomrule
+\end{tabular}
+

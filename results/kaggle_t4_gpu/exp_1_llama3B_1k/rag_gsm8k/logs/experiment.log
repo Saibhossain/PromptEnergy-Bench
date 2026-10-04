@@ -1,0 +1,10 @@
+[2026-10-03 22:03:23] [INFO] Initialized Experiment: rag_gsm8k
+[2026-10-03 22:03:23] [INFO] Run ID: rag_gsm8k__kaggle_t4_gpu__2026-10-03_22-03-23
+[2026-10-03 22:03:23] [INFO] Run Directory: results/kaggle_t4_gpu/exp_1_llama3B_1k/rag_gsm8k
+[2026-10-03 22:03:23] [INFO] Model: llama3.2:3b (Backend: ollama, Format: gguf)
+[2026-10-03 22:03:23] [INFO] Device: kaggle_t4_gpu
+[2026-10-03 22:03:23] [INFO] Evaluation Size: 50 (Evaluation Split: TEST)
+[2026-10-03 22:03:23] [INFO] Initializing BM25 Index over gsm8k TRAIN corpus (Evaluation on TEST split)...
+[2026-10-03 22:03:24] [INFO] Executing 1 warmup run(s)...
+[2026-10-03 22:03:24] [INFO] Warmup 1/1 completed.
+[2026-10-03 22:06:32] [INFO] Experiment completed. Summary saved to results/kaggle_t4_gpu/exp_1_llama3B_1k/rag_gsm8k/summary.json

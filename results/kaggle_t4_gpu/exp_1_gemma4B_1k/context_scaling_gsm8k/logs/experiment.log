@@ -1,0 +1,11 @@
+[2026-10-04 01:10:05] [INFO] Initialized Experiment: context_scaling_gsm8k
+[2026-10-04 01:10:05] [INFO] Run ID: context_scaling_gsm8k__kaggle_t4_gpu__2026-10-04_01-10-05
+[2026-10-04 01:10:05] [INFO] Run Directory: results/kaggle_t4_gpu/exp_1_gemma4B_1k/context_scaling_gsm8k
+[2026-10-04 01:10:05] [INFO] Model: gemma3:4b (Backend: ollama, Format: gguf)
+[2026-10-04 01:10:05] [INFO] Device: kaggle_t4_gpu
+[2026-10-04 01:10:05] [INFO] Evaluation Size: 50 (Evaluation Split: TEST)
+[2026-10-04 01:10:05] [INFO] Loading gsm8k (train split) for Context Corpus...
+[2026-10-04 01:10:05] [INFO] Loading gsm8k (test split) for Evaluation...
+[2026-10-04 01:10:05] [INFO] Executing 1 warmup run(s)...
+[2026-10-04 01:10:07] [INFO] Warmup 1/1 completed.
+[2026-10-04 01:42:10] [INFO] Experiment completed. Summary saved to results/kaggle_t4_gpu/exp_1_gemma4B_1k/context_scaling_gsm8k/summary.json

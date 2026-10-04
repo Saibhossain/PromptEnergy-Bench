@@ -1,0 +1,12 @@
+{
+    "model_name": "qwen3.5:9b",
+    "clean_tag": "qwen9B",
+    "hardware": "kaggle_t4_gpu",
+    "total_records": 700,
+    "generated_timestamp": "2026-10-03 23:37:24",
+    "tables": {
+        "table1_csv": "results/kaggle_t4_gpu/exp_1_qwen9B_1k/tables/table1_full_merged_results.csv",
+        "table2_csv": "results/kaggle_t4_gpu/exp_1_qwen9B_1k/tables/table2_model_execution_energy.csv"
+    },
+    "plots_directory": "results/kaggle_t4_gpu/exp_1_qwen9B_1k/plots"
+}
