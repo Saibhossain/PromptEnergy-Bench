@@ -1,0 +1,10 @@
+[2026-10-04 21:53:23] [INFO] Initialized Experiment: context_scaling_natural_questions
+[2026-10-04 21:53:23] [INFO] Run ID: context_scaling_natural_questions__macbook_air_m1__2026-10-04_21-53-23
+[2026-10-04 21:53:23] [INFO] Run Directory: results/macbook_air_m1/exp_1_qwen08B_1k/context_scaling_natural_questions
+[2026-10-04 21:53:23] [INFO] Model: qwen3.5:0.8b-mlx (Backend: ollama, Format: mlx)
+[2026-10-04 21:53:23] [INFO] Device: macbook_air_m1
+[2026-10-04 21:53:23] [INFO] Evaluation Size: 50 (Evaluation Split: TEST)
+[2026-10-04 21:53:24] [INFO] Loading natural_questions (train split) for Context Corpus...
+[2026-10-04 21:53:25] [INFO] Loading natural_questions (test split) for Evaluation...
+[2026-10-04 21:53:25] [INFO] Executing 1 warmup run(s)...
+[2026-10-04 21:53:28] [INFO] Warmup 1/1 completed.
