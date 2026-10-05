@@ -351,30 +351,54 @@ python scripts/run_all_experiments.py \
 
 ---
 
-## 8. Quick Verification Commands (10-Sample Fast Check)
+## 8. Rapid Smoke Test Suite (`eval-size 2` for All 4 Datasets & 7 Models)
 
-Use `--eval-size 10` to quickly test the entire pipeline in **under 1–2 minutes** before launching long runs:
+Use `scripts/quick_smoke_test.py` for a rapid end-to-end sanity check (**~1–2 minutes**) to verify dataset parsing, model inference, telemetry energy tracking, and metrics across **all 4 benchmark datasets** (`gsm8k`, `natural_questions`, `contexteval`, `cnn_dailymail`) and **all 3 experiments** (Prompting, Scaling, RAG).
 
-### Windows PowerShell:
-```powershell
-python scripts/run_all_experiments.py `
-    --hardware windows_10core_pc `
-    --models "qwen3.5:2b" `
-    --dataset gsm8k `
-    --eval-size 10 `
-    --experiment all `
-    --runs-per-condition 1
+### A. macOS (Apple Silicon / MLX) — 7 Models
+```bash
+python scripts/quick_smoke_test.py \
+    --hardware macbook_air_m1 \
+    --models "qwen3.5:0.8b-mlx,qwen3.5:2b-mlx,qwen3.5:9b-mlx,gemma4:e4b-mlx,llama3.2:1b,llama3.2:3b,llama3:8b" \
+    --dataset all \
+    --eval-size 2 \
+    --experiment all
 ```
 
-### macOS / Linux:
+### B. Windows 10-Core PC (PowerShell) — 11 Mixed Models
+```powershell
+python scripts/quick_smoke_test.py `
+    --hardware windows_10core_pc `
+    --models "gemma4:e2b,qwen3.5:2b,qwen3.5:0.8b,gemma3:4b,deepseek-r1:7b,llama3.1:8b,qwen3.5:9b,mistral:7b,gemma3:1b,llama3.2:1b,gemma4:12b" `
+    --dataset all `
+    --eval-size 2 `
+    --experiment all
+```
+
+### C. Kaggle (NVIDIA T4 GPU) — 11 Mixed Models
 ```bash
-python scripts/run_all_experiments.py \
-    --hardware macbook_air_m1 \
-    --models "qwen3.5:2b-mlx" \
-    --dataset gsm8k \
-    --eval-size 10 \
-    --experiment all \
-    --runs-per-condition 1
+python scripts/quick_smoke_test.py \
+    --hardware kaggle_t4_gpu \
+    --models "gemma4:e2b,qwen3.5:2b,qwen3.5:0.8b,gemma3:4b,deepseek-r1:7b,llama3.1:8b,qwen3.5:9b,mistral:7b,gemma3:1b,llama3.2:1b,gemma4:12b" \
+    --dataset all \
+    --eval-size 2 \
+    --experiment all
+```
+
+### D. Google Colab (NVIDIA T4 GPU) — 11 Mixed Models
+```bash
+!python scripts/quick_smoke_test.py \
+    --hardware colab_t4_gpu \
+    --models "gemma4:e2b,qwen3.5:2b,qwen3.5:0.8b,gemma3:4b,deepseek-r1:7b,llama3.1:8b,qwen3.5:9b,mistral:7b,gemma3:1b,llama3.2:1b,gemma4:12b" \
+    --dataset all \
+    --eval-size 2 \
+    --experiment all
+```
+
+### E. Single-Model Quick Test (Any Platform)
+```bash
+# Test just 1 model on all datasets in ~30 seconds:
+python scripts/quick_smoke_test.py --models "qwen3.5:2b" --dataset all --eval-size 2
 ```
 
 ---

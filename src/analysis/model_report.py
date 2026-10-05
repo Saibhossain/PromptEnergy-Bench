@@ -69,13 +69,29 @@ def get_clean_model_tag(model_name: str) -> str:
             return "qwen9B"
         elif "14b" in m:
             return "qwen14B"
+    if "deepseek" in m or "r1" in m:
+        if "1.5b" in m:
+            return "deepseek15B"
+        elif "7b" in m:
+            return "deepseek7B"
+        elif "8b" in m:
+            return "deepseek8B"
+        elif "14b" in m:
+            return "deepseek14B"
+        elif "32b" in m:
+            return "deepseek32B"
+        elif "70b" in m:
+            return "deepseek70B"
+        return "deepseekR1"
     if "gemma" in m:
-        if "4b" in m or "e4b" in m:
+        if "12b" in m:
+            return "gemma12B"
+        elif "4b" in m or "e4b" in m:
             return "gemma4B"
+        elif "2b" in m or "e2b" in m:
+            return "gemma2B"
         elif "1b" in m:
             return "gemma1B"
-        elif "2b" in m:
-            return "gemma2B"
         elif "7b" in m:
             return "gemma7B"
         elif "9b" in m:

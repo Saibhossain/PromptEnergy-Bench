@@ -1,0 +1,9 @@
+[2026-10-05 18:03:39] [INFO] Initialized Experiment: primary_exp_contexteval
+[2026-10-05 18:03:39] [INFO] Run ID: primary_exp_contexteval__windows_10core_pc__2026-10-05_18-03-39
+[2026-10-05 18:03:39] [INFO] Run Directory: results_smoke_test\windows_10core_pc\exp_1_gemma2B_2\primary_exp_contexteval
+[2026-10-05 18:03:39] [INFO] Model: gemma4:e2b (Backend: ollama, Format: gguf)
+[2026-10-05 18:03:39] [INFO] Device: windows_10core_pc
+[2026-10-05 18:03:39] [INFO] Evaluation Size: 2 (Evaluation Split: TEST)
+[2026-10-05 18:03:39] [INFO] Loading contexteval evaluation dataset (test split)...
+[2026-10-05 18:03:39] [INFO] Loaded 2 evaluation examples.
+[2026-10-05 18:03:39] [INFO] Executing 1 warmup run(s)...

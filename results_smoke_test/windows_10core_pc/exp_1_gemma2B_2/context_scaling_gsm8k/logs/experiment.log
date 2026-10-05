@@ -1,0 +1,11 @@
+[2026-10-05 17:53:04] [INFO] Initialized Experiment: context_scaling_gsm8k
+[2026-10-05 17:53:04] [INFO] Run ID: context_scaling_gsm8k__windows_10core_pc__2026-10-05_17-53-03
+[2026-10-05 17:53:04] [INFO] Run Directory: results_smoke_test\windows_10core_pc\exp_1_gemma2B_2\context_scaling_gsm8k
+[2026-10-05 17:53:04] [INFO] Model: gemma4:e2b (Backend: ollama, Format: gguf)
+[2026-10-05 17:53:04] [INFO] Device: windows_10core_pc
+[2026-10-05 17:53:04] [INFO] Evaluation Size: 2 (Evaluation Split: TEST)
+[2026-10-05 17:53:04] [INFO] Loading gsm8k (train split) for Context Corpus...
+[2026-10-05 17:53:04] [INFO] Loading gsm8k (test split) for Evaluation...
+[2026-10-05 17:53:04] [INFO] Executing 1 warmup run(s)...
+[2026-10-05 17:53:12] [INFO] Warmup 1/1 completed.
+[2026-10-05 17:55:22] [INFO] Experiment completed. Summary saved to results_smoke_test\windows_10core_pc\exp_1_gemma2B_2\context_scaling_gsm8k\summary.json

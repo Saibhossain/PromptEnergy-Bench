@@ -152,6 +152,36 @@ models:
       seed: 42
       max_tokens: 1024
 
+  - name: "gemma4:e2b"
+    backend: "ollama"
+    format: "gguf"
+    context_limit: 8192
+    supports_thinking: false
+    default_parameters:
+      temperature: 0.0
+      seed: 42
+      max_tokens: 1024
+
+  - name: "deepseek-r1:7b"
+    backend: "ollama"
+    format: "gguf"
+    context_limit: 8192
+    supports_thinking: true
+    default_parameters:
+      temperature: 0.0
+      seed: 42
+      max_tokens: 1024
+
+  - name: "gemma4:12b"
+    backend: "ollama"
+    format: "gguf"
+    context_limit: 8192
+    supports_thinking: false
+    default_parameters:
+      temperature: 0.0
+      seed: 42
+      max_tokens: 1024
+
   - name: "gemma4:e4b-mlx"
     backend: "ollama"
     format: "mlx"

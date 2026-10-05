@@ -298,7 +298,8 @@ def main():
         
         # Canonical model experiment directory: results/{hardware}/exp_{model_idx}_{clean_tag}_{eval_size}/
         clean_tag = get_clean_model_tag(model_name)
-        model_folder_name = f"exp_{model_idx}_{clean_tag}_{eval_size_val}"
+        eval_size_tag = "1k" if eval_size_val in (1000, "1000", "1k") else str(eval_size_val)
+        model_folder_name = f"exp_{model_idx}_{clean_tag}_{eval_size_tag}"
         model_run_dir = os.path.join(args.output_dir, hw_name, model_folder_name)
         os.makedirs(model_run_dir, exist_ok=True)
         print(f"\n{'='*75}")

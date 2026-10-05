@@ -1,0 +1,10 @@
+[2026-10-05 18:03:14] [INFO] Initialized Experiment: rag_natural_questions
+[2026-10-05 18:03:14] [INFO] Run ID: rag_natural_questions__windows_10core_pc__2026-10-05_18-03-14
+[2026-10-05 18:03:14] [INFO] Run Directory: results_smoke_test\windows_10core_pc\exp_1_gemma2B_2\rag_natural_questions
+[2026-10-05 18:03:14] [INFO] Model: gemma4:e2b (Backend: ollama, Format: gguf)
+[2026-10-05 18:03:14] [INFO] Device: windows_10core_pc
+[2026-10-05 18:03:14] [INFO] Evaluation Size: 2 (Evaluation Split: TEST)
+[2026-10-05 18:03:14] [INFO] Initializing BM25 Index over natural_questions TRAIN corpus (Evaluation on TEST split)...
+[2026-10-05 18:03:15] [INFO] Executing 1 warmup run(s)...
+[2026-10-05 18:03:17] [INFO] Warmup 1/1 completed.
+[2026-10-05 18:03:39] [INFO] Experiment completed. Summary saved to results_smoke_test\windows_10core_pc\exp_1_gemma2B_2\rag_natural_questions\summary.json
