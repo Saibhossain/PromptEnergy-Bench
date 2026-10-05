@@ -1,0 +1,11 @@
+[2026-10-05 12:08:40] [INFO] Initialized Experiment: primary_exp_contexteval
+[2026-10-05 12:08:40] [INFO] Run ID: primary_exp_contexteval__windows_10core_pc__2026-10-05_12-08-36
+[2026-10-05 12:08:40] [INFO] Run Directory: results\windows_10core_pc\exp_1_qwen9B_1k\primary_exp_contexteval
+[2026-10-05 12:08:40] [INFO] Model: qwen3.5:9b (Backend: ollama, Format: gguf)
+[2026-10-05 12:08:40] [INFO] Device: windows_10core_pc
+[2026-10-05 12:08:40] [INFO] Evaluation Size: 50 (Evaluation Split: TEST)
+[2026-10-05 12:08:40] [INFO] Loading contexteval evaluation dataset (test split)...
+[2026-10-05 12:08:40] [INFO] Loaded 50 evaluation examples.
+[2026-10-05 12:08:40] [INFO] Executing 1 warmup run(s)...
+[2026-10-05 12:09:18] [INFO] Warmup 1/1 completed.
+[2026-10-05 12:09:18] [INFO] Beginning main evaluation across 250 inference requests...

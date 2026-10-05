@@ -1,0 +1,12 @@
+{
+    "model_name": "qwen3.5:9b",
+    "clean_tag": "qwen9B",
+    "hardware": "windows_10core_pc",
+    "total_records": 700,
+    "generated_timestamp": "2026-10-05 04:11:18",
+    "tables": {
+        "table1_csv": "results\\windows_10core_pc\\exp_1_qwen9B_1k\\tables\\table1_full_merged_results.csv",
+        "table2_csv": "results\\windows_10core_pc\\exp_1_qwen9B_1k\\tables\\table2_model_execution_energy.csv"
+    },
+    "plots_directory": "results\\windows_10core_pc\\exp_1_qwen9B_1k\\plots"
+}

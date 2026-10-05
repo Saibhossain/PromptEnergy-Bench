@@ -176,12 +176,17 @@ class AppleSiliconHardwareMonitor(EnergyMonitor):
             "-s", "cpu_power,gpu_power"
         ]
         try:
+            clean_env = dict(os.environ)
+            clean_env.pop("MallocStackLogging", None)
+            clean_env.pop("MallocStackLoggingNoCompact", None)
+            clean_env.pop("MallocStackLoggingDontCompact", None)
             self.process = subprocess.Popen(
                 cmd,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.DEVNULL,
                 text=True,
-                bufsize=1
+                bufsize=1,
+                env=clean_env
             )
         except Exception:
             return

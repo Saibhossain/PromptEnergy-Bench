@@ -188,9 +188,14 @@ def collect_device_info(interactive: bool = False, cli_args: Optional[Dict[str, 
     dataset_name = str(get_val("dataset", get_val("dataset_name", "gsm8k", "10. Benchmark dataset name (gsm8k, natural_questions, contexteval, cnn_dailymail)"))).lower()
 
     # 11. Dataset evaluation size
-    eval_size_raw = str(get_val("eval_size", "50", "11. Dataset evaluation size ('50' or 'full')")).lower()
-    if eval_size_raw == "full":
+    eval_size_raw = str(get_val("eval_size", "50", "11. Dataset evaluation size ('50', '1k', or 'full')")).lower().strip()
+    if eval_size_raw in ("full", "all", "max"):
         eval_size = "full"
+    elif eval_size_raw.endswith("k"):
+        try:
+            eval_size = int(float(eval_size_raw[:-1]) * 1000)
+        except ValueError:
+            eval_size = 1000
     else:
         try:
             eval_size = int(eval_size_raw)

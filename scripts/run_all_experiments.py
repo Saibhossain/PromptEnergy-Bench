@@ -234,9 +234,18 @@ def main():
         print(f"[GPU PINNING] Active CUDA device pinned to GPU ID: {args.gpu_id}")
 
     # Parse eval size
-    eval_size_val = args.eval_size
-    if eval_size_val.isdigit():
-        eval_size_val = int(eval_size_val)
+    eval_size_str = str(args.eval_size).strip().lower()
+    if eval_size_str in ("full", "all", "max"):
+        eval_size_val = "full"
+    elif eval_size_str.endswith("k"):
+        try:
+            eval_size_val = int(float(eval_size_str[:-1]) * 1000)
+        except ValueError:
+            eval_size_val = 1000
+    elif eval_size_str.isdigit():
+        eval_size_val = int(eval_size_str)
+    else:
+        eval_size_val = args.eval_size
 
     # Normalize hardware preset
     hw_name = args.hardware

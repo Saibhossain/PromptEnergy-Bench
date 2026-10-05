@@ -1,0 +1,14 @@
+Dataset,Experiment Type,Strategy,Raw Strategy,Raw Dataset,Samples,Accuracy (%),Token F1,ROUGE-L,Total Energy (J),Net Energy (J),Prefill Energy (J),Decode Energy (J),TTFT (ms),Decode Latency (ms),Total Latency (ms),Input Tokens,Output Tokens,Thinking Tokens,Throughput (tok/s),Energy/Token (mJ),Truncation Rate (%)
+GSM8K (Math),Context Scaling (Exp 2),Context 0 tokens,ctx_0,gsm8k,50,92.0,,,4669.228,,,,9556.4,107841.8,117398.2,146.3,507.5,N/A,4.71,7141.24,6.0
+GSM8K (Math),Context Scaling (Exp 2),Context 512 tokens,ctx_512,gsm8k,50,96.0,,,5724.002,,,,37591.5,106412.5,144004.0,598.8,488.2,N/A,4.59,5266.16,4.0
+GSM8K (Math),Context Scaling (Exp 2),Context 1024 tokens,ctx_1024,gsm8k,50,96.0,,,6928.945,,,,71343.6,103730.1,175073.7,1168.6,474.4,N/A,4.57,4217.41,4.0
+GSM8K (Math),Context Scaling (Exp 2),Context 2048 tokens,ctx_2048,gsm8k,50,96.0,,,10287.895,,,,142479.6,115674.1,258153.7,2362.2,507.5,N/A,4.39,3585.06,4.0
+GSM8K (Math),Context Scaling (Exp 2),Context 4096 tokens,ctx_4096,gsm8k,50,90.0,,,16909.439,,,,298302.1,124286.8,422588.9,4728.5,485.3,N/A,3.9,3243.25,8.0
+GSM8K (Math),Prompting (Exp 1),Zero-shot Direct,zero_shot_direct,gsm8k,100,94.0,,,1699.023,,,,9429.9,34787.4,44217.3,142.3,162.5,N/A,4.67,5574.59,2.0
+GSM8K (Math),Prompting (Exp 1),Few-shot (3),few_shot_3,gsm8k,50,78.0,,,3442.604,,,,19344.2,68386.6,87730.7,318.3,326.0,N/A,4.77,5342.84,20.0
+GSM8K (Math),Prompting (Exp 1),Zero-shot CoT,zero_shot_cot,gsm8k,50,92.0,,,4510.939,,,,9279.8,106004.2,115284.0,146.3,507.5,N/A,4.79,6899.15,6.0
+GSM8K (Math),Prompting (Exp 1),Short CoT,short_cot,gsm8k,50,92.0,,,1196.848,,,,9456.2,21618.4,31074.6,151.3,104.7,N/A,4.84,4674.46,0.0
+GSM8K (Math),Prompting (Exp 1),Long CoT,long_cot,gsm8k,50,94.0,,,6788.722,,,,9045.9,164578.5,173624.4,144.3,782.5,N/A,4.75,7324.59,2.0
+GSM8K (Math),BM25 RAG (Exp 3),BM25 RAG (top-1),rag_top_1,gsm8k,50,90.0,,,2311.943,,,,24421.7,34817.7,59239.5,390.5,161.2,N/A,4.63,4190.58,2.0
+GSM8K (Math),BM25 RAG (Exp 3),BM25 RAG (top-3),rag_top_3,gsm8k,50,90.0,,,3490.533,,,,53603.6,35291.2,88894.7,861.2,160.7,N/A,4.55,3415.86,4.0
+GSM8K (Math),BM25 RAG (Exp 3),BM25 RAG (top-5),rag_top_5,gsm8k,50,88.0,,,4733.612,,,,78853.9,41313.0,120166.9,1325.7,188.2,N/A,4.55,3126.77,6.0
